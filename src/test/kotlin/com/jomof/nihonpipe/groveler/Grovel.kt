@@ -9,7 +9,7 @@ class Grovel {
     private val linuxScriptFile = File(projectRootDir, "make.sh")
     /**/private val externalDir = File(projectRootDir, "external")
     /*--*/private val jacyDir = File(externalDir, "jacy")
-    /*----*/private val jacyAceDir = File(externalDir, "ace")
+    /*----*/private val jacyAceDir = File(jacyDir, "ace")
     /*----*/private val jacyAceConfigTdlFile = File(jacyAceDir, "config.tdl")
     /*----*/private val jacyDataDir = File(jacyDir, "data")
     /*------*/private val jacyDataTanakaDir = File(jacyDataDir, "tanaka")
