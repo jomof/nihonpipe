@@ -88,7 +88,7 @@ class Grovel {
                 val tokenized = node.getValueTypeFile("tokenized")
                 val jacyParsed = node.getValueTypeFile("jacy-parsed")
                 sb.appendln(
-                        "cat $tokenized | $aceExecutableFile -g $grammarsJacyDatFile ")
+                        "cat $tokenized | $aceExecutableFile -g $grammarsJacyDatFile > $jacyParsed")
             }
         }
         linuxScriptFile.writeText(sb.toString())
