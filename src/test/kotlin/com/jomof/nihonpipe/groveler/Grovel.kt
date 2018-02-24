@@ -77,6 +77,7 @@ class Grovel {
 
     @Test
     fun generateIncrementalAceScript() {
+        translateTanakaCorpus()
         linuxScriptFile.writeText("$aceExecutableFile -g $jacyAceConfigTdlFile -G $grammarsJacyDatFile\r")
         db.forEach("japanese-sentence") { node ->
             if (!node.hasValueType("tokenized")) {
