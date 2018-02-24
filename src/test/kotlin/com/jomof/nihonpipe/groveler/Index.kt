@@ -1,0 +1,43 @@
+package com.jomof.nihonpipe.groveler
+
+import java.io.File
+
+class Index(val originalNext: Int, val map: MutableMap<String, Int>) {
+    var next = originalNext
+    fun getIndex(key: String): Int {
+        val sha = getSHA256OfString(key)
+        if (map.containsKey(sha)) {
+            return map[sha]!!
+        }
+        map[sha] = next++
+        return getIndex(key)
+    }
+
+    fun containsKey(key: String): Boolean {
+        return map.containsKey(getSHA256OfString(key))
+    }
+
+    fun writeFile(file: File) {
+        file.writeText("$next\r")
+        for ((key, value) in map) {
+            file.appendText("$key $value\r")
+        }
+    }
+
+    fun hasChanged(): Boolean {
+        return originalNext != next
+    }
+}
+
+fun readIndex(file: File): Index {
+    val lines = file.readLines()
+    val next = lines[0].toInt()
+    val result = mutableMapOf<String, Int>()
+    for (i in 1 until lines.size) {
+        val line = lines[i]
+        val space = line.indexOf(" ")
+        val split = line.split(" ")
+        result[split[0]] = split[1].toInt()
+    }
+    return Index(next, result)
+}
