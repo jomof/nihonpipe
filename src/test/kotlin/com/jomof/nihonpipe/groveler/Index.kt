@@ -38,7 +38,6 @@ fun readIndex(file: File): Index {
     val next = lines[0].toInt()
     for (i in 1 until lines.size) {
         val line = lines[i]
-        val space = line.indexOf(" ")
         val split = line.split(" ")
         result[split[0]] = split[1].toInt()
     }
