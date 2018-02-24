@@ -30,9 +30,12 @@ class Index(val originalNext: Int, val map: MutableMap<String, Int>) {
 }
 
 fun readIndex(file: File): Index {
+    val result = mutableMapOf<String, Int>()
+    if (!file.isFile) {
+        return Index(0, result)
+    }
     val lines = file.readLines()
     val next = lines[0].toInt()
-    val result = mutableMapOf<String, Int>()
     for (i in 1 until lines.size) {
         val line = lines[i]
         val space = line.indexOf(" ")
