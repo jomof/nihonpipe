@@ -5,5 +5,7 @@ matrix:
   include:
   - os: linux
     script:
+    - ./gradlew assemble
+    - ./gradlew check
     - ./make.sh
     
