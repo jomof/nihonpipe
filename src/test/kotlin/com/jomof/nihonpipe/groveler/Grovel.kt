@@ -78,7 +78,8 @@ class Grovel {
     @Test
     fun generateIncrementalAceScript() {
         translateTanakaCorpus()
-        linuxScriptFile.writeText("$aceExecutableFile -g $jacyAceConfigTdlFile -G $grammarsJacyDatFile\r")
+        val sb = StringBuilder()
+        sb.appendln("$aceExecutableFile -g $jacyAceConfigTdlFile -G $grammarsJacyDatFile")
         db.forEach("japanese-sentence") { node ->
             if (!node.hasValueType("tokenized")) {
                 throw RuntimeException(node.keyTypeFolder.toString())
@@ -86,10 +87,11 @@ class Grovel {
             if (!node.hasValueType("jacy-parsed")) {
                 val tokenized = node.getValueTypeFile("tokenized")
                 val jacyParsed = node.getValueTypeFile("jacy-parsed")
-                linuxScriptFile.appendText(
-                        "cat $tokenized | $aceExecutableFile -G $grammarsJacyDatFile \r")
+                sb.appendln(
+                        "cat $tokenized | $aceExecutableFile -G $grammarsJacyDatFile ")
             }
         }
+        linuxScriptFile.writeText(sb.toString())
 
     }
 }
