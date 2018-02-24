@@ -1,0 +1,99 @@
+[ LTOP: h0
+  INDEX: e2 [
+   e
+   TENSE: pres
+   MOOD: indicative
+   PROG: +
+   PERF: -
+   ASPECT: default_aspect
+   PASS: -
+   SF: prop ]
+  RELS: <
+   [ udef_q_rel<0:1> LBL: h4 ARG0: x3 [ x PERS: 3 ] RSTR: h5 BODY: h6 ]
+   [ "_michi_n_2_rel"<0:1> LBL: h7 ARG0: x3 ]
+   [ _wa_d_rel<2:3> LBL: h7
+     ARG0: e8 [ e
+       TENSE: untensed
+       MOOD: indicative
+       PROG: -
+       PERF: -
+       ASPECT: default_aspect
+       PASS: - SF: prop ]
+     ARG1: e9 [ e
+       TENSE: tense
+       MOOD: indicative
+       PROG: -
+       PERF: -
+       ASPECT: default_aspect
+       PASS: - SF: prop ]
+     ARG2: x3 ]
+   [ "_soko_n_rel"<4:6> LBL: h10 ARG0: x11 ]
+   [ def_q_rel<-1:-1> LBL: h12 ARG0: x11 RSTR: h13 BODY: h14 ]
+   [ place_n_rel<-1:-1> LBL: h10 ARG0: x11 ]
+   [ "_kara_p_rel"<7:9> LBL: h1 ARG0: e15
+   [ e TENSE: untensed MOOD: indicative PROG: - PERF: -
+   ASPECT: default_aspect PASS: - SF: prop ] ARG1: e2 ARG2: x11 ]
+   [ udef_q_rel<10:13> LBL: h16 ARG0: x17 [ x PERS: 3 ] RSTR: h18 BODY: h19 ]
+   [ "_noborizaka_n_1_rel"<10:13> LBL: h20 ARG0: x17 ]
+   [ "_naru_v_4_rel"<16:18> LBL: h1 ARG0: e2 ARG1: h21 ]
+   [ "cop_id_rel"<-1:-1> LBL: h22 ARG0: e23
+   [ e TENSE: tense MOOD: indicative PROG: - PERF: - ASPECT: default_aspect PASS: - SF: prop ]
+   ARG1: x3 ARG2: x17 ] >
+   HCONS: < h0 qeq h1 h5 qeq h7 h13 qeq h10 h18 qeq h20 h21 qeq h22 > ] ;
+
+   (1879 utterance_rule-decl-finite 18.491320 0 9
+     (1876 head_subj_rule 17.030895 0 9
+       (1695 hf-complement-rule 3.527071 0 2
+         (1694 quantify-n-rule 0.101234 0 1
+           (28 michi_2 -0.064847 0 1
+             ("道" 19 "token [ +FORM \"道\" +FROM \"0\" +TO \"1\" +ID diff-list [ LIST list LAST list ] +POS pos [ +TAGS null +PRBS null ] +CLASS non_ne [ +INITIAL luk ] +TRAIT token_trait +PRED predsort +CARG \"道\" ]"
+             )
+           )
+         )
+         (29 wa-case-ga 3.623456 1 2
+           ("は" 20 "token [ +FORM \"は\" +FROM \"2\" +TO \"3\" +ID diff-list [ LIST list LAST list ] +POS pos [ +TAGS null +PRBS null ] +CLASS non_ne [ +INITIAL luk ] +TRAIT token_trait +PRED predsort +CARG \"は\" ]"
+           )
+         )
+       )
+       (1875 hf-adj-i-rule 12.919121 2 9
+         (1711 hf-complement-rule 1.264745 2 4
+           (37 soko -0.079894 2 3
+             ("そこ" 21 "token [ +FORM \"そこ\" +FROM \"4\" +TO \"6\" +ID diff-list [ LIST list LAST list ] +POS pos [ +TAGS null +PRBS null ] +CLASS non_ne [ +INITIAL luk ] +TRAIT token_trait +PRED predsort +CARG \"そこ\" ]"
+             )
+           )
+           (48 kara-postp 1.244333 3 4
+             ("から" 22 "token [ +FORM \"から\" +FROM \"7\" +TO \"9\" +ID diff-list [ LIST list LAST list ] +POS pos [ +TAGS null +PRBS null ] +CLASS non_ne [ +INITIAL luk ] +TRAIT token_trait +PRED predsort +CARG \"から\" ]"
+             )
+           )
+         )
+         (1874 head-specifier-rule 11.844149 4 9
+           (1873 hf-complement-rule 6.754720 4 8
+             (1593 hf-complement-rule 2.452087 4 6
+               (1592 quantify-n-rule 0.083982 4 5
+                 (59 noborizaka_1 0.000000 4 5
+                   ("上り坂" 23 "token [ +FORM \"上り坂\" +FROM \"10\" +TO \"13\" +ID diff-list [ LIST list LAST list ] +POS pos [ +TAGS null +PRBS null ] +CLASS non_ne [ +INITIAL luk ] +TRAIT token_trait +PRED predsort +CARG \"上り坂\" ]"
+                   )
+                 )
+               )
+               (60 ni-case 3.243510 5 6
+                 ("に" 24 "token [ +FORM \"に\" +FROM \"14\" +TO \"15\" +ID diff-list [ LIST list LAST list ] +POS pos [ +TAGS null +PRBS null ] +CLASS non_ne [ +INITIAL luk ] +TRAIT token_trait +PRED predsort +CARG \"に\" ]"
+                 )
+               )
+             )
+             (1595 vstem-vend-rule 4.653307 6 8
+               (1594 t-lexeme-c-stem-infl-rule 1.827792 6 7
+                 (77 naru-pparg-stem 0.762460 6 7
+                   ("なっ" 25 "token [ +FORM \"なっ\" +FROM \"16\" +TO \"18\" +ID diff-list [ LIST list LAST list ] +POS pos [ +TAGS null +PRBS null ] +CLASS non_ne [ +INITIAL luk ] +TRAIT token_trait +PRED predsort +CARG \"なっ\" ]"
+                   )
+                 )
+               )
+               (85 te-end 2.349368 7 8
+                 ("て" 26 "token [ +FORM \"て\" +FROM \"19\" +TO \"20\" +ID diff-list [ LIST list LAST list ] +POS pos [ +TAGS null +PRBS null ] +CLASS non_ne [ +INITIAL luk ] +TRAIT token_trait +PRED predsort +CARG \"て\" ]"
+                 )
+               )
+             )
+           )
+           (1869 unary-vstem-vend-rule 4.800516 8 9
+             (1574 ru-lexeme-infl-rule 2.496112 8 9
+               (99 iru-aux-stem 1.393024 8 9
+                 ("いる" 27 "token [ +FORM \"いる\" +FROM \"21\" +TO \"23\" +ID diff-list [ LIST list LAST list ] +POS pos [ +TAGS null +PRBS null ] +CLASS non_ne [ +INITIAL luk ] +TRAIT token_trait +PRED predsort +CARG \"いる\" ]"))))))))

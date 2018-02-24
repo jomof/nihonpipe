@@ -87,8 +87,11 @@ class Grovel {
             if (!node.hasValueType("jacy-parsed")) {
                 val tokenized = node.getValueTypeFile("tokenized")
                 val jacyParsed = node.getValueTypeFile("jacy-parsed")
+                val jacyParsedStderr = node.getValueTypeFile("jacy-parsed-stderr")
                 sb.appendln(
-                        "cat $tokenized | $aceExecutableFile -g $grammarsJacyDatFile > $jacyParsed")
+                        "cat $tokenized | $aceExecutableFile -1 -g $grammarsJacyDatFile " +
+                                "> $jacyParsed " +
+                                "2> $jacyParsedStderr")
             }
         }
         linuxScriptFile.writeText(sb.toString())

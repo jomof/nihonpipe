@@ -1,6 +1,14 @@
 language: java
 git:
   depth: 3
+deploy:
+  provider: releases
+  api_key:
+    secure: ${GITHUB_TOKEN}
+  file: processed.zip
+  skip_cleanup: true
+  on:
+    tags: true
 matrix:
   include:
   - os: linux
@@ -9,8 +17,6 @@ matrix:
     - ./gradlew check --info
     - rm .gitignore
     - chmod +x make.sh
-    #- cat make.sh
     - ./make.sh
-    #- git add processed/
-    #- git commit -m .
+    - zip -r processed{.zip,}
 
