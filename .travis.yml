@@ -6,3 +6,4 @@ matrix:
   - os: linux
     script:
     - ./make.sh
+    
