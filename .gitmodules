@@ -1,0 +1,4 @@
+[submodule "external/jacy"]
+	path = external/jacy
+	url = https://github.com/delph-in/jacy.git
+	branch = master
