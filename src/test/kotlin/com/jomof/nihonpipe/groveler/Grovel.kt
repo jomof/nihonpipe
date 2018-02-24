@@ -11,7 +11,7 @@ class Grovel {
     /*--*/private val jacyDir = File(externalDir, "jacy")
     /*----*/private val jacyAceDir = File(externalDir, "ace")
     /*----*/private val jacyAceConfigTdlFile = File(jacyAceDir, "config.tdl")
-    /*----*/private val jacyDataDir = File(jacyDir, "ace")
+    /*----*/private val jacyDataDir = File(jacyDir, "data")
     /*------*/private val jacyDataTanakaDir = File(jacyDataDir, "tanaka")
     /**/private val processedDir = File(projectRootDir, "processed")
     /*--*/private val indexedDir = File(processedDir, "indexed")
@@ -64,7 +64,7 @@ class Grovel {
         }
         jacyDataTanakaDir.walkTopDown()
                 .toList()
-                .take(15)
+                .take(2)
                 .forEach { file ->
                     if (file.isFile) {
                         translateTanakaCorpus(file)
@@ -77,7 +77,18 @@ class Grovel {
 
     @Test
     fun generateIncrementalAceScript() {
-        linuxScriptFile.writeText("$aceExecutableFile -g $jacyAceConfigTdlFile -G $grammarsJacyDatFile")
+        linuxScriptFile.writeText("$aceExecutableFile -g $jacyAceConfigTdlFile -G $grammarsJacyDatFile\r")
+        db.forEach("japanese-sentence") { node ->
+            if (!node.hasValueType("tokenized")) {
+                throw RuntimeException(node.keyTypeFolder.toString())
+            }
+            if (!node.hasValueType("jacy-parsed")) {
+                val tokenized = node.getValueTypeFile("tokenized")
+                val jacyParsed = node.getValueTypeFile("jacy-parsed")
+                linuxScriptFile.appendText(
+                        "cat $tokenized | $aceExecutableFile -G $grammarsJacyDatFile > $jacyParsed\r")
+            }
+        }
 
     }
 }

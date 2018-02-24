@@ -5,7 +5,7 @@ import java.io.File
 class Database(val root: File) {
     val map: MutableMap<String, Index> = mutableMapOf()
 
-    class WithinKey(db: Database, key: String, keyType: String) {
+    class WithinKey(val db: Database, key: String, keyType: String) {
         val index = db.getKeyTypeIndex(keyType)
         val alreadyExisted = index.containsKey(key)
         val ordinal = index.getIndex(key)
@@ -26,19 +26,15 @@ class Database(val root: File) {
         }
 
         fun write(value: String, valueType: String): WithinKey {
-            if (!valueTypeFolder(valueType).isFile) {
-                valueTypeFolder(valueType).writeText(value)
+            if (!db.valueTypeFile(folder, valueType).isFile) {
+                db.valueTypeFile(folder, valueType).writeText(value)
             }
             return this
         }
-
-        fun overwrite(value: String, valueType: String): WithinKey {
-            valueTypeFolder(valueType).writeText(value)
-            return this
-        }
-
-        private fun valueTypeFolder(valueType: String) = File(folder, "$valueType.txt")
     }
+
+    fun valueTypeFile(folder: File, valueType: String) =
+            File(folder, "$valueType.txt")
 
     fun withinKey(key: String, keyType: String): WithinKey {
         return WithinKey(this, key, keyType)
@@ -63,6 +59,25 @@ class Database(val root: File) {
             if (index.hasChanged()) {
                 index.writeFile(file)
             }
+        }
+    }
+
+    class NodeContext(val db: Database,
+                      val keyTypeFolder: File) {
+        fun hasValueType(valueType: String): Boolean {
+            return getValueTypeFile(valueType).isFile
+        }
+
+        fun getValueTypeFile(valueType: String): File {
+            return db.valueTypeFile(keyTypeFolder, valueType)
+        }
+    }
+
+    fun forEach(keyType: String, action: (NodeContext) -> Unit) {
+        val index = getKeyTypeIndex(keyType)
+
+        index.map.forEach { _, ordinal ->
+            action(NodeContext(this, File(root, "$keyType/$ordinal")))
         }
     }
 }

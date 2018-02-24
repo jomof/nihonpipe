@@ -8,8 +8,8 @@ matrix:
     - ./gradlew assemble
     - ./gradlew check --info
     - rm .gitignore
-    - git status
+    - chmod +x make.sh
     - ./make.sh
-    - git add processed/
-    - git commit -m .
+    #- git add processed/
+    #- git commit -m .
 
