@@ -9,6 +9,7 @@ matrix:
     - ./gradlew check --info
     - rm .gitignore
     - git status
-    - git add processed/
     - ./make.sh
-    
+    - git add processed/
+    - git commit -m .
+

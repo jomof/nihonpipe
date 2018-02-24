@@ -1,1 +1,1 @@
-pushd grammars/jacy &&./make.sh && popd
+C:\Users\jomof\IdeaProjects\nihonpipe\bin\ace\ace-0.9.26\ace -g C:\Users\jomof\IdeaProjects\nihonpipe\external\ace\config.tdl -G C:\Users\jomof\IdeaProjects\nihonpipe\grammars\jacy\jacy.dat

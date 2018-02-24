@@ -6,13 +6,21 @@ import java.io.File
 
 class Grovel {
     private val projectRootDir = File(".").absoluteFile.canonicalFile!!
-    private val externalDir = File(projectRootDir, "external")
-    private val jacyDir = File(externalDir, "jacy")
-    private val jacyDataDir = File(jacyDir, "data")
-    private val jacyDataTanakaDir = File(jacyDataDir, "tanaka")
-    private val processedDir = File(projectRootDir, "processed")
-    private val indexedDir = File(processedDir, "indexed")
-
+    private val linuxScriptFile = File(projectRootDir, "make.sh")
+    /**/private val externalDir = File(projectRootDir, "external")
+    /*--*/private val jacyDir = File(externalDir, "jacy")
+    /*----*/private val jacyAceDir = File(externalDir, "ace")
+    /*----*/private val jacyAceConfigTdlFile = File(jacyAceDir, "config.tdl")
+    /*----*/private val jacyDataDir = File(jacyDir, "ace")
+    /*------*/private val jacyDataTanakaDir = File(jacyDataDir, "tanaka")
+    /**/private val processedDir = File(projectRootDir, "processed")
+    /*--*/private val indexedDir = File(processedDir, "indexed")
+    /*----*/private val binDir = File(projectRootDir, "bin")
+    /*------*/private val aceBinDir = File(binDir, "ace/ace-0.9.26")
+    /*------*/private val aceExecutableFile = File(aceBinDir, "ace")
+    /**/private val grammarsDir = File(projectRootDir, "grammars")
+    /*--*/private val grammarsJacyDir = File(grammarsDir, "jacy")
+    /*--*/private val grammarsJacyDatFile = File(grammarsJacyDir, "jacy.dat")
 
     fun translateTanakaCorpus(file: File) {
         val lines = file.readLines()
@@ -56,6 +64,7 @@ class Grovel {
         }
         jacyDataTanakaDir.walkTopDown()
                 .toList()
+                .take(15)
                 .forEach { file ->
                     if (file.isFile) {
                         translateTanakaCorpus(file)
@@ -64,5 +73,11 @@ class Grovel {
                     }
                 }
         db.save()
+    }
+
+    @Test
+    fun generateIncrementalAceScript() {
+        linuxScriptFile.writeText("$aceExecutableFile -g $jacyAceConfigTdlFile -G $grammarsJacyDatFile")
+
     }
 }
