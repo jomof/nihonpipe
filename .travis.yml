@@ -6,7 +6,7 @@ matrix:
   - os: linux
     script:
     - ./gradlew assemble
-    - ./gradlew check
+    - ./gradlew check --info
     - git status
     - ./make.sh
     

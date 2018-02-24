@@ -60,7 +60,7 @@ class Grovel {
                     if (file.isFile) {
                         translateTanakaCorpus(file)
                         db.save()
-                        println("saved tanaka corpus index...")
+                        println("saved tanaka corpus index ${file.name}...")
                     }
                 }
         db.save()
