@@ -18,5 +18,5 @@ matrix:
     - rm .gitignore
     - chmod +x make.sh
     - ./make.sh
-    - zip -r processed{.zip,}
+    - zip -r processed{.zip,} > nul
 
