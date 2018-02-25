@@ -75,71 +75,72 @@ class Grovel {
                     }
                     db.save()
                 }
-
-        @Test
-        fun generateIncrementalAceScript() {
-            translateTanakaCorpus()
-            val sb = StringBuilder()
-            sb.appendln("$aceExecutableFile -g $jacyAceConfigTdlFile -G $grammarsJacyDatFile")
-            var n = 1
-            db.forEach("japanese-sentence") { node ->
-                if (!node.hasValueType("tokenized")) {
-                    throw RuntimeException(node.keyTypeFolder.toString())
-                }
-                if (!node.hasValueType("jacy-parsed")) {
-                    val tokenized = node.getValueTypeFile("tokenized")
-                    val jacyParsed = node.getValueTypeFile("jacy-parsed")
-                    val jacyParsedStderr = node.getValueTypeFile("jacy-parsed-stderr")
-                    sb.appendln(
-                            "cat $tokenized | $aceExecutableFile -1 -g $grammarsJacyDatFile " +
-                                    "> $jacyParsed " +
-                                    "2> $jacyParsedStderr")
-                    if (n % 50 == 0) {
-                        sb.appendln("echo ${node.ordinal} of ${node.getIndexSize()} " +
-                                "sentences processed")
-                    }
-                    ++n
-                }
-            }
-            linuxScriptFile.writeText(sb.toString())
-        }
-
-        @Test
-        fun translateOptimizedKore() {
-            val lines = optimizedKoreFile.readLines()
-            val fieldNames = lines[1].split("\t")
-            val count = mutableMapOf<String, Int>()
-            for (n in 2 until lines.size) {
-                val fields = lines[n].split("\t")
-                if (fields.size != 20) {
-                    throw RuntimeException(fields.size.toString())
-                }
-                val coreIndex = fields[0].toInt()
-                val vocabKoIndex = fields[1].toInt()
-                val sentKoIndex = fields[2].toInt()
-                val newOptVocIndex = fields[3].toInt()
-                val optVocIndex = fields[4].toInt()
-                val optSenIndex = fields[5].toInt()
-                val jlpt = fields[6]
-                val vocab = fields[7]
-                val kana = fields[8]
-                val english = fields[9]
-                val pos = fields[11]
-                val index = count[vocab] ?: 0
-                count[vocab] = index + 1
-                db.withinKey(vocab, "vocab")
-                        .write("$coreIndex", "core-index-$index")
-                        .write("$vocabKoIndex", "vocab-ko-index-$index")
-                        .write("$sentKoIndex", "sent-ko-$index")
-                        .write("$newOptVocIndex", "new-opt-voc-index-$index")
-                        .write("$optVocIndex", "opt-voc-index-$index")
-                        .write("$optSenIndex", "opt-sen-index-$index")
-                        .write("$jlpt", "jlpt-$index")
-                        .write("$kana", "kana-$index")
-                        .write("$english", "english-$index")
-                        .write("$pos", "pos-$index")
-                        .overwrite("${index + 1}", "meaning-count")
-            }
-            db.save()
-        }
     }
+
+    @Test
+    fun generateIncrementalAceScript() {
+        translateTanakaCorpus()
+        val sb = StringBuilder()
+        sb.appendln("$aceExecutableFile -g $jacyAceConfigTdlFile -G $grammarsJacyDatFile")
+        var n = 1
+        db.forEach("japanese-sentence") { node ->
+            if (!node.hasValueType("tokenized")) {
+                throw RuntimeException(node.keyTypeFolder.toString())
+            }
+            if (!node.hasValueType("jacy-parsed")) {
+                val tokenized = node.getValueTypeFile("tokenized")
+                val jacyParsed = node.getValueTypeFile("jacy-parsed")
+                val jacyParsedStderr = node.getValueTypeFile("jacy-parsed-stderr")
+                sb.appendln(
+                        "cat $tokenized | $aceExecutableFile -1 -g $grammarsJacyDatFile " +
+                                "> $jacyParsed " +
+                                "2> $jacyParsedStderr")
+                if (n % 50 == 0) {
+                    sb.appendln("echo ${node.ordinal} of ${node.getIndexSize()} " +
+                            "sentences processed")
+                }
+                ++n
+            }
+        }
+        linuxScriptFile.writeText(sb.toString())
+    }
+
+    //@Test
+    fun translateOptimizedKore() {
+        val lines = optimizedKoreFile.readLines()
+        val fieldNames = lines[1].split("\t")
+        val count = mutableMapOf<String, Int>()
+        for (n in 2 until lines.size) {
+            val fields = lines[n].split("\t")
+            if (fields.size != 20) {
+                throw RuntimeException(fields.size.toString())
+            }
+            val coreIndex = fields[0].toInt()
+            val vocabKoIndex = fields[1].toInt()
+            val sentKoIndex = fields[2].toInt()
+            val newOptVocIndex = fields[3].toInt()
+            val optVocIndex = fields[4].toInt()
+            val optSenIndex = fields[5].toInt()
+            val jlpt = fields[6]
+            val vocab = fields[7]
+            val kana = fields[8]
+            val english = fields[9]
+            val pos = fields[11]
+            val index = count[vocab] ?: 0
+            count[vocab] = index + 1
+            db.withinKey(vocab, "vocab")
+                    .write("$coreIndex", "core-index-$index")
+                    .write("$vocabKoIndex", "vocab-ko-index-$index")
+                    .write("$sentKoIndex", "sent-ko-$index")
+                    .write("$newOptVocIndex", "new-opt-voc-index-$index")
+                    .write("$optVocIndex", "opt-voc-index-$index")
+                    .write("$optSenIndex", "opt-sen-index-$index")
+                    .write("$jlpt", "jlpt-$index")
+                    .write("$kana", "kana-$index")
+                    .write("$english", "english-$index")
+                    .write("$pos", "pos-$index")
+                    .overwrite("${index + 1}", "meaning-count")
+        }
+        db.save()
+    }
+}
