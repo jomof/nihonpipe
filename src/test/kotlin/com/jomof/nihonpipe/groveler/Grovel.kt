@@ -64,12 +64,14 @@ class Grovel {
         }
         jacyDataTanakaDir.walkTopDown()
                 .toList()
-                //.take(15)
+                .take(20)
                 .forEach { file ->
                     if (file.isFile) {
                         translateTanakaCorpus(file)
                         db.save()
-                        println("saved tanaka corpus index ${file.name}...")
+                        println("saved ${file.name}...")
+                    } else {
+
                     }
                 }
         db.save()
@@ -94,7 +96,8 @@ class Grovel {
                                 "> $jacyParsed " +
                                 "2> $jacyParsedStderr")
                 if (n % 50 == 0) {
-                    sb.appendln("echo $n sentences processed")
+                    sb.appendln("echo ${node.ordinal} of ${node.getIndexSize()} " +
+                            "sentences processed")
                 }
                 ++n
             }

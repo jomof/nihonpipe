@@ -63,7 +63,9 @@ class Database(val root: File) {
     }
 
     class NodeContext(val db: Database,
-                      val keyTypeFolder: File) {
+                      val keyTypeFolder: File,
+                      val index: Index,
+                      val ordinal: Int) {
         fun hasValueType(valueType: String): Boolean {
             return getValueTypeFile(valueType).isFile
         }
@@ -71,13 +73,17 @@ class Database(val root: File) {
         fun getValueTypeFile(valueType: String): File {
             return db.valueTypeFile(keyTypeFolder, valueType)
         }
+
+        fun getIndexSize(): Int {
+            return index.next
+        }
     }
 
     fun forEach(keyType: String, action: (NodeContext) -> Unit) {
         val index = getKeyTypeIndex(keyType)
 
         index.map.forEach { _, ordinal ->
-            action(NodeContext(this, File(root, "$keyType/$ordinal")))
+            action(NodeContext(this, File(root, "$keyType/$ordinal"), index, ordinal))
         }
     }
 }
