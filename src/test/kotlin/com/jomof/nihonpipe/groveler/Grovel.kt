@@ -80,6 +80,7 @@ class Grovel {
         translateTanakaCorpus()
         val sb = StringBuilder()
         sb.appendln("$aceExecutableFile -g $jacyAceConfigTdlFile -G $grammarsJacyDatFile")
+        var n = 1
         db.forEach("japanese-sentence") { node ->
             if (!node.hasValueType("tokenized")) {
                 throw RuntimeException(node.keyTypeFolder.toString())
@@ -92,6 +93,10 @@ class Grovel {
                         "cat $tokenized | $aceExecutableFile -1 -g $grammarsJacyDatFile " +
                                 "> $jacyParsed " +
                                 "2> $jacyParsedStderr")
+                if (n % 50 == 0) {
+                    sb.appendln("echo $n sentences processed")
+                }
+                ++n
             }
         }
         linuxScriptFile.writeText(sb.toString())
