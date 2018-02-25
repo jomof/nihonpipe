@@ -1,7 +1,33 @@
 package com.jomof.nihonpipe.groveler
 
-class BitField(val init: String) {
-    val size = computeSize()
+
+class BitField(val init: String) : Iterable<Pair<Int, Boolean>> {
+    private class BitFieldIterator(val init: String) : Iterator<Pair<Int, Boolean>> {
+        var i = 0
+        override fun next(): Pair<Int, Boolean> {
+            var num = 0
+            while (i != init.length) {
+                val c = init[i]
+                ++i
+                num = when (c) {
+                    '-', '+' -> {
+                        return Pair(num, c == '+')
+                    }
+                    else -> (num * 36) + toNum(c)
+                }
+            }
+            throw RuntimeException()
+        }
+
+        override fun hasNext(): Boolean {
+            return i != init.length
+        }
+
+    }
+
+    override fun iterator(): Iterator<Pair<Int, Boolean>> {
+        return BitFieldIterator(init)
+    }
 }
 
 fun createBitField(size: Int): BitField {
@@ -55,18 +81,8 @@ private fun toNum(c: Char): Int {
 }
 
 fun BitField.forEachSpan(action: (size: Int, set: Boolean) -> Unit) {
-    var i = 0
-    var num = 0
-    while (i != init.length) {
-        val c = init[i]
-        num = when (c) {
-            '-', '+' -> {
-                action(num, c == '+')
-                0
-            }
-            else -> (num * 36) + toNum(c)
-        }
-        ++i
+    for ((size, set) in this) {
+        action(size, set)
     }
 }
 
@@ -78,10 +94,18 @@ fun BitField.mapEachSpan(action: (size: Int, set: Boolean) -> BitField): BitFiel
     return BitField(sb.toString())
 }
 
-fun BitField.computeSize(): Int {
+fun BitField.size(): Int {
     var result = 0
-    forEachSpan { size, set ->
+    forEachSpan { size, _ ->
         result += size
+    }
+    return result
+}
+
+fun BitField.spans(): Int {
+    var result = 0
+    forEachSpan { size, _ ->
+        result++
     }
     return result
 }
@@ -107,29 +131,34 @@ fun createBitField(vararg vals: Pair<Int, Boolean>): BitField {
 
 fun BitField.set(key: Int, value: Boolean): BitField {
     var key = key
+    var debt = false
     return mapEachSpan { size, set ->
         var current = key
         key -= size
-        if (current in 0 until size && value != set) {
-            createBitField(
-                    current to set,
-                    1 to !set,
-                    size - current - 1 to set)
-        } else {
-            createBitField(size to set)
+        when {
+            !debt && current in 0..size && value != set ->
+                createBitField(
+                        current to set,
+                        1 to !set,
+                        size - current - 1 to set)
+            debt && current in 0..size && value != set ->
+                createBitField(size - 1 to set)
+            current == size && value == set -> {
+                debt = true
+                createBitField(size + 1 to set)
+            }
+            else -> createBitField(size to set)
         }
     }
 }
 
 operator fun BitField.get(key: Int): Boolean {
-    var key = key
-    var result = false
-    forEachSpan { size, set ->
-        var current = key
-        key -= size
-        if (current in 0 until size) {
-            result = set
+    var start = 0
+    for ((size, set) in this) {
+        if (key in start until start + size) {
+            return set
         }
+        start += size
     }
-    return result
+    throw RuntimeException()
 }
