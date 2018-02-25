@@ -13,7 +13,7 @@ matrix:
   include:
   - os: linux
     script:
-    - wget https://github.com/jomof/nihonpipe/releases/download/0.0.5/processed.zip > nul 2>nul
+    - wget https://github.com/jomof/nihonpipe/releases/download/0.0.6/processed.zip > nul 2>nul
     - unzip processed.zip > nul 2>nul
     - ./gradlew assemble
     - ./gradlew check --info
