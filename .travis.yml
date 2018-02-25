@@ -13,9 +13,10 @@ matrix:
   include:
   - os: linux
     script:
+    - wget https://github.com/jomof/nihonpipe/releases/download/0.0.1/processed.zip
+    - unzip processed.zip > nul
     - ./gradlew assemble
     - ./gradlew check --info
-    - rm .gitignore
     - chmod +x make.sh
     - ./make.sh
     - zip -r processed{.zip,} > nul
