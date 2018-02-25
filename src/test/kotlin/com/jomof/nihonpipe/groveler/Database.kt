@@ -31,6 +31,11 @@ class Database(val root: File) {
             }
             return this
         }
+
+        fun overwrite(value: String, valueType: String): WithinKey {
+            db.valueTypeFile(folder, valueType).writeText(value)
+            return this
+        }
     }
 
     fun valueTypeFile(folder: File, valueType: String) =

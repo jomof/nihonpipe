@@ -8,6 +8,7 @@ class Grovel {
     private val projectRootDir = File(".").absoluteFile.canonicalFile!!
     private val linuxScriptFile = File(projectRootDir, "make.sh")
     /**/private val externalDir = File(projectRootDir, "external")
+    /*--*/private val optimizedKoreFile = File(externalDir, "optimized-kore.tsv")
     /*--*/private val jacyDir = File(externalDir, "jacy")
     /*----*/private val jacyAceDir = File(jacyDir, "ace")
     /*----*/private val jacyAceConfigTdlFile = File(jacyAceDir, "config.tdl")
@@ -103,6 +104,44 @@ class Grovel {
             }
         }
         linuxScriptFile.writeText(sb.toString())
+    }
 
+    @Test
+    fun translateOptimizedKore() {
+        val lines = optimizedKoreFile.readLines()
+        val fieldNames = lines[1].split("\t")
+        val count = mutableMapOf<String, Int>()
+        for (n in 2 until lines.size) {
+            val fields = lines[n].split("\t")
+            if (fields.size != 20) {
+                throw RuntimeException(fields.size.toString())
+            }
+            val coreIndex = fields[0].toInt()
+            val vocabKoIndex = fields[1].toInt()
+            val sentKoIndex = fields[2].toInt()
+            val newOptVocIndex = fields[3].toInt()
+            val optVocIndex = fields[4].toInt()
+            val optSenIndex = fields[5].toInt()
+            val jlpt = fields[6]
+            val vocab = fields[7]
+            val kana = fields[8]
+            val english = fields[9]
+            val pos = fields[11]
+            val index = count[vocab] ?: 0
+            count[vocab] = index + 1
+            db.withinKey(vocab, "vocab")
+                    .write("$coreIndex", "core-index-$index")
+                    .write("$vocabKoIndex", "vocab-ko-index-$index")
+                    .write("$sentKoIndex", "sent-ko-$index")
+                    .write("$newOptVocIndex", "new-opt-voc-index-$index")
+                    .write("$optVocIndex", "opt-voc-index-$index")
+                    .write("$optSenIndex", "opt-sen-index-$index")
+                    .write("$jlpt", "jlpt-$index")
+                    .write("$kana", "kana-$index")
+                    .write("$english", "english-$index")
+                    .write("$pos", "pos-$index")
+                    .overwrite("${index + 1}", "meaning-count")
+        }
+        db.save()
     }
 }
