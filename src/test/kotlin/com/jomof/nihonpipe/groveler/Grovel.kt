@@ -65,14 +65,13 @@ class Grovel {
         }
         jacyDataTanakaDir.walkTopDown()
                 .toList()
-                .take(60)
+                .take(100)
                 .forEach { file ->
                     if (file.isFile) {
                         translateTanakaCorpus(file)
-                        db.save()
-                        println("saved ${file.name}...")
-                    } else {
-
+                        if (db.save()) {
+                            println("saved ${file.name}...")
+                        }
                     }
                 }
         db.save()

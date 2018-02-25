@@ -58,13 +58,17 @@ class Database(val root: File) {
         return File(root, "$keyType.txt")
     }
 
-    fun save() {
+    fun save(): Boolean {
+        var savedAny = true
         for ((keyType, index) in map) {
             val file = getKeyTypeIndexFile(keyType)
             if (index.hasChanged()) {
                 index.writeFile(file)
+            } else {
+                savedAny = false
             }
         }
+        return savedAny
     }
 
     class NodeContext(val db: Database,
