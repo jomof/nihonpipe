@@ -19,5 +19,5 @@ matrix:
     - ./gradlew check --info
     - chmod +x make.sh
     - ./make.sh
-    - zip -r processed{.zip,} > nul
+    - zip -r processed{.zip,}
 
