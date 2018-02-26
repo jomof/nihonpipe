@@ -63,7 +63,7 @@ class Grovel {
         }
         jacyDataTanakaDir.walkTopDown()
                 .toList()
-                //.take(2)
+                .take(90)
                 .forEach { file ->
                     if (file.isFile) {
                         translateTanakaCorpus(file)
@@ -103,7 +103,7 @@ class Grovel {
         linuxScriptFile.writeText(sb.toString())
     }
 
-    //@Test
+    @Test
     fun translateOptimizedKore() {
         val lines = optimizedKoreFile.readLines()
         val fieldNames = lines[1].split("\t")
