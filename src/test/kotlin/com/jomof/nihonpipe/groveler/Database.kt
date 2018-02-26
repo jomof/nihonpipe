@@ -4,11 +4,13 @@ import java.io.File
 
 class Database(val root: File) {
     val map: MutableMap<String, Index> = mutableMapOf()
+    val originalFilters: MutableMap<String, BitField> = mutableMapOf()
+    val filters: MutableMap<String, BitField> = mutableMapOf()
 
-    class WithinKey(val db: Database, key: String, keyType: String) {
+    class WithinKey(val db: Database, key: String, val keyType: String) {
         val index = db.getKeyTypeIndex(keyType)
         val alreadyExisted = index.containsKey(key)
-        val ordinal = index.getIndex(key)
+        val ordinal = index.getOrdinal(key)
         val folder = File(db.root, "$keyType/$ordinal")
 
         init {
@@ -25,20 +27,52 @@ class Database(val root: File) {
             }
         }
 
+        fun readBitField(valueType: String): BitField {
+            val key = getKeyTypeValueTypeKey(valueType)
+            if (db.filters.containsKey(key)) {
+                return db.filters[key]!!
+            }
+            val file = File(db.root, "$key.index.txt")
+            val filter =
+                    if (file.exists()) {
+                        val init = file.readLines()[0]
+                        BitField(init)
+                    } else {
+                        createBitField()
+                    }
+            db.originalFilters[key] = filter
+            db.filters[key] = filter
+            return filter
+        }
+
+        fun getAndSetFilter(valueType: String): Boolean {
+            val filter = readBitField(valueType)
+            return if (filter[ordinal]) {
+                true
+            } else {
+                val key = getKeyTypeValueTypeKey(valueType)
+                db.filters[key] = filter.set(ordinal, true)
+                false
+            }
+        }
+
+        private fun getKeyTypeValueTypeKey(valueType: String) = "$keyType~$valueType"
+
         fun write(value: String, valueType: String): WithinKey {
-            if (!db.valueTypeFile(folder, valueType).isFile) {
-                db.valueTypeFile(folder, valueType).writeText(value)
+            if (!getAndSetFilter(valueType)) {
+                db.getValueTypeFile(folder, valueType).writeText(value)
             }
             return this
         }
 
         fun overwrite(value: String, valueType: String): WithinKey {
-            db.valueTypeFile(folder, valueType).writeText(value)
+            getAndSetFilter(valueType)
+            db.getValueTypeFile(folder, valueType).writeText(value)
             return this
         }
     }
 
-    fun valueTypeFile(folder: File, valueType: String) =
+    fun getValueTypeFile(folder: File, valueType: String) =
             File(folder, "$valueType.txt")
 
     fun withinKey(key: String, keyType: String): WithinKey {
@@ -68,6 +102,15 @@ class Database(val root: File) {
                 savedAny = false
             }
         }
+
+        for ((indexKey, bitfield) in filters) {
+            val originalFilter = originalFilters[indexKey] ?: createBitField()
+            if (originalFilter.init != bitfield.init) {
+                val file = File(root, "$indexKey.index.txt")
+                file.writeText(bitfield.init)
+                savedAny = true
+            }
+        }
         return savedAny
     }
 
@@ -80,7 +123,7 @@ class Database(val root: File) {
         }
 
         fun getValueTypeFile(valueType: String): File {
-            return db.valueTypeFile(keyTypeFolder, valueType)
+            return db.getValueTypeFile(keyTypeFolder, valueType)
         }
 
         fun getIndexSize(): Int {
@@ -92,7 +135,20 @@ class Database(val root: File) {
         val index = getKeyTypeIndex(keyType)
 
         index.map.forEach { _, ordinal ->
-            action(NodeContext(this, File(root, "$keyType/$ordinal"), index, ordinal))
+            action(NodeContext(this, getKeyTypeOrdinalFolder(keyType, ordinal), index, ordinal))
         }
+    }
+
+    private fun getKeyTypeOrdinalFolder(keyType: String, ordinal: Int) = File(root, "$keyType/$ordinal")
+
+    fun get(key: String, keyType: String, valueType: String): String? {
+        val index = getKeyTypeIndex(keyType)
+        val ordinal = index.getOrdinal(key)
+        val folder = getKeyTypeOrdinalFolder(keyType, ordinal)
+        val file = getValueTypeFile(folder, valueType)
+        if (!file.exists()) {
+            return null
+        }
+        return file.readText()
     }
 }

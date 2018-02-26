@@ -52,10 +52,8 @@ class Grovel {
     val db = Database(indexedDir)
 
     @Test
-    fun readme() {
-        db.withinKey("readme.txt", "raw")
-                .write("Hello world", "text-file")
-        db.save()
+    fun deleteRaw() {
+        File(indexedDir, "raw").deleteRecursively()
     }
 
     @Test
@@ -65,7 +63,7 @@ class Grovel {
         }
         jacyDataTanakaDir.walkTopDown()
                 .toList()
-                .take(80)
+                //.take(2)
                 .forEach { file ->
                     if (file.isFile) {
                         translateTanakaCorpus(file)

@@ -4,13 +4,17 @@ import java.io.File
 
 class Index(val originalNext: Int, val map: MutableMap<String, Int>) {
     var next = originalNext
-    fun getIndex(key: String): Int {
+    fun getOrdinal(key: String): Int {
         val sha = getSHA256OfString(key)
         if (map.containsKey(sha)) {
             return map[sha]!!
         }
         map[sha] = next++
-        return getIndex(key)
+        return getOrdinal(key)
+    }
+
+    fun size(): Int {
+        return originalNext
     }
 
     fun containsKey(key: String): Boolean {
