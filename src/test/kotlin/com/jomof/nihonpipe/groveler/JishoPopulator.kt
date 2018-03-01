@@ -1,5 +1,7 @@
 package com.jomof.nihonpipe.groveler
 
+import com.jomof.nihonpipe.groveler.schema.JishoVocab
+import org.h2.mvstore.MVMap
 import java.io.File
 
 fun translateJishoJLPT(file: File, level: Int, map: MutableMap<String, List<String>>) {
@@ -17,7 +19,7 @@ fun translateJishoJLPT(file: File, level: Int, map: MutableMap<String, List<Stri
     }
 }
 
-fun translatJishoJLPT() {
+fun translatJishoJLPT(result: MVMap<String, List<JishoVocab>>) {
     val map = mutableMapOf<String, List<String>>()
     translateJishoJLPT(jishoJLPT5, 5, map)
     translateJishoJLPT(jishoJLPT4, 4, map)
@@ -41,12 +43,12 @@ fun translatJishoJLPT() {
                 val jlpt = it[2]
                 val meaning = it[3]
                 val number = it[4]
-//                db.withinKey(vocab, "jisho-vocab")
-//                        .write("$kana", "kana")
-//                        .write("$meaning", "english")
-//                        .write("$jlpt", "jlpt")
-//                        .write("$kana", "kana-$number")
-//                        .write("$meaning", "english-$number")
-//                        .write("$jlpt", "jlpt-$number")
+                val current = (result[vocab] ?: listOf()).toMutableList()
+                val alreadyExists = current.any { it.meaning == meaning }
+                if (alreadyExists) {
+                    return
+                }
+                current.add(JishoVocab(vocab, kana, meaning, jlpt, number.toInt()))
+                result[vocab] = current
             }
 }

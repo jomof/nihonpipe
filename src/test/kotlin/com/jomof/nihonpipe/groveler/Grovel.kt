@@ -122,7 +122,7 @@ class Grovel {
         }
     }
 
-    //@Test
+    @Test
     fun generateIncrementalAceScript() {
         translateTanakaCorpus()
         val sb = StringBuilder()
