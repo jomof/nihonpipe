@@ -11,6 +11,8 @@ class H2Populator {
         val store = Store()
         translatJishoJLPT(store)
         translateOptimizedKore(store)
+        translateWaniKaniVocab(store)
+        translateTanakaCorpus(store)
         store.close()
     }
 }

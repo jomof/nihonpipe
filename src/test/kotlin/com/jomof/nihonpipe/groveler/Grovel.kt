@@ -58,7 +58,7 @@ class Grovel {
                 }
     }
 
-    @Test
+    //@Test
     fun annotateSentencesWithMaxVocabIndex() {
         // For each sentence, find the word with the highest index value and record it.
         val vocabMap = mutableMapOf<String, String>()
@@ -144,37 +144,5 @@ class Grovel {
             }
         }
         linuxScriptFile.writeText(sb.toString())
-    }
-
-    @Test
-    fun addSomeMissingVocab() {
-        db.withinKey("最善", "vocab")
-                .write("JLPT1", "jlpt-0")
-                .write("さいぜん", "kana-0")
-        db.save()
-    }
-
-    //@Test
-
-    //@Test
-    fun translateWaniKaniVocab() {
-        val lines = wanikaniVocabFile.readLines()
-        for (n in 0 until lines.size) {
-            val fields = lines[n].split("\t")
-            if (fields.size != 4) {
-                throw RuntimeException(fields.size.toString())
-            }
-            val kana = fields[0].substring(1, fields[0].length - 1)
-            val vocab = fields[1]
-            val english = fields[2].substring(1, fields[2].length - 1)
-            val level = fields[3]
-            db.withinKey(vocab, "vocab")
-                    .write("$kana", "wani-kani-kana")
-                    .write("$kana", "kana-0")
-                    .write("$english", "wani-kani-english")
-                    .write("$english", "english-0")
-                    .write("$level", "wani-kani-level")
-        }
-        db.save()
     }
 }
