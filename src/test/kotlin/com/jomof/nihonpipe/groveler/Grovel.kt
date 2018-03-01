@@ -5,23 +5,6 @@ import java.io.File
 
 
 class Grovel {
-    private val projectRootDir = File(".").absoluteFile.canonicalFile!!
-    private val linuxScriptFile = File(projectRootDir, "make.sh")
-    /**/private val externalDir = File(projectRootDir, "external")
-    /*--*/private val optimizedKoreFile = File(externalDir, "optimized-kore.tsv")
-    /*--*/private val jacyDir = File(externalDir, "jacy")
-    /*----*/private val jacyAceDir = File(jacyDir, "ace")
-    /*----*/private val jacyAceConfigTdlFile = File(jacyAceDir, "config.tdl")
-    /*----*/private val jacyDataDir = File(jacyDir, "data")
-    /*------*/private val jacyDataTanakaDir = File(jacyDataDir, "tanaka")
-    /**/private val processedDir = File(projectRootDir, "processed")
-    /*--*/private val indexedDir = File(processedDir, "indexed")
-    /*--*/private val binDir = File(projectRootDir, "bin")
-    /*----*/private val aceBinDir = File(binDir, "ace-0.9.26")
-    /*----*/private val aceExecutableFile = File(aceBinDir, "ace")
-    /**/private val grammarsDir = File(projectRootDir, "grammars")
-    /*--*/private val grammarsJacyDir = File(grammarsDir, "jacy")
-    /*--*/private val grammarsJacyDatFile = File(grammarsJacyDir, "jacy.dat")
 
     fun translateTanakaCorpus(file: File) {
         val lines = file.readLines()
@@ -56,14 +39,15 @@ class Grovel {
         File(indexedDir, "raw").deleteRecursively()
     }
 
-    @Test
+    //@Test
     fun translateTanakaCorpus() {
         if (!jacyDataTanakaDir.isDirectory) {
             throw RuntimeException(jacyDataTanakaDir.toString())
         }
         jacyDataTanakaDir.walkTopDown()
                 .toList()
-                .take(85)
+                .take(90)
+                .take(2)
                 .forEach { file ->
                     if (file.isFile) {
                         translateTanakaCorpus(file)
@@ -76,6 +60,69 @@ class Grovel {
     }
 
     @Test
+    fun annotateSentencesWithMaxVocabIndex() {
+        // For each sentence, find the word with the highest index value and record it.
+        val vocabMap = mutableMapOf<String, String>()
+        var maxOrder = ""
+        db.forEach("vocab") { node ->
+            fun format(key: String): String {
+                val file = node.getValueTypeFile(key)
+                if (!file.exists()) {
+                    return "9999"
+                }
+                val value = file.readText()
+                return when (value) {
+                    "JLPT0" -> "0006"
+                    "JLPT1" -> "0005"
+                    "JLPT2" -> "0004"
+                    "JLPT3" -> "0003"
+                    "JLPT4" -> "0002"
+                    "JLPT5" -> "0001"
+                    else -> ("0000" + value.toInt().toString()).substring(value.length)
+                }
+            }
+
+            val word = node.getValueTypeFile("key").readText()
+            val r0 = format("wani-kani-level")
+            val r1 = format("core-index-0")
+            val r2 = format("new-opt-voc-index-0")
+            val r3 = format("opt-sen-index-0")
+            val r4 = format("opt-voc-index-0")
+            val r5 = format("sent-ko-0")
+            val r6 = format("vocab-ko-index-0")
+            val r7 = format("jlpt-0")
+            val order = "$r0$r1$r2$r3$r4$r5$r6$r7"
+            if (order > maxOrder) {
+                maxOrder = order
+            }
+            vocabMap[word] = order
+        }
+
+        db.forEach("japanese-sentence") { node ->
+            val tokenized = node.getValueTypeFile("tokenized").readText()
+            val stripped = tokenized
+                    .replace("。", " ")
+                    .replace("  ", " ")
+            var max: String? = null
+            for (word in stripped.split(" ")) {
+                val lookup = vocabMap[word]
+                if (lookup != null) {
+                    if (max == null) {
+                        max = lookup
+                    } else {
+                        if (lookup > max) {
+                            max = lookup
+                        }
+                    }
+                }
+            }
+            if (max == null) {
+                println(tokenized)
+            }
+        }
+    }
+
+    //@Test
     fun generateIncrementalAceScript() {
         translateTanakaCorpus()
         val sb = StringBuilder()
@@ -104,6 +151,14 @@ class Grovel {
     }
 
     @Test
+    fun addSomeMissingVocab() {
+        db.withinKey("最善", "vocab")
+                .write("JLPT1", "jlpt-0")
+                .write("さいぜん", "kana-0")
+        db.save()
+    }
+
+    //@Test
     fun translateOptimizedKore() {
         val lines = optimizedKoreFile.readLines()
         val fieldNames = lines[1].split("\t")
@@ -134,10 +189,36 @@ class Grovel {
                     .write("$optVocIndex", "opt-voc-index-$index")
                     .write("$optSenIndex", "opt-sen-index-$index")
                     .write("$jlpt", "jlpt-$index")
+                    .write("$jlpt", "opt-kore-jlpt-$index")
                     .write("$kana", "kana-$index")
+                    .write("$kana", "opt-kore-kana-$index")
                     .write("$english", "english-$index")
+                    .write("$english", "opt-kore-english-$index")
                     .write("$pos", "pos-$index")
+                    .write("$pos", "opt-kore-pos-$index")
                     .overwrite("${index + 1}", "meaning-count")
+        }
+        db.save()
+    }
+
+    //@Test
+    fun translateWaniKaniVocab() {
+        val lines = wanikaniVocabFile.readLines()
+        for (n in 0 until lines.size) {
+            val fields = lines[n].split("\t")
+            if (fields.size != 4) {
+                throw RuntimeException(fields.size.toString())
+            }
+            val kana = fields[0].substring(1, fields[0].length - 1)
+            val vocab = fields[1]
+            val english = fields[2].substring(1, fields[2].length - 1)
+            val level = fields[3]
+            db.withinKey(vocab, "vocab")
+                    .write("$kana", "wani-kani-kana")
+                    .write("$kana", "kana-0")
+                    .write("$english", "wani-kani-english")
+                    .write("$english", "english-0")
+                    .write("$level", "wani-kani-level")
         }
         db.save()
     }

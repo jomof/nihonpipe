@@ -22,10 +22,12 @@ class Index(val originalNext: Int, val map: MutableMap<String, Int>) {
     }
 
     fun writeFile(file: File) {
-        file.writeText("$next\r")
+        var sb = StringBuilder()
+        sb.append("$next\r")
         for ((key, value) in map) {
-            file.appendText("$key $value\r")
+            sb.append("$key $value\r")
         }
+        file.writeText(sb.toString())
     }
 
     fun hasChanged(): Boolean {
