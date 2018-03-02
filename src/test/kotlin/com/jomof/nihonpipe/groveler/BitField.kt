@@ -1,6 +1,8 @@
 package com.jomof.nihonpipe.groveler
 
-class BitField(val init: String) : Iterable<Pair<Int, Boolean>> {
+import java.io.Serializable
+
+class BitField(val init: String) : Iterable<Pair<Int, Boolean>>, Serializable {
     private class BitFieldIterator(val init: String) : Iterator<Pair<Int, Boolean>> {
         var i = 0
         override fun next(): Pair<Int, Boolean> {
@@ -157,14 +159,16 @@ private fun insert(i: Int, offset: Int, value: Boolean, list: MutableList<Pair<I
         list.add(i + 1, Pair(sizei - 1, seti))
     }
 }
-fun BitField.set(key: Int, value: Boolean): BitField {
-    val size = size()
+
+fun BitField?.set(key: Int, value: Boolean): BitField {
+    val bitfield = this ?: createBitField()
+    val size = bitfield.size()
     if (key >= size) {
-        return BitField("$init${encode(key - size + 1, false)}")
+        return BitField("${bitfield.init}${encode(key - size + 1, false)}")
                 .set(key, value)
     }
 
-    val segments = this.toMutableList()
+    val segments = bitfield.toMutableList()
     var start = 0
     for (i in 0 until segments.size) {
         val (size, _) = segments[i]

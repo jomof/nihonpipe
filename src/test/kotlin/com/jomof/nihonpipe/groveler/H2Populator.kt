@@ -15,4 +15,22 @@ class H2Populator {
         translateTanakaCorpus(store)
         store.close()
     }
+
+    //@Test
+    fun matchSentenceToVocab() {
+        val store = Store()
+        store.tanakaCorpusSentence.forEach { index, sentence ->
+            val unpunctuated = sentence.japanese
+                    .replace("。", "")
+                    .replace("、", "")
+            val words = unpunctuated.split(" ")
+            for (word in words) {
+                val vocab = store.vocabToIndex[word]
+                if (vocab == null) {
+                    //org.atilika.kuromoji.Tokenizer()
+                    println("$word : ${sentence.japanese}")
+                }
+            }
+        }
+    }
 }

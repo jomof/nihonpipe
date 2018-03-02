@@ -6,4 +6,4 @@ data class JishoVocab(
         val vocab: String,
         val kana: String,
         val meaning: String,
-        val jlptLevel: String) : Serializable
+        val jlptLevel: String) : Serializable, Indexed
