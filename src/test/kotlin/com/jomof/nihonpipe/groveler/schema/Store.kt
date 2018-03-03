@@ -1,8 +1,7 @@
 package com.jomof.nihonpipe.groveler.schema
 
 import com.jomof.nihonpipe.groveler.bitfield.BitField
-import com.jomof.nihonpipe.groveler.bitfield.createBitField
-import com.jomof.nihonpipe.groveler.bitfield.set
+import com.jomof.nihonpipe.groveler.bitfield.mutableBitFieldOf
 import org.h2.mvstore.MVStore
 import java.io.File
 
@@ -33,13 +32,13 @@ class Store(file: File) {
     fun tanakaCorpusSentence(): Map<Int, TanakaCorpusSentence> = tanakaCorpusSentenceTable
 
     private fun addVocabForeignKey(vocab: String, foreignKey: Int) {
-        val bf = vocabToIndexTable[vocab] ?: createBitField()
+        val bf = vocabToIndexTable[vocab] ?: mutableBitFieldOf()
         bf[foreignKey] = true
         vocabToIndexTable[vocab] = bf
     }
 
     private fun addToFilter(filterName: String, index: Int) {
-        val bf = filterTable[filterName] ?: createBitField()
+        val bf = filterTable[filterName] ?: mutableBitFieldOf()
         bf[index] = true
         filterTable[filterName] = bf
     }
@@ -76,7 +75,7 @@ class Store(file: File) {
 
     fun addSentenceIndex(indexOfSentence: Int) {
         addToFilter(SENTENCE_INDEX_TO_INDEX, nextIndex)
-        val bf = sentenceIndexToIndex[nextIndex] ?: createBitField()
+        val bf = sentenceIndexToIndex[nextIndex] ?: mutableBitFieldOf()
         bf[nextIndex] = true
         sentenceIndexToIndex[nextIndex] = bf
         ++nextIndex
