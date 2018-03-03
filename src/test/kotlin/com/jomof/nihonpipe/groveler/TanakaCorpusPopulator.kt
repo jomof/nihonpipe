@@ -14,7 +14,8 @@ private fun translateTanakaCorpus(file: File, store: Store) {
         val japanese = japaneseLine.substring(10, semsem)
         val tid = japaneseLine.substring(semsem + 6)
         val english = lines[i + 1]
-        store.add(TanakaCorpusSentence(japanese, code, tid, english, file.name))
+        store.add(TanakaCorpusSentence(japanese, code, tid,
+                english, file.name))
     }
 }
 
@@ -30,4 +31,9 @@ fun translateTanakaCorpus(store: Store) {
                     translateTanakaCorpus(file, store)
                 }
             }
+
+    // Add an index for each sentence
+    store.tanakaCorpusSentence().forEach { (index, sentence) ->
+        store.addSentenceIndex(index)
+    }
 }

@@ -7,8 +7,11 @@ class H2Populator {
     @Test
     fun populate() {
         dataDir.mkdirs()
-        dataDatabaseBin.delete()
-        val store = Store()
+        if (dataDatabase1Bin.exists()) {
+            return
+        }
+        dataDatabase1Bin.delete()
+        val store = Store(dataDatabase1Bin)
         translatJishoJLPT(store)
         translateOptimizedKore(store)
         translateWaniKaniVocab(store)
@@ -16,21 +19,41 @@ class H2Populator {
         store.close()
     }
 
-    //@Test
+    @Test
     fun matchSentenceToVocab() {
-        val store = Store()
-        store.tanakaCorpusSentence.forEach { index, sentence ->
-            val unpunctuated = sentence.japanese
-                    .replace("。", "")
-                    .replace("、", "")
-            val words = unpunctuated.split(" ")
-            for (word in words) {
-                val vocab = store.vocabToIndex[word]
-                if (vocab == null) {
-                    //org.atilika.kuromoji.Tokenizer()
-                    println("$word : ${sentence.japanese}")
-                }
-            }
+        if (!dataDatabase1Bin.exists()) {
+            populate()
         }
+        dataDatabase2Bin.delete()
+        dataDatabase1Bin.copyTo(dataDatabase2Bin)
+        val store = Store(dataDatabase2Bin)
+        var n = 1
+//        store.sentenceIndexToIndex().forEach { sentenceIndex, bitfield  ->
+//            store.forEachIndexed(bitfield) { indexed -> }
+
+
+//            if (n % 10 == 0) println("sentence $n")
+//            ++n
+//            val tokens = Tokenizer()
+//                    .tokenize(sentence.japanese.replace(" ", ""))
+//
+//            for (token in tokens) {
+//                var baseForm = token.baseForm
+//                var index = store.vocabToIndex()[baseForm]
+//                if (index == null) {
+//                    val x = "baseForm=${token.baseForm} " +
+//                            "conjugationForm=${token.conjugationForm} " +
+//                            "conjugationType=${token.conjugationType} " +
+//                            "partOfSpeechLevel1=${token.partOfSpeechLevel1} " +
+//                            "partOfSpeechLevel2=${token.partOfSpeechLevel2} " +
+//                            "partOfSpeechLevel3=${token.partOfSpeechLevel3} " +
+//                            "partOfSpeechLevel4=${token.partOfSpeechLevel4} " +
+//                            "pronunciation=${token.pronunciation} " +
+//                            "reading=${token.reading}"
+//                    val y = x
+//                }
+//            }
+//        }
+        store.close()
     }
 }

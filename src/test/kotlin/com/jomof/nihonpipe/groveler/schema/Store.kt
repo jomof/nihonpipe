@@ -1,49 +1,51 @@
 package com.jomof.nihonpipe.groveler.schema
 
-import com.jomof.nihonpipe.groveler.BitField
-import com.jomof.nihonpipe.groveler.createBitField
-import com.jomof.nihonpipe.groveler.dataDatabaseBin
-import com.jomof.nihonpipe.groveler.set
+import com.jomof.nihonpipe.groveler.bitfield.BitField
+import com.jomof.nihonpipe.groveler.bitfield.createBitField
+import com.jomof.nihonpipe.groveler.bitfield.set
 import org.h2.mvstore.MVStore
+import java.io.File
 
-const val VOCAB_TO_DEFINITION = "vocab-to-definition"
-const val VOCAB_NEXT_INDEX = "vocab-next-index"
+const val VOCAB_TO_INDEX = "vocab-to-index"
+const val SENTENCE_INDEX_TO_INDEX = "sentence-index-to-index"
+const val NEXT_INDEX = "next-index"
 const val JISHO_VOCAB = "jisho-vocab"
-const val JISHO_VOCAB_TABLE_INDEX = 0
 const val OPTIMIZED_CORE_VOCAB = "optimized-core-vocab"
-const val OPTIMIZED_CORE_VOCAB_TABLE_INDEX = 1
 const val WANIKANI_VOCAB = "wanikani-vocab"
-const val WANIKANI_VOCAB_TABLE_INDEX = 2
 const val TANAKA_CORPUS_SENTENCE = "tanaka-corpus-sentence"
-//const val TANAKA_CORPUS_SENTENCE_TABLE_INDEX = 3
 
-class Store {
+class Store(file: File) {
     private val store = MVStore.Builder()
-            .fileName(dataDatabaseBin.absolutePath)
+            .fileName(file.absolutePath)
             .compress()
             .open()!!
-    private val nextIndexTable = store.openMap<String, Int>("next-index")!!
-    private var nextIndex = nextIndexTable[VOCAB_NEXT_INDEX] ?: 0
+    private val nextIndexTable = store.openMap<String, Int>(NEXT_INDEX)!!
+    private var nextIndex = nextIndexTable[NEXT_INDEX] ?: 0
     private val filterTable = store.openMap<String, BitField>("filters")!!
-    private var jishoVocabFilter = filterTable[JISHO_VOCAB] ?: createBitField()
-    private var optimizedKoreVocabFilter = filterTable[OPTIMIZED_CORE_VOCAB] ?: createBitField()
-    private var wanikaniVocabFilter = filterTable[OPTIMIZED_CORE_VOCAB] ?: createBitField()
-    private var tanakaCorpusSentenceFilter = filterTable[TANAKA_CORPUS_SENTENCE] ?: createBitField()
-    private val vocabToIndexedTable = store.openMap<String, BitField>(VOCAB_TO_DEFINITION)!!
+    private val vocabToIndexTable = store.openMap<String, BitField>(VOCAB_TO_INDEX)!!
+    private val sentenceIndexToIndex = store.openMap<Int, BitField>(SENTENCE_INDEX_TO_INDEX)!!
     private val jishoVocabTable = store.openMap<Int, JishoVocab>(JISHO_VOCAB)!!
     private val optimizedCoreVocabTable = store.openMap<Int, OptimizedKoreVocab>(OPTIMIZED_CORE_VOCAB)!!
     private val wanikaniVocabTable = store.openMap<Int, WaniKaniVocab>(WANIKANI_VOCAB)!!
     private val tanakaCorpusSentenceTable = store.openMap<Int, TanakaCorpusSentence>(TANAKA_CORPUS_SENTENCE)!!
-    val vocabToIndex = vocabToIndexedTable.toMap<String, BitField>()
-    val tanakaCorpusSentence = tanakaCorpusSentenceTable.toMap<Int, TanakaCorpusSentence>()
+    fun vocabToIndex(): Map<String, BitField> = vocabToIndexTable
+    fun sentenceIndexToIndex(): Map<Int, BitField> = sentenceIndexToIndex
+    fun tanakaCorpusSentence(): Map<Int, TanakaCorpusSentence> = tanakaCorpusSentenceTable
 
     private fun addVocabForeignKey(vocab: String, foreignKey: Int) {
-        vocabToIndexedTable[vocab] =
-                vocabToIndexedTable[vocab].set(foreignKey, true)
+        val bf = vocabToIndexTable[vocab] ?: createBitField()
+        bf[foreignKey] = true
+        vocabToIndexTable[vocab] = bf
+    }
+
+    private fun addToFilter(filterName: String, index: Int) {
+        val bf = filterTable[filterName] ?: createBitField()
+        bf[index] = true
+        filterTable[filterName] = bf
     }
 
     fun add(vocab: JishoVocab) {
-        jishoVocabFilter = jishoVocabFilter.set(nextIndex, true)
+        addToFilter(JISHO_VOCAB, nextIndex)
         addVocabForeignKey(vocab.vocab, nextIndex)
         addVocabForeignKey(vocab.kana, nextIndex)
         jishoVocabTable[nextIndex] = vocab
@@ -51,7 +53,7 @@ class Store {
     }
 
     fun add(vocab: OptimizedKoreVocab) {
-        optimizedKoreVocabFilter = optimizedKoreVocabFilter.set(nextIndex, true)
+        addToFilter(OPTIMIZED_CORE_VOCAB, nextIndex)
         addVocabForeignKey(vocab.vocab, nextIndex)
         addVocabForeignKey(vocab.kana, nextIndex)
         optimizedCoreVocabTable[nextIndex] = vocab
@@ -59,7 +61,7 @@ class Store {
     }
 
     fun add(vocab: WaniKaniVocab) {
-        wanikaniVocabFilter = wanikaniVocabFilter.set(nextIndex, true)
+        addToFilter(WANIKANI_VOCAB, nextIndex)
         addVocabForeignKey(vocab.vocab, nextIndex)
         addVocabForeignKey(vocab.kana, nextIndex)
         wanikaniVocabTable[nextIndex] = vocab
@@ -67,17 +69,27 @@ class Store {
     }
 
     fun add(sentence: TanakaCorpusSentence) {
-        tanakaCorpusSentenceFilter = tanakaCorpusSentenceFilter.set(nextIndex, true)
+        addToFilter(TANAKA_CORPUS_SENTENCE, nextIndex)
         tanakaCorpusSentenceTable[nextIndex] = sentence
         ++nextIndex
     }
 
+    fun addSentenceIndex(indexOfSentence: Int) {
+        addToFilter(SENTENCE_INDEX_TO_INDEX, nextIndex)
+        val bf = sentenceIndexToIndex[nextIndex] ?: createBitField()
+        bf[nextIndex] = true
+        sentenceIndexToIndex[nextIndex] = bf
+        ++nextIndex
+    }
+
+//    fun forEachIndexed(bitfield : BitField, action : (Indexed) -> Unit) {
+//        bitfield.forEach { it ->
+//            it.
+//        }
+//    }
+
     fun close() {
-        nextIndexTable[VOCAB_NEXT_INDEX] = nextIndex
-        filterTable[JISHO_VOCAB] = jishoVocabFilter
-        filterTable[OPTIMIZED_CORE_VOCAB] = optimizedKoreVocabFilter
-        filterTable[WANIKANI_VOCAB] = wanikaniVocabFilter
-        filterTable[TANAKA_CORPUS_SENTENCE] = tanakaCorpusSentenceFilter
+        nextIndexTable[NEXT_INDEX] = nextIndex
         store.close()
     }
 }
