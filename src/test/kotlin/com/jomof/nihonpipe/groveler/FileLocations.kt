@@ -5,8 +5,8 @@ import java.io.File
 private val projectRootDir = File(".").absoluteFile.canonicalFile!!
 internal val linuxScriptFile = File(projectRootDir, "make.sh")
 internal val dataDir = File(projectRootDir, "data")
-/*--*/internal val dataDatabaseBin = File(dataDir, "database1.bin")
-/*--*/internal val dataDatabase2Bin = File(dataDir, "database2.bin")
+/*--*/internal val dataDatabaseBin = File(dataDir, "database.bin")
+/*--*/internal val dataKuromojiBin = File(dataDir, "kuromoji-cache.bin")
 private val externalDir = File(projectRootDir, "external")
 /*--*/internal val optimizedKoreFile = File(externalDir, "optimized-kore.tsv")
 /*--*/internal val wanikaniVocabFile = File(externalDir, "wani-kani-vocab.tsv")

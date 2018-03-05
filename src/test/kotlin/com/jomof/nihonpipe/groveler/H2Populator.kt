@@ -25,6 +25,7 @@ class H2Populator {
         // Slow or incremental population steps
         var db = Store(dataDatabaseBin)
         populateKuromojiBatch(db, 30)
+        println("kuromoji size = ${db.kuromojiIpadicTokenization.count()}")
         db.close()
     }
 
