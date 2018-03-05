@@ -1,6 +1,9 @@
 package com.jomof.nihonpipe.groveler
 
 import com.google.common.truth.Truth.assertThat
+import com.jomof.nihonpipe.groveler.bitfield.BitField
+import com.jomof.nihonpipe.groveler.bitfield.and
+import com.jomof.nihonpipe.groveler.bitfield.minus
 import com.jomof.nihonpipe.groveler.bitfield.mutableBitFieldOf
 import org.junit.Test
 
@@ -12,6 +15,28 @@ class BitFieldTest {
         assertThat(bf.size).isEqualTo(6)
         assertThat(bf.segments.count()).isEqualTo(1)
         assertThat(bf[5]).isEqualTo(true)
+    }
+
+    @Test
+    fun bitfieldof() {
+        val bf1 = mutableBitFieldOf(1..2 to true)
+        assertThat(bf1[0]).isFalse()
+        assertThat(bf1[1]).isTrue()
+        assertThat(bf1[2]).isTrue()
+    }
+
+    @Test
+    fun and() {
+        val bf1 = mutableBitFieldOf(0..5 to true)
+        val bf2 = mutableBitFieldOf(3..4 to true)
+        val bf3 = bf1 and bf2
+        println(bf3)
+        assertThat(bf3[0]).isFalse()
+        assertThat(bf3[1]).isFalse()
+        assertThat(bf3[2]).isFalse()
+        assertThat(bf3[3]).isTrue()
+        assertThat(bf3[4]).isTrue()
+        assertThat(bf3[5]).isFalse()
     }
 
     @Test
@@ -113,6 +138,34 @@ class BitFieldTest {
         val bf = mutableBitFieldOf()
         bf[3] = true
         bf[4] = false
+    }
+
+    @Test
+    fun minus1() {
+        val bf1 = mutableBitFieldOf(0..100 to true)
+        val bf2 = mutableBitFieldOf(50..100 to true)
+        val result = bf1 minus bf2
+        assertThat(result[49]).isTrue()
+        assertThat(result[50]).isFalse()
+        assertThat(result[51]).isFalse()
+    }
+
+    @Test
+    fun minus2() {
+        val bf1 = mutableBitFieldOf(0..100 to true)
+        val bf2 = mutableBitFieldOf()
+        val result = bf1 minus bf2
+        assertThat(result[49]).isTrue()
+        assertThat(result[50]).isTrue()
+        assertThat(result[51]).isTrue()
+    }
+
+    @Test
+    fun minus3() {
+        val filter = BitField("36qg-2v0c+", 282196)
+        val other = BitField("", 0)
+        val result = filter minus other
+        assertThat(result).isEqualTo(filter)
     }
 
     @Test

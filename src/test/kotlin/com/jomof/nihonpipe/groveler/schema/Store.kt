@@ -1,91 +1,98 @@
 package com.jomof.nihonpipe.groveler.schema
 
 import com.jomof.nihonpipe.groveler.bitfield.BitField
-import com.jomof.nihonpipe.groveler.bitfield.mutableBitFieldOf
+import com.jomof.nihonpipe.groveler.bitfield.toSetBitIndices
 import org.h2.mvstore.MVStore
 import java.io.File
+import kotlin.reflect.KClass
 
 const val VOCAB_TO_INDEX = "vocab-to-index"
 const val SENTENCE_INDEX_TO_INDEX = "sentence-index-to-index"
 const val NEXT_INDEX = "next-index"
-const val JISHO_VOCAB = "jisho-vocab"
-const val OPTIMIZED_CORE_VOCAB = "optimized-core-vocab"
-const val WANIKANI_VOCAB = "wanikani-vocab"
-const val TANAKA_CORPUS_SENTENCE = "tanaka-corpus-sentence"
 
 class Store(file: File) {
+
     private val store = MVStore.Builder()
             .fileName(file.absolutePath)
             .compress()
             .open()!!
     private val nextIndexTable = store.openMap<String, Int>(NEXT_INDEX)!!
     private var nextIndex = nextIndexTable[NEXT_INDEX] ?: 0
-    private val filterTable = store.openMap<String, BitField>("filters")!!
-    private val vocabToIndexTable = store.openMap<String, BitField>(VOCAB_TO_INDEX)!!
-    private val sentenceIndexToIndex = store.openMap<Int, BitField>(SENTENCE_INDEX_TO_INDEX)!!
-    private val jishoVocabTable = store.openMap<Int, JishoVocab>(JISHO_VOCAB)!!
-    private val optimizedCoreVocabTable = store.openMap<Int, OptimizedKoreVocab>(OPTIMIZED_CORE_VOCAB)!!
-    private val wanikaniVocabTable = store.openMap<Int, WaniKaniVocab>(WANIKANI_VOCAB)!!
-    private val tanakaCorpusSentenceTable = store.openMap<Int, TanakaCorpusSentence>(TANAKA_CORPUS_SENTENCE)!!
-    fun vocabToIndex(): Map<String, BitField> = vocabToIndexTable
-    fun sentenceIndexToIndex(): Map<Int, BitField> = sentenceIndexToIndex
-    fun tanakaCorpusSentence(): Map<Int, TanakaCorpusSentence> = tanakaCorpusSentenceTable
+    private val filterTable = FilterTable(
+            store.openMap<String, BitField>("filters"))
+    private val vocabToIndexTable = oneToManyOf<String>(VOCAB_TO_INDEX)
+    private val sentenceIndexToIndexTable = oneIndexToManyOf(SENTENCE_INDEX_TO_INDEX)
+    private val jishoVocabTable = tableOf(JishoVocab::class)
+    private val optimizedCoreVocabTable = tableOf(OptimizedKoreVocab::class)
+    private val wanikaniVocabTable = tableOf(WaniKaniVocab::class)
+    private val tanakaCorpusSentenceTable = tableOf(TanakaCorpusSentence::class)
+    private val kuromojiIpadicTokenizationTable = tableOf(KuromojiIpadicTokenization::class)
+    val tanakaCorpusSentence: IndexedTable<TanakaCorpusSentence> = tanakaCorpusSentenceTable
+    val sentenceIndexToIndex: OneIndexToManyIndex = sentenceIndexToIndexTable
+    val kuromojiIpadicTokenization: IndexedTable<KuromojiIpadicTokenization> = kuromojiIpadicTokenizationTable
 
-    private fun addVocabForeignKey(vocab: String, foreignKey: Int) {
-        val bf = vocabToIndexTable[vocab] ?: mutableBitFieldOf()
-        bf[foreignKey] = true
-        vocabToIndexTable[vocab] = bf
-    }
+    operator fun get(index: Int) =
+            jishoVocabTable[index] ?: optimizedCoreVocabTable[index] ?: wanikaniVocabTable[index]
+            ?: tanakaCorpusSentenceTable[index] ?: kuromojiIpadicTokenizationTable[index]
 
-    private fun addToFilter(filterName: String, index: Int) {
-        val bf = filterTable[filterName] ?: mutableBitFieldOf()
-        bf[index] = true
-        filterTable[filterName] = bf
-    }
+    operator fun get(indices: BitField) =
+            indices
+                    .toSetBitIndices()
+                    .map { get(it) }
 
     fun add(vocab: JishoVocab) {
-        addToFilter(JISHO_VOCAB, nextIndex)
-        addVocabForeignKey(vocab.vocab, nextIndex)
-        addVocabForeignKey(vocab.kana, nextIndex)
         jishoVocabTable[nextIndex] = vocab
+        vocabToIndexTable.add(vocab.vocab, nextIndex, jishoVocabTable)
+        vocabToIndexTable.add(vocab.kana, nextIndex, jishoVocabTable)
         nextIndex++
     }
 
     fun add(vocab: OptimizedKoreVocab) {
-        addToFilter(OPTIMIZED_CORE_VOCAB, nextIndex)
-        addVocabForeignKey(vocab.vocab, nextIndex)
-        addVocabForeignKey(vocab.kana, nextIndex)
         optimizedCoreVocabTable[nextIndex] = vocab
+        vocabToIndexTable.add(vocab.vocab, nextIndex, optimizedCoreVocabTable)
+        vocabToIndexTable.add(vocab.kana, nextIndex, optimizedCoreVocabTable)
         nextIndex++
     }
 
     fun add(vocab: WaniKaniVocab) {
-        addToFilter(WANIKANI_VOCAB, nextIndex)
-        addVocabForeignKey(vocab.vocab, nextIndex)
-        addVocabForeignKey(vocab.kana, nextIndex)
         wanikaniVocabTable[nextIndex] = vocab
+        vocabToIndexTable.add(vocab.vocab, nextIndex, wanikaniVocabTable)
+        vocabToIndexTable.add(vocab.kana, nextIndex, wanikaniVocabTable)
         nextIndex++
     }
 
     fun add(sentence: TanakaCorpusSentence) {
-        addToFilter(TANAKA_CORPUS_SENTENCE, nextIndex)
         tanakaCorpusSentenceTable[nextIndex] = sentence
         ++nextIndex
     }
 
-    fun addSentenceIndex(indexOfSentence: Int) {
-        addToFilter(SENTENCE_INDEX_TO_INDEX, nextIndex)
-        val bf = sentenceIndexToIndex[nextIndex] ?: mutableBitFieldOf()
-        bf[nextIndex] = true
-        sentenceIndexToIndex[nextIndex] = bf
+    fun add(indexOfSentence: Int, tokenization: KuromojiIpadicTokenization) {
+        kuromojiIpadicTokenizationTable[nextIndex] = tokenization
+        sentenceIndexToIndexTable.add(indexOfSentence,
+                nextIndex,
+                kuromojiIpadicTokenizationTable)
         ++nextIndex
     }
 
-//    fun forEachIndexed(bitfield : BitField, action : (Indexed) -> Unit) {
-//        bitfield.forEach { it ->
-//            it.
-//        }
-//    }
+    fun add(indexOfSentence: Int, sentence: TanakaCorpusSentence) {
+        sentenceIndexToIndexTable.add(nextIndex,
+                indexOfSentence,
+                tanakaCorpusSentenceTable)
+        ++nextIndex
+    }
+
+    private fun <T : Indexed> tableOf(clazz: KClass<T>): MutableIndexedTable<T> {
+        val name = clazz.java.simpleName
+        return MutableIndexedTable(filterTable, store.openMap(name))
+    }
+
+    private fun <P : Any> oneToManyOf(name: String): MutableOneToManyIndex<P> {
+        return MutableOneToManyIndex(filterTable, store.openMap(name))
+    }
+
+    private fun oneIndexToManyOf(name: String): MutableOneIndexToManyIndex {
+        return MutableOneIndexToManyIndex(filterTable, store.openMap(name))
+    }
 
     fun close() {
         nextIndexTable[NEXT_INDEX] = nextIndex

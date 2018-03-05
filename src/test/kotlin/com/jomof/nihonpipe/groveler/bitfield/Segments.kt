@@ -112,7 +112,13 @@ operator fun Iterable<Segment>.get(key: Int): Boolean {
 }
 
 fun mutableBitFieldOf(vararg elements: Pair<IntRange, Boolean>): BitField {
-    return elements.map { Segment(it.first, it.second) }.toBitField()
+    val bf = BitField("", 0)
+    elements.forEach { (range, set) ->
+        for (i in range) {
+            bf[i] = set
+        }
+    }
+    return bf
 }
 
 

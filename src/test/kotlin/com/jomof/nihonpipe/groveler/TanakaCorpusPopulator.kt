@@ -33,7 +33,7 @@ fun translateTanakaCorpus(store: Store) {
             }
 
     // Add an index for each sentence
-    store.tanakaCorpusSentence().forEach { (index, sentence) ->
-        store.addSentenceIndex(index)
+    store.tanakaCorpusSentence.forEach { (index, sentence) ->
+        store.add(index, sentence)
     }
 }
