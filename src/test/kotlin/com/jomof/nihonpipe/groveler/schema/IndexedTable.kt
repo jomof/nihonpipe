@@ -16,7 +16,7 @@ class FluentIndices<V, out T : IndexedTable<V>>(
             .iterator()
 }
 
-fun <V, T : IndexedTable<V>> FluentIndices<V, T>.count() =
+fun <V : Indexed, T : IndexedTable<V>> FluentIndices<V, T>.count() =
         filter.toSetBitIndices().count()
 
 interface IndexedTable<V> : Map<Int, V> {
@@ -25,7 +25,7 @@ interface IndexedTable<V> : Map<Int, V> {
     val name: String
 }
 
-class MutableIndexedTable<T>(
+class MutableIndexedTable<T : Indexed>(
         private val filterTable: FilterTable,
         private val table: MVMap<Int, T>) : IndexedTable<T> {
 

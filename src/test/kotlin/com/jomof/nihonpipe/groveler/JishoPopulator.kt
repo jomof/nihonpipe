@@ -2,6 +2,7 @@ package com.jomof.nihonpipe.groveler
 
 import com.jomof.nihonpipe.groveler.schema.JishoVocab
 import com.jomof.nihonpipe.groveler.schema.Store
+import com.jomof.nihonpipe.groveler.schema.jlptToInt
 import java.io.File
 
 fun translateJishoJLPT(file: File, level: Int, map: MutableMap<String, List<String>>) {
@@ -32,7 +33,7 @@ fun translatJishoJLPT(store: Store) {
     }
             .sortedByDescending { it[2] }
             .map {
-                JishoVocab(it[0], it[1], it[2], it[3])
+                JishoVocab(it[0], it[1], jlptToInt(it[2]), it[3])
             }
             .forEach { it ->
                 store.add(it)

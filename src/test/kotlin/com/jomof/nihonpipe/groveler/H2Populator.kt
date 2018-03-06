@@ -24,7 +24,9 @@ class H2Populator {
 
         // Slow or incremental population steps
         var db = Store(dataDatabaseBin)
-        populateKuromojiBatch(db, 30)
+        populateKuromojiBatch(db, 5_000)
+        populateKuromojiTokenSentenceStatistics(db)
+        populateKuromojiTokenSentenceStructure(db)
         println("kuromoji size = ${db.kuromojiIpadicTokenization.count()}")
         db.close()
     }
@@ -33,7 +35,7 @@ class H2Populator {
     fun testManyToOne() {
         val name = "my-test-db-2.bin"
 
-        data class TestClass(val value: String) : Serializable
+        data class TestClass(val value: String) : Serializable, Indexed
 
         fun tables(store: MVStore): Pair<MutableOneIndexToManyIndex, MutableIndexedTable<TestClass>> {
             val filters = FilterTable(store.openMap("filters"))

@@ -9,9 +9,9 @@ import kotlin.reflect.KClass
 const val VOCAB_TO_INDEX = "vocab-to-index"
 const val SENTENCE_INDEX_TO_INDEX = "sentence-index-to-index"
 const val NEXT_INDEX = "next-index"
+const val KUROMOJI_STRUCTURE_TO_INDEX = "kuromoji-structure-to-index"
 
 class Store(file: File) {
-
     private val store = MVStore.Builder()
             .fileName(file.absolutePath)
             .compress()
@@ -21,22 +21,41 @@ class Store(file: File) {
     private val filterTable = FilterTable(
             store.openMap<String, BitField>("filters"))
     private val vocabToIndexTable = oneToManyOf<String>(VOCAB_TO_INDEX)
+    private val kuromojiStructureToIndexTable = oneToManyOf<String>(KUROMOJI_STRUCTURE_TO_INDEX)
     private val sentenceIndexToIndexTable = oneIndexToManyOf(SENTENCE_INDEX_TO_INDEX)
     private val jishoVocabTable = tableOf(JishoVocab::class)
     private val optimizedCoreVocabTable = tableOf(OptimizedKoreVocab::class)
     private val wanikaniVocabTable = tableOf(WaniKaniVocab::class)
     private val tanakaCorpusSentenceTable = tableOf(TanakaCorpusSentence::class)
     private val kuromojiIpadicTokenizationTable = tableOf(KuromojiIpadicTokenization::class)
+    private val kuromojiIpadicSentenceStatisticsTable = tableOf(KuromojiIpadicSentenceStatistics::class)
     val tanakaCorpusSentence: IndexedTable<TanakaCorpusSentence> = tanakaCorpusSentenceTable
     val sentenceIndexToIndex: OneIndexToManyIndex = sentenceIndexToIndexTable
     val kuromojiIpadicTokenization: IndexedTable<KuromojiIpadicTokenization> = kuromojiIpadicTokenizationTable
+    val kuromojiIpadicSentenceStatistics: IndexedTable<KuromojiIpadicSentenceStatistics> = kuromojiIpadicSentenceStatisticsTable
+    val vocabToIndex: OneToManyIndex<String> = vocabToIndexTable
+    val kuromojiStructureToIndex: OneToManyIndex<String> = kuromojiStructureToIndexTable
 
-    operator fun get(index: Int) =
-            jishoVocabTable[index] ?: optimizedCoreVocabTable[index] ?: wanikaniVocabTable[index]
-            ?: tanakaCorpusSentenceTable[index] ?: kuromojiIpadicTokenizationTable[index]
+    private val indexedTables = arrayOf(
+            jishoVocabTable,
+            optimizedCoreVocabTable,
+            wanikaniVocabTable,
+            tanakaCorpusSentenceTable,
+            kuromojiIpadicTokenizationTable,
+            kuromojiIpadicSentenceStatisticsTable
+    )
 
-    operator fun get(indices: BitField) =
-            indices
+    operator fun get(index: Int): Indexed {
+        for (table in indexedTables) {
+            val value = table[index]
+            if (value != null) {
+                return value
+            }
+        }
+        throw RuntimeException()
+    }
+
+    operator fun get(indices: BitField) = indices
                     .toSetBitIndices()
                     .map { get(it) }
 
@@ -71,6 +90,14 @@ class Store(file: File) {
         sentenceIndexToIndexTable.add(indexOfSentence,
                 nextIndex,
                 kuromojiIpadicTokenizationTable)
+        ++nextIndex
+    }
+
+    fun add(indexOfSentence: Int, statistics: KuromojiIpadicSentenceStatistics) {
+        kuromojiIpadicSentenceStatisticsTable[nextIndex] = statistics
+        sentenceIndexToIndexTable.add(indexOfSentence,
+                nextIndex,
+                kuromojiIpadicSentenceStatisticsTable)
         ++nextIndex
     }
 

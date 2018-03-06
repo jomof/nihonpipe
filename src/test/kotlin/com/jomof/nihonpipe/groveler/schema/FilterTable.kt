@@ -17,19 +17,19 @@ class FilterTable(
     private fun get(name: String) =
             filters[name] ?: mutableBitFieldOf()
 
-    private fun <T> containsName(table: IndexedTable<T>) =
+    private fun containsName(table: IndexedTable<*>) =
             "contains-${table.name}"
 
-    fun <T> tableContainsBitField(table: IndexedTable<T>) =
+    fun tableContainsBitField(table: IndexedTable<*>) =
             get(containsName(table))
 
-    fun <T> addTableContains(table: IndexedTable<T>, key: Int) =
+    fun addTableContains(table: IndexedTable<*>, key: Int) =
             set(containsName(table), key)
 
-    fun <P : Any, F> addOneToManyContains(
+    fun <P : Any> addOneToManyContains(
             index: OneToManyIndex<P>,
             foreignKey: Int,
-            foreignTable: IndexedTable<F>) {
+            foreignTable: IndexedTable<*>) {
         set("${index.name}-key-contains-${foreignTable.name}", foreignKey)
     }
 

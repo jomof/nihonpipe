@@ -1,12 +1,14 @@
 package com.jomof.nihonpipe.groveler.schema
 
 import com.jomof.nihonpipe.groveler.bitfield.BitField
+import com.jomof.nihonpipe.groveler.bitfield.and
 import com.jomof.nihonpipe.groveler.bitfield.minus
 import com.jomof.nihonpipe.groveler.bitfield.mutableBitFieldOf
 import org.h2.mvstore.MVMap
 
 interface OneToManyIndex<P : Any> {
     val name: String
+    operator fun get(key: P): BitField?
 }
 
 open class MutableOneToManyIndex<P : Any>(
@@ -15,6 +17,9 @@ open class MutableOneToManyIndex<P : Any>(
     override val name: String
         get() = table.name
 
+    override fun get(key: P): BitField? {
+        return table[key]
+    }
     open fun <F : Any> add(
             primary: P,
             foreignKey: Int,
@@ -32,6 +37,19 @@ fun FluentIndices<BitField, OneIndexToManyIndex>.removeRowsContaining(
     val reverse = filterTable.oneToManyValueContains(this.table, other)
     val subtracted = filter minus reverse
     return FluentIndices(subtracted, filterTable, table)
+}
+
+fun FluentIndices<BitField, OneIndexToManyIndex>.keepOnlyRowsContaining(
+        other: IndexedTable<*>): FluentIndices<BitField, OneIndexToManyIndex> {
+    val reverse = filterTable.oneToManyValueContains(this.table, other)
+    val subtracted = filter and reverse
+    return FluentIndices(subtracted, filterTable, table)
+}
+
+inline fun <reified T> FluentIndices<BitField, OneIndexToManyIndex>.keepInstances(db: Store) = map { (row, indices) ->
+    Row(row, db[indices]
+            .filterIsInstance<T>()
+            .takeOnly())
 }
 
 interface OneIndexToManyIndex : IndexedTable<BitField> {

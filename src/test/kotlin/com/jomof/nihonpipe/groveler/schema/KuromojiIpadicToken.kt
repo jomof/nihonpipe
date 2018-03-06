@@ -3,6 +3,7 @@ package com.jomof.nihonpipe.groveler.schema
 import java.io.Serializable
 
 data class KuromojiIpadicToken(
+        val surface: String,
         val baseForm: String,
         val conjugationForm: String,
         val conjugationType: String,
