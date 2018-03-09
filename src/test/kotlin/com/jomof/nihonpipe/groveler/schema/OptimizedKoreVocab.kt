@@ -9,7 +9,7 @@ data class OptimizedKoreVocab(
         val newOptVocIndex: Int,
         val optVocIndex1: Int,
         val optSenIndex: Int,
-        val jlpt: String,
+        val jlpt: Jlpt,
         val vocab: String,
         val kana: String,
         val english: String,

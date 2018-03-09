@@ -1,5 +1,6 @@
 package com.jomof.nihonpipe.groveler
 
+import com.jomof.nihonpipe.groveler.schema.Jlpt
 import com.jomof.nihonpipe.groveler.schema.OptimizedKoreVocab
 import com.jomof.nihonpipe.groveler.schema.Store
 
@@ -23,6 +24,6 @@ fun translateOptimizedKore(store: Store) {
         val pos = fields[11]
 
         store.add(OptimizedKoreVocab(coreIndex, vocabKoIndex, sentKoIndex, newOptVocIndex,
-                optVocIndex, optSenIndex, jlpt, vocab, kana, english, pos))
+                optVocIndex, optSenIndex, Jlpt.of(jlpt), vocab, kana, english, pos))
     }
 }

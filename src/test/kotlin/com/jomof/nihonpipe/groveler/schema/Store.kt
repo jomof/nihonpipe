@@ -12,20 +12,26 @@ const val NEXT_INDEX = "next-index"
 const val KUROMOJI_STRUCTURE_TO_INDEX = "kuromoji-structure-to-index"
 
 class Store(file: File) {
-    private val store = MVStore.Builder()
+    private val db = MVStore.Builder()
             .fileName(file.absolutePath)
             .compress()
             .open()!!
-    private val nextIndexTable = store.openMap<String, Int>(NEXT_INDEX)!!
+    private val levelsDb = MVStore.Builder()
+            .fileName(file.absoluteFile.parent + "/levels.bin")
+            .compress()
+            .open()!!
+    private val nextIndexTable = db.openMap<String, Int>(NEXT_INDEX)!!
+    private val levelsTable = levelsDb.openMap<LevelType, LevelInfo>("sentence-index-levels")!!
     private var nextIndex = nextIndexTable[NEXT_INDEX] ?: 0
     private val filterTable = FilterTable(
-            store.openMap<String, BitField>("filters"))
+            db.openMap<String, BitField>("filters"))
     private val vocabToIndexTable = oneToManyOf<String>(VOCAB_TO_INDEX)
     private val kuromojiStructureToIndexTable = oneToManyOf<String>(KUROMOJI_STRUCTURE_TO_INDEX)
     private val sentenceIndexToIndexTable = oneIndexToManyOf(SENTENCE_INDEX_TO_INDEX)
     private val jishoVocabTable = tableOf(JishoVocab::class)
     private val optimizedCoreVocabTable = tableOf(OptimizedKoreVocab::class)
     private val wanikaniVocabTable = tableOf(WaniKaniVocab::class)
+    private val waniKaniVsJlptVocabTable = tableOf(WaniKaniVsJlptVocab::class)
     private val tanakaCorpusSentenceTable = tableOf(TanakaCorpusSentence::class)
     private val kuromojiIpadicTokenizationTable = tableOf(KuromojiIpadicTokenization::class)
     private val kuromojiIpadicSentenceStatisticsTable = tableOf(KuromojiIpadicSentenceStatistics::class)
@@ -35,6 +41,7 @@ class Store(file: File) {
     val kuromojiIpadicSentenceStatistics: IndexedTable<KuromojiIpadicSentenceStatistics> = kuromojiIpadicSentenceStatisticsTable
     val vocabToIndex: OneToManyIndex<String> = vocabToIndexTable
     val kuromojiStructureToIndex: OneToManyIndex<String> = kuromojiStructureToIndexTable
+    val levels: Map<LevelType, LevelInfo> = levelsTable
 
     private val indexedTables = arrayOf(
             jishoVocabTable,
@@ -42,7 +49,8 @@ class Store(file: File) {
             wanikaniVocabTable,
             tanakaCorpusSentenceTable,
             kuromojiIpadicTokenizationTable,
-            kuromojiIpadicSentenceStatisticsTable
+            kuromojiIpadicSentenceStatisticsTable,
+            waniKaniVsJlptVocabTable
     )
 
     operator fun get(index: Int): Indexed {
@@ -80,6 +88,13 @@ class Store(file: File) {
         nextIndex++
     }
 
+    fun add(vocab: WaniKaniVsJlptVocab) {
+        waniKaniVsJlptVocabTable[nextIndex] = vocab
+        vocabToIndexTable.add(vocab.vocab, nextIndex, waniKaniVsJlptVocabTable)
+        vocabToIndexTable.add(vocab.kana, nextIndex, waniKaniVsJlptVocabTable)
+        nextIndex++
+    }
+
     fun add(sentence: TanakaCorpusSentence) {
         tanakaCorpusSentenceTable[nextIndex] = sentence
         ++nextIndex
@@ -102,27 +117,33 @@ class Store(file: File) {
     }
 
     fun add(indexOfSentence: Int, sentence: TanakaCorpusSentence) {
+        sentenceIndexToIndexTable.add(nextIndex, indexOfSentence)
         sentenceIndexToIndexTable.add(nextIndex,
                 indexOfSentence,
                 tanakaCorpusSentenceTable)
         ++nextIndex
     }
 
+    fun set(levelType: LevelType, levelInfo: LevelInfo) {
+        levelsTable[levelType] = levelInfo
+    }
+
     private fun <T : Indexed> tableOf(clazz: KClass<T>): MutableIndexedTable<T> {
         val name = clazz.java.simpleName
-        return MutableIndexedTable(filterTable, store.openMap(name))
+        return MutableIndexedTable(filterTable, db.openMap(name))
     }
 
     private fun <P : Any> oneToManyOf(name: String): MutableOneToManyIndex<P> {
-        return MutableOneToManyIndex(filterTable, store.openMap(name))
+        return MutableOneToManyIndex(filterTable, db.openMap(name))
     }
 
     private fun oneIndexToManyOf(name: String): MutableOneIndexToManyIndex {
-        return MutableOneIndexToManyIndex(filterTable, store.openMap(name))
+        return MutableOneIndexToManyIndex(filterTable, db.openMap(name))
     }
 
     fun close() {
         nextIndexTable[NEXT_INDEX] = nextIndex
-        store.close()
+        db.close()
+        levelsDb.close()
     }
 }

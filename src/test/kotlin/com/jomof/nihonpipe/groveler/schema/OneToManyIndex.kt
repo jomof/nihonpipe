@@ -2,8 +2,8 @@ package com.jomof.nihonpipe.groveler.schema
 
 import com.jomof.nihonpipe.groveler.bitfield.BitField
 import com.jomof.nihonpipe.groveler.bitfield.and
+import com.jomof.nihonpipe.groveler.bitfield.bitFieldOf
 import com.jomof.nihonpipe.groveler.bitfield.minus
-import com.jomof.nihonpipe.groveler.bitfield.mutableBitFieldOf
 import org.h2.mvstore.MVMap
 
 interface OneToManyIndex<P : Any> {
@@ -24,7 +24,7 @@ open class MutableOneToManyIndex<P : Any>(
             primary: P,
             foreignKey: Int,
             foreignTable: IndexedTable<F>) {
-        val bf = table[primary] ?: mutableBitFieldOf()
+        val bf = table[primary] ?: bitFieldOf()
         bf[foreignKey] = true
         table[primary] = bf
         filterTable.addOneToManyContains(this, foreignKey, foreignTable)
@@ -88,8 +88,18 @@ class MutableOneIndexToManyIndex(
             foreignKey: Int,
             foreignTable: IndexedTable<F>) {
         super.add(primary, foreignKey, foreignTable)
-        filterTable.addTableContains(this, primary)
+        assert(contains[primary]) {
+            "can't set foreign keys on element that doesn't exist"
+        }
         filterTable.addOneToManyValueContains(this, primary, foreignTable)
     }
+
+    fun add(primary: Int, foreignKey: Int) {
+        assert(!contains[primary]) { "already added" }
+        table[primary] = bitFieldOf(foreignKey..foreignKey to true)
+        filterTable.addTableContains(this, primary)
+    }
+
+    override fun toString() = contains.toString()
 }
 

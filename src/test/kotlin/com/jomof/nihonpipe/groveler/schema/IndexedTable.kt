@@ -29,7 +29,8 @@ class MutableIndexedTable<T : Indexed>(
         private val filterTable: FilterTable,
         private val table: MVMap<Int, T>) : IndexedTable<T> {
 
-    override val contains = filterTable.tableContainsBitField(this)
+    override val contains: BitField
+        get() = filterTable.tableContainsBitField(this)
     override val name = table.name!!
 
     override fun toSequence(): FluentIndices<T, MutableIndexedTable<T>> =

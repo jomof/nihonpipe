@@ -1,6 +1,7 @@
 package com.jomof.nihonpipe.groveler
 
 import com.jomof.nihonpipe.groveler.schema.JishoVocab
+import com.jomof.nihonpipe.groveler.schema.Jlpt
 import com.jomof.nihonpipe.groveler.schema.Store
 import com.jomof.nihonpipe.groveler.schema.jlptToInt
 import java.io.File
@@ -20,20 +21,20 @@ fun translateJishoJLPT(file: File, level: Int, map: MutableMap<String, List<Stri
     }
 }
 
-fun translatJishoJLPT(store: Store) {
+fun translateJishoJLPT(store: Store) {
     val map = mutableMapOf<String, List<String>>()
-    translateJishoJLPT(jishoJLPT5, 5, map)
-    translateJishoJLPT(jishoJLPT4, 4, map)
-    translateJishoJLPT(jishoJLPT3, 3, map)
-    translateJishoJLPT(jishoJLPT2, 2, map)
-    translateJishoJLPT(jishoJLPT1, 1, map)
+    translateJishoJLPT(jishoJLPT5, jlptToInt("jlpt5"), map)
+    translateJishoJLPT(jishoJLPT4, jlptToInt("jlpt5"), map)
+    translateJishoJLPT(jishoJLPT3, jlptToInt("jlpt5"), map)
+    translateJishoJLPT(jishoJLPT2, jlptToInt("jlpt5"), map)
+    translateJishoJLPT(jishoJLPT1, jlptToInt("jlpt5"), map)
 
     map.map { (english, values) ->
         listOf(values[0], values[1], values[2], english)
     }
             .sortedByDescending { it[2] }
             .map {
-                JishoVocab(it[0], it[1], jlptToInt(it[2]), it[3])
+                JishoVocab(it[0], it[1], Jlpt.of(it[2]), it[3])
             }
             .forEach { it ->
                 store.add(it)

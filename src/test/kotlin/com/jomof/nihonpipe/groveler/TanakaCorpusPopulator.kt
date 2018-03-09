@@ -25,7 +25,7 @@ fun translateTanakaCorpus(store: Store) {
     }
     jacyDataTanakaDir.walkTopDown()
             .toList()
-            .take(90)
+            //.take(90)
             .forEach { file ->
                 if (file.isFile) {
                     translateTanakaCorpus(file, store)
@@ -33,7 +33,9 @@ fun translateTanakaCorpus(store: Store) {
             }
 
     // Add an index for each sentence
+    var count = 0
     store.tanakaCorpusSentence.forEach { (index, sentence) ->
         store.add(index, sentence)
+        ++count
     }
 }

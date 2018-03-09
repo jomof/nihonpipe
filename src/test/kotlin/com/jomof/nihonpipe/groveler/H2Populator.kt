@@ -1,7 +1,7 @@
 package com.jomof.nihonpipe.groveler
 
 import com.google.common.truth.Truth.assertThat
-import com.jomof.nihonpipe.groveler.bitfield.mutableBitFieldOf
+import com.jomof.nihonpipe.groveler.bitfield.bitFieldOf
 import com.jomof.nihonpipe.groveler.schema.*
 import org.h2.mvstore.MVStore
 import org.junit.Test
@@ -15,19 +15,22 @@ class H2Populator {
         if (!dataDatabaseBin.exists()) {
             // Fast population steps
             val db = Store(dataDatabaseBin)
-            translatJishoJLPT(db)
+            translateJishoJLPT(db)
             translateOptimizedKore(db)
             translateWaniKaniVocab(db)
             translateTanakaCorpus(db)
+            translateWaniKaniVsJLPT(db)
             db.close()
         }
 
         // Slow or incremental population steps
         var db = Store(dataDatabaseBin)
-        populateKuromojiBatch(db, 5_000)
+        populateKuromojiBatch(db, 1_000)
         populateKuromojiTokenSentenceStatistics(db)
         populateKuromojiTokenSentenceStructure(db)
         println("kuromoji size = ${db.kuromojiIpadicTokenization.count()}")
+        println("tanaka corpus size = ${db.tanakaCorpusSentence.count()}")
+        println("sentence index size = ${db.sentenceIndexToIndex.count()}")
         db.close()
     }
 
@@ -67,7 +70,7 @@ class H2Populator {
             assertThat(manyToOne.contains[193]).isFalse()
             val rows = manyToOne.toSequence().toList()
             assertThat(rows).containsExactly(
-                    Row(192, mutableBitFieldOf(193..193 to true)))
+                    Row(192, bitFieldOf(193..193 to true)))
             val subtracted =
                     manyToOne.toSequence()
                             .removeRowsContaining(foreign)

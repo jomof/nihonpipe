@@ -1,6 +1,8 @@
 package com.jomof.nihonpipe.groveler
 
 import com.atilika.kuromoji.ipadic.Tokenizer
+import com.jomof.nihonpipe.groveler.bitfield.BitField
+import com.jomof.nihonpipe.groveler.bitfield.toSetBitIndices
 import com.jomof.nihonpipe.groveler.schema.*
 import org.h2.mvstore.MVStore
 
@@ -10,6 +12,7 @@ fun populateKuromojiBatch(db: Store, millis: Int) {
             .compress()
             .open()!!
     val kuromojiCache = kuromojiCacheStore.openMap<String, KuromojiIpadicTokenization>("KuromojiIpadic")
+    println("cache size = ${kuromojiCache.size}")
     fun kuromoji(sentence: String): KuromojiIpadicTokenization {
         val lookup = kuromojiCache[sentence]
         if (lookup != null) {
@@ -35,22 +38,33 @@ fun populateKuromojiBatch(db: Store, millis: Int) {
     }
 
     val start = System.currentTimeMillis()
+    var after = 0
+    var before = 0
+
     db.sentenceIndexToIndex
             .toSequence()
             .removeRowsContaining(db.kuromojiIpadicTokenization)
+            .onEach {
+                ++before
+            }
+            .takeWhile {
+                (System.currentTimeMillis() - start) < millis
+            }
+            .onEach {
+                ++after
+            }
             .map { (row, indices) ->
                 Row(row, db[indices]
                         .filterIsInstance<TanakaCorpusSentence>()
                         .takeOnly())
             }.map { (row, tanaka) ->
                 Row(row, kuromoji(tanaka.japanese.replace(" ", "")))
-            }.takeWhile {
-                (System.currentTimeMillis() - start) < millis
-            }.toList()
+            }
             .forEach { (row, kuromoji) ->
                 db.add(row, kuromoji)
             }
     kuromojiCacheStore.close()
+    println("before=$before after=$after")
 }
 
 fun getKuromojiTokenizationWithout(db: Store, table: IndexedTable<*>) =
@@ -85,6 +99,8 @@ fun populateKuromojiTokenSentenceStatistics(db: Store) {
                 var optCoreOptVocIndex = Statistics()
                 var optCoreOptSenIndex = Statistics()
                 var optCoreJlpt = Statistics()
+                var waniKaniVsJlptWaniKaniLevel = Statistics()
+                var waniKaniVsJlptJlptLevel = Statistics()
                 tokens.forEach { (kuromoji, vocabs) ->
                     vocabs.forEach { vocab ->
                         when (vocab) {
@@ -92,7 +108,7 @@ fun populateKuromojiTokenSentenceStatistics(db: Store) {
                                 waniKaniLevel += vocab.level
                             }
                             is JishoVocab -> {
-                                jishoJlpt += vocab.jlptLevel
+                                jishoJlpt += vocab.jlptLevel.ordinal
                             }
                             is OptimizedKoreVocab -> {
                                 optCore += vocab.core
@@ -101,7 +117,11 @@ fun populateKuromojiTokenSentenceStatistics(db: Store) {
                                 optCoreNewOptVocIndex += vocab.newOptVocIndex
                                 optCoreOptVocIndex += vocab.optVocIndex1
                                 optCoreOptSenIndex += vocab.optSenIndex
-                                optCoreJlpt += jlptToInt(vocab.jlpt)
+                                optCoreJlpt += vocab.jlpt.ordinal
+                            }
+                            is WaniKaniVsJlptVocab -> {
+                                waniKaniVsJlptWaniKaniLevel += vocab.wanikaniLevel
+                                waniKaniVsJlptJlptLevel += vocab.jlptLevel.ordinal
                             }
                             else -> throw RuntimeException(vocab.toString())
                         }
@@ -125,26 +145,57 @@ fun populateKuromojiTokenSentenceStatistics(db: Store) {
 
 
 fun populateKuromojiTokenSentenceStructure(db: Store) {
-    var groups = db.sentenceIndexToIndex
+    if (db.levels.containsKey(LevelType.SENTENCE_SKELETON)) {
+        return
+    }
+    val skeletonToSentence = mutableMapOf<String, BitField>()
+    val grammarElementToSentence = mutableMapOf<String, BitField>()
+
+    db.sentenceIndexToIndex
             .toSequence()
             .keepOnlyRowsContaining(db.kuromojiIpadicTokenization)
             .keepInstances<KuromojiIpadicTokenization>(db)
-            .map { (row, tokenization) ->
-                val skeleton = tokenization.particleSkeletonForm()
-                if (skeleton == "xはxだx") {
-                    var rebuild = tokenization.tokens
-                            .joinToString(" ") { it.surface }
-                    tokenization.particleSkeletonForm()
-                }
-                skeleton
-            }
+            .indexInto(skeletonToSentence) { it.particleSkeletonForm() }
+            .indexEachInto(grammarElementToSentence) { it.grammarSummaryForm() }
+            .count()
+
+    db.set(LevelType.GRAMMAR_ELEMENT, LevelInfo(grammarElementToSentence
             .toList()
-            .groupBy { it }
-            .map { (key, value) -> Pair(key, value) }
-            .filter { (key, value) -> value.size > 1 }
-            .sortedBy { (key, value) -> value.size }
-            .onEach { (key, value) ->
-                println("$key = ${value.size}")
-            }.count()
-    println("groups=$groups")
+            .sortedWith(compareByDescending<Pair<String, BitField>>
+            { it.second.toSetBitIndices().count() }
+                    .thenBy { it.first.length })
+            .chunked(2)
+            .take(60)
+            .mapIndexed { level, chunk ->
+                Level(level, chunk.map {
+                    LevelElement(
+                            level = level,
+                            key = it.first,
+                            sentenceIndex = it.second)
+                })
+            }
+            .onEach { level ->
+                println("level = $level")
+            }))
+
+    db.set(LevelType.SENTENCE_SKELETON, LevelInfo(skeletonToSentence
+            .toList()
+            .sortedWith(compareByDescending<Pair<String, BitField>>
+            { it.second.toSetBitIndices().count() }
+                    .thenBy { it.first.length })
+            .chunked(6)
+            .take(60)
+            .mapIndexed { level, chunk ->
+                Level(level, chunk.map {
+                    LevelElement(
+                            level = level,
+                            key = it.first,
+                            sentenceIndex = it.second)
+                })
+            }
+            .onEach { level ->
+                println("level = $level")
+            }))
 }
+
+

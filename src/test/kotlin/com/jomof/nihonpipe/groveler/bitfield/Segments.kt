@@ -72,14 +72,17 @@ fun MutableList<Segment>.insert(
         offset: Int,
         value: Boolean) {
     val (range, set) = this[index]
+    if (set == value) {
+        return
+    }
     assert(range.contains(offset)) { "$offset not withing range $range" }
 
     if (offset != range.start) {
         this[index] = Segment(range.start until offset, set)
         add(index + 1, Segment(offset..offset, value))
-        add(index + 2, Segment(offset + 1 until range.last, set))
+        add(index + 2, Segment(offset + 1..range.last, set))
     } else {
-        this[index] = Segment(range.start until offset, value)
+        this[index] = Segment(range.start..offset, value)
         add(index + 1, Segment(offset until range.last, set))
     }
 }
@@ -111,7 +114,7 @@ operator fun Iterable<Segment>.get(key: Int): Boolean {
     return false
 }
 
-fun mutableBitFieldOf(vararg elements: Pair<IntRange, Boolean>): BitField {
+fun bitFieldOf(vararg elements: Pair<IntRange, Boolean>): BitField {
     val bf = BitField("", 0)
     elements.forEach { (range, set) ->
         for (i in range) {

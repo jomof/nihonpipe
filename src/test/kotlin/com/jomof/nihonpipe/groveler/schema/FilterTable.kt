@@ -1,7 +1,7 @@
 package com.jomof.nihonpipe.groveler.schema
 
 import com.jomof.nihonpipe.groveler.bitfield.BitField
-import com.jomof.nihonpipe.groveler.bitfield.mutableBitFieldOf
+import com.jomof.nihonpipe.groveler.bitfield.bitFieldOf
 import org.h2.mvstore.MVMap
 
 
@@ -15,7 +15,7 @@ class FilterTable(
     }
 
     private fun get(name: String) =
-            filters[name] ?: mutableBitFieldOf()
+            filters[name] ?: bitFieldOf()
 
     private fun containsName(table: IndexedTable<*>) =
             "contains-${table.name}"

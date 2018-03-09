@@ -3,23 +3,33 @@ package com.jomof.nihonpipe.groveler
 import com.google.common.truth.Truth.assertThat
 import com.jomof.nihonpipe.groveler.bitfield.BitField
 import com.jomof.nihonpipe.groveler.bitfield.and
+import com.jomof.nihonpipe.groveler.bitfield.bitFieldOf
 import com.jomof.nihonpipe.groveler.bitfield.minus
-import com.jomof.nihonpipe.groveler.bitfield.mutableBitFieldOf
 import org.junit.Test
 
 class BitFieldTest {
 
     @Test
     fun rangeInit() {
-        val bf = mutableBitFieldOf(0..5 to true)
+        val bf = bitFieldOf(0..5 to true)
         assertThat(bf.size).isEqualTo(6)
         assertThat(bf.segments.count()).isEqualTo(1)
         assertThat(bf[5]).isEqualTo(true)
     }
 
     @Test
+    fun repro2() {
+        val bf = BitField(init = "3jqa-3803+", sizeField = 315877)
+        assertThat(bf[165543]).isTrue()
+        assertThat(bf.size).isEqualTo(315877)
+        bf[165543] = true
+        assertThat(bf[165543]).isTrue()
+        assertThat(bf.size).isEqualTo(315877)
+    }
+
+    @Test
     fun bitfieldof() {
-        val bf1 = mutableBitFieldOf(1..2 to true)
+        val bf1 = bitFieldOf(1..2 to true)
         assertThat(bf1[0]).isFalse()
         assertThat(bf1[1]).isTrue()
         assertThat(bf1[2]).isTrue()
@@ -27,8 +37,8 @@ class BitFieldTest {
 
     @Test
     fun and() {
-        val bf1 = mutableBitFieldOf(0..5 to true)
-        val bf2 = mutableBitFieldOf(3..4 to true)
+        val bf1 = bitFieldOf(0..5 to true)
+        val bf2 = bitFieldOf(3..4 to true)
         val bf3 = bf1 and bf2
         println(bf3)
         assertThat(bf3[0]).isFalse()
@@ -41,14 +51,14 @@ class BitFieldTest {
 
     @Test
     fun size() {
-        val bf = mutableBitFieldOf()
+        val bf = bitFieldOf()
         assertThat(bf.size).isEqualTo(0)
         assertThat(bf.segments.count()).isEqualTo(0)
     }
 
     @Test
     fun set0true() {
-        val bf = mutableBitFieldOf()
+        val bf = bitFieldOf()
         bf[0] = true
         assertThat(bf.size).isEqualTo(1)
         assertThat(bf[0]).isEqualTo(true)
@@ -57,7 +67,7 @@ class BitFieldTest {
 
     @Test
     fun set0false() {
-        val bf = mutableBitFieldOf()
+        val bf = bitFieldOf()
         bf[0] = false
         assertThat(bf.size).isEqualTo(0)
         assertThat(bf[0]).isEqualTo(false)
@@ -66,7 +76,7 @@ class BitFieldTest {
 
     @Test
     fun setMiddleOf3() {
-        val bf = mutableBitFieldOf()
+        val bf = bitFieldOf()
         bf[1] = true
         assertThat(bf.size).isEqualTo(2)
         assertThat(bf[0]).isEqualTo(false)
@@ -77,7 +87,7 @@ class BitFieldTest {
 
     @Test
     fun set() {
-        val bf = mutableBitFieldOf()
+        val bf = bitFieldOf()
         bf[500] = true
         assertThat(bf[499]).isEqualTo(false)
         assertThat(bf[500]).isEqualTo(true)
@@ -88,7 +98,7 @@ class BitFieldTest {
 
     @Test
     fun set2() {
-        val bf = mutableBitFieldOf()
+        val bf = bitFieldOf()
         bf[0] = true
         assertThat(bf.size).isEqualTo(1)
         assertThat(bf[0]).isEqualTo(true)
@@ -98,7 +108,7 @@ class BitFieldTest {
 
     @Test
     fun set3() {
-        val bf = mutableBitFieldOf()
+        val bf = bitFieldOf()
         bf[999] = true
         assertThat(bf.size).isEqualTo(1000)
         assertThat(bf[998]).isEqualTo(false)
@@ -108,7 +118,7 @@ class BitFieldTest {
 
     @Test
     fun set3000() {
-        val bf = mutableBitFieldOf()
+        val bf = bitFieldOf()
         bf[3000] = true
         assertThat(bf.size).isEqualTo(3001)
         assertThat(bf.segments.count()).isEqualTo(2)
@@ -116,7 +126,7 @@ class BitFieldTest {
 
     @Test
     fun adjacent() {
-        val bf = mutableBitFieldOf()
+        val bf = bitFieldOf()
         bf[0] = true
         bf[1] = true
         assertThat(bf.size).isEqualTo(2)
@@ -125,7 +135,7 @@ class BitFieldTest {
 
     @Test
     fun reset() {
-        val bf = mutableBitFieldOf()
+        val bf = bitFieldOf()
         bf[0] = true
         bf[0] = false
         assertThat(bf[0]).isFalse()
@@ -135,15 +145,15 @@ class BitFieldTest {
 
     @Test
     fun repro() {
-        val bf = mutableBitFieldOf()
+        val bf = bitFieldOf()
         bf[3] = true
         bf[4] = false
     }
 
     @Test
     fun minus1() {
-        val bf1 = mutableBitFieldOf(0..100 to true)
-        val bf2 = mutableBitFieldOf(50..100 to true)
+        val bf1 = bitFieldOf(0..100 to true)
+        val bf2 = bitFieldOf(50..100 to true)
         val result = bf1 minus bf2
         assertThat(result[49]).isTrue()
         assertThat(result[50]).isFalse()
@@ -152,8 +162,8 @@ class BitFieldTest {
 
     @Test
     fun minus2() {
-        val bf1 = mutableBitFieldOf(0..100 to true)
-        val bf2 = mutableBitFieldOf()
+        val bf1 = bitFieldOf(0..100 to true)
+        val bf2 = bitFieldOf()
         val result = bf1 minus bf2
         assertThat(result[49]).isTrue()
         assertThat(result[50]).isTrue()
@@ -169,17 +179,29 @@ class BitFieldTest {
     }
 
     @Test
+    fun repro3() {
+        val v = BitField(init = "1-1+1-2+", sizeField = 5)
+        v[3] = false
+        assertThat(v[3]).isEqualTo(false)
+    }
+
+    @Test
     fun several() {
-        val v = mutableBitFieldOf()
+        val v = bitFieldOf()
         for (a in 0..1) {
+            println("v[0]=${a == 1}")
             v[0] = a == 1
             for (b in 0..1) {
+                println("v[1]=${b == 1}")
                 v[1] = b == 1
                 for (c in 0..1) {
+                    println("v[2]=${c == 1}")
                     v[2] = c == 1
                     for (d in 0..1) {
+                        println("v[3]=${d == 1}")
                         v[3] = d == 1
                         for (e in 0..1) {
+                            println("v[4]=${e == 1}")
                             v[4] = e == 1
                             assertThat(v[4]).isEqualTo(e == 1)
                         }
