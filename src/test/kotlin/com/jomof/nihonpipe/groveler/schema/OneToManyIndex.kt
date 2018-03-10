@@ -46,6 +46,12 @@ fun FluentIndices<BitField, OneIndexToManyIndex>.keepOnlyRowsContaining(
     return FluentIndices(subtracted, filterTable, table)
 }
 
+fun FluentIndices<BitField, OneIndexToManyIndex>.keepOnlyRowsContaining(
+        other: BitField): FluentIndices<BitField, OneIndexToManyIndex> {
+    val subtracted = filter and other
+    return FluentIndices(subtracted, filterTable, table)
+}
+
 inline fun <reified T> FluentIndices<BitField, OneIndexToManyIndex>.keepInstances(db: Store) = map { (row, indices) ->
     Row(row, db[indices]
             .filterIsInstance<T>()

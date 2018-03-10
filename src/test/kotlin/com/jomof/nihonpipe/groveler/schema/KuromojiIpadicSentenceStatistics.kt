@@ -11,4 +11,6 @@ data class KuromojiIpadicSentenceStatistics(
         val optCoreNewOptVocIndex: Statistics,
         val optCoreOptVocIndex: Statistics,
         val optCoreOptSenIndex: Statistics,
-        val optCoreJlpt: Statistics) : Indexed, Serializable
+        val optCoreJlpt: Statistics,
+        val waniKaniVsJlptWaniKaniLevel: Statistics,
+        val waniKaniVsJlptJlptLevel: Statistics) : Indexed, Serializable

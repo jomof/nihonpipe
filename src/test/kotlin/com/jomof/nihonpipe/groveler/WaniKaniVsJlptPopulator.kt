@@ -1,9 +1,8 @@
 package com.jomof.nihonpipe.groveler
 
-import com.jomof.nihonpipe.groveler.schema.Jlpt
+import com.jomof.nihonpipe.groveler.bitfield.BitField
+import com.jomof.nihonpipe.groveler.schema.*
 import com.jomof.nihonpipe.groveler.schema.Jlpt.*
-import com.jomof.nihonpipe.groveler.schema.Store
-import com.jomof.nihonpipe.groveler.schema.WaniKaniVsJlptVocab
 import java.io.File
 
 
@@ -42,4 +41,33 @@ fun translateWaniKaniVsJLPT(store: Store) {
     map.values.forEach { vocab ->
         store.add(vocab)
     }
+}
+
+fun populateWaniKaniSentencesLevels(db: Store) {
+    if (db.levels.containsKey(LevelType.WANIKANI_LEVEL)) {
+        return
+    }
+    val waniKaniLevelToSentence = mutableMapOf<Int, BitField>()
+    var index = 0
+    db.sentenceIndexToIndex
+            .toSequence()
+            .keepOnlyRowsContaining(db.kuromojiIpadicSentenceStatistics)
+            .keepInstances<KuromojiIpadicSentenceStatistics>(db)
+            .indexInto(waniKaniLevelToSentence) { row ->
+                row.waniKaniVsJlptWaniKaniLevel.max
+            }
+            .onEach {
+                if (index++ % 1000 == 0) println("$index")
+            }
+            .count()
+    db.set(LevelType.WANIKANI_LEVEL, LevelInfo(waniKaniLevelToSentence
+            .toList()
+            .sortedBy { (level, _) -> level }
+            .map { (level, bitfield) ->
+                Level(
+                        level,
+                        listOf(LevelElement(level, "wanikani level $level", bitfield)))
+            }))
+    println("$waniKaniLevelToSentence")
+
 }

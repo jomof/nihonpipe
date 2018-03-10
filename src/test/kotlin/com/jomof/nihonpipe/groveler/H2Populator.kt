@@ -25,9 +25,10 @@ class H2Populator {
 
         // Slow or incremental population steps
         var db = Store(dataDatabaseBin)
-        populateKuromojiBatch(db, 1_000)
+        populateKuromojiBatch(db, 100_000)
         populateKuromojiTokenSentenceStatistics(db)
         populateKuromojiTokenSentenceStructure(db)
+        populateWaniKaniSentencesLevels(db)
         println("kuromoji size = ${db.kuromojiIpadicTokenization.count()}")
         println("tanaka corpus size = ${db.tanakaCorpusSentence.count()}")
         println("sentence index size = ${db.sentenceIndexToIndex.count()}")
@@ -58,6 +59,7 @@ class H2Populator {
             val primary = 192
             val foreign = 193
             foreignTable[foreign] = TestClass("bob")
+            manyToOne.add(primary, foreign)
             manyToOne.add(primary, foreign, foreignTable)
             store.close()
         }

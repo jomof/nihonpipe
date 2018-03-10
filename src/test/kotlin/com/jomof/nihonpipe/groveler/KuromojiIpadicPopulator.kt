@@ -67,28 +67,25 @@ fun populateKuromojiBatch(db: Store, millis: Int) {
     println("before=$before after=$after")
 }
 
-fun getKuromojiTokenizationWithout(db: Store, table: IndexedTable<*>) =
-        db.sentenceIndexToIndex
-                .toSequence()
-                .removeRowsContaining(table)
-                .keepOnlyRowsContaining(db.kuromojiIpadicTokenization)
-                .keepInstances<KuromojiIpadicTokenization>(db)
-                .map { (row, indices) -> Row(row, indices.tokens) }
-                .map { (row, tokens) ->
-                    Row(row, tokens
-                            .map { token -> Pair(token, db.vocabToIndex[token.baseForm]) }
-                            .filter { (token, vocab) -> vocab != null })
-                }.filter { (_, tokens) ->
-                    tokens.isNotEmpty()
-                }.map { (row, tokens) ->
-                    Row(row, tokens
-                            .map { (kuromoji, vocab) ->
-                                Pair(kuromoji, db[vocab!!])
-                            })
-                }
-
 fun populateKuromojiTokenSentenceStatistics(db: Store) {
-    getKuromojiTokenizationWithout(db, db.kuromojiIpadicSentenceStatistics)
+    db.sentenceIndexToIndex
+            .toSequence()
+            .removeRowsContaining(db.kuromojiIpadicSentenceStatistics)
+            .keepOnlyRowsContaining(db.kuromojiIpadicTokenization)
+            .keepInstances<KuromojiIpadicTokenization>(db)
+            .map { (row, indices) -> Row(row, indices.tokens) }
+            .map { (row, tokens) ->
+                Row(row, tokens
+                        .map { token -> Pair(token, db.vocabToIndex[token.baseForm]) }
+                        .filter { (token, vocab) -> vocab != null })
+            }.filter { (_, tokens) ->
+                tokens.isNotEmpty()
+            }.map { (row, tokens) ->
+                Row(row, tokens
+                        .map { (kuromoji, vocab) ->
+                            Pair(kuromoji, db[vocab!!])
+                        })
+            }
             .map { (row, tokens) ->
                 var waniKaniLevel = Statistics()
                 var jishoJlpt = Statistics()
@@ -129,15 +126,17 @@ fun populateKuromojiTokenSentenceStatistics(db: Store) {
 
                 }
                 Row(row, KuromojiIpadicSentenceStatistics(
-                        waniKaniLevel,
-                        jishoJlpt,
-                        optCore,
-                        optCoreVocabKoIndex,
-                        optCoreSentKoIndex,
-                        optCoreNewOptVocIndex,
-                        optCoreOptVocIndex,
-                        optCoreOptSenIndex,
-                        optCoreJlpt))
+                        waniKaniLevel = waniKaniLevel,
+                        jishoJlpt = jishoJlpt,
+                        optCore = optCore,
+                        optCoreVocabKoIndex = optCoreVocabKoIndex,
+                        optCoreSentKoIndex = optCoreSentKoIndex,
+                        optCoreNewOptVocIndex = optCoreNewOptVocIndex,
+                        optCoreOptVocIndex = optCoreOptVocIndex,
+                        optCoreOptSenIndex = optCoreOptSenIndex,
+                        optCoreJlpt = optCoreJlpt,
+                        waniKaniVsJlptWaniKaniLevel = waniKaniVsJlptWaniKaniLevel,
+                        waniKaniVsJlptJlptLevel = waniKaniVsJlptJlptLevel))
             }.forEach { (row, statistics) ->
                 db.add(row, statistics)
             }

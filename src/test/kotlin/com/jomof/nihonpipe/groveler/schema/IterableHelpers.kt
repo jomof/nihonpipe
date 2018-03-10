@@ -12,9 +12,9 @@ fun <T> Sequence<T>.takeOnly(): T {
     return result[0]
 }
 
-internal fun <T> Sequence<Row<T>>.indexInto(
-        map: MutableMap<String, BitField>,
-        action: (T) -> String): Sequence<Row<T>> {
+internal fun <K, T> Sequence<Row<T>>.indexInto(
+        map: MutableMap<K, BitField>,
+        action: (T) -> K): Sequence<Row<T>> {
     return onEach { (row, value) ->
         val key = action(value)
         val bitField = map[key] ?: bitFieldOf()

@@ -17,7 +17,10 @@ enum class LevelType {
      * Grammar element level reduces sentences to a set of grammar pieces (like suru
      * verb), then sorts the from most frequent to least.
      */
-    GRAMMAR_ELEMENT
+    GRAMMAR_ELEMENT,
+
+
+    WANIKANI_LEVEL
 }
 
 /**
