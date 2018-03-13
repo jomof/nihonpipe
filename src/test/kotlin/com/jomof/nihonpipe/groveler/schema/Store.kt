@@ -1,7 +1,6 @@
 package com.jomof.nihonpipe.groveler.schema
 
-import com.jomof.nihonpipe.groveler.bitfield.BitField
-import com.jomof.nihonpipe.groveler.bitfield.toSetBitIndices
+import com.jomof.intset.IntSet
 import org.h2.mvstore.MVStore
 import java.io.File
 import kotlin.reflect.KClass
@@ -24,9 +23,9 @@ class Store(file: File) {
     private val levelsTable = levelsDb.openMap<LevelType, LevelInfo>("sentence-index-levels")!!
     private var nextIndex = nextIndexTable[NEXT_INDEX] ?: 0
     private val filterTable = FilterTable(
-            db.openMap<String, BitField>("filters"))
+            db.openMap<String, IntSet>("filters"))
     private val vocabToIndexTable = oneToManyOf<String>(VOCAB_TO_INDEX)
-    private val kuromojiStructureToIndexTable = oneToManyOf<String>(KUROMOJI_STRUCTURE_TO_INDEX)
+    //private val kuromojiStructureToIndexTable = oneToManyOf<String>(KUROMOJI_STRUCTURE_TO_INDEX)
     private val sentenceIndexToIndexTable = oneIndexToManyOf(SENTENCE_INDEX_TO_INDEX)
     private val jishoVocabTable = tableOf(JishoVocab::class)
     private val optimizedCoreVocabTable = tableOf(OptimizedKoreVocab::class)
@@ -40,7 +39,6 @@ class Store(file: File) {
     val kuromojiIpadicTokenization: IndexedTable<KuromojiIpadicTokenization> = kuromojiIpadicTokenizationTable
     val kuromojiIpadicSentenceStatistics: IndexedTable<KuromojiIpadicSentenceStatistics> = kuromojiIpadicSentenceStatisticsTable
     val vocabToIndex: OneToManyIndex<String> = vocabToIndexTable
-    val kuromojiStructureToIndex: OneToManyIndex<String> = kuromojiStructureToIndexTable
     val levels: Map<LevelType, LevelInfo> = levelsTable
 
     private val indexedTables = arrayOf(
@@ -63,8 +61,7 @@ class Store(file: File) {
         throw RuntimeException()
     }
 
-    operator fun get(indices: BitField) = indices
-                    .toSetBitIndices()
+    fun getIndexed(indices: IntSet): List<Indexed> = indices
                     .map { get(it) }
 
     fun add(vocab: JishoVocab) {

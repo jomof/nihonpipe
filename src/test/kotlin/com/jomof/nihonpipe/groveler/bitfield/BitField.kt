@@ -95,7 +95,7 @@ infix fun BitField.minus(bitField: BitField): BitField {
     return result.toBitField()
 }
 
-fun BitField.toSetBitIndices(): Sequence<Int> = buildSequence {
+fun BitField.ones(): Sequence<Int> = buildSequence {
     for ((range, set) in segments) {
         if (set) {
             for (index in range) {

@@ -1,6 +1,6 @@
 package com.jomof.nihonpipe.groveler
 
-import com.jomof.nihonpipe.groveler.bitfield.BitField
+import com.jomof.intset.IntSet
 import com.jomof.nihonpipe.groveler.schema.*
 import com.jomof.nihonpipe.groveler.schema.Jlpt.*
 import java.io.File
@@ -47,7 +47,7 @@ fun populateWaniKaniSentencesLevels(db: Store) {
     if (db.levels.containsKey(LevelType.WANIKANI_LEVEL)) {
         return
     }
-    val waniKaniLevelToSentence = mutableMapOf<Int, BitField>()
+    val waniKaniLevelToSentence = mutableMapOf<Int, IntSet>()
     var index = 0
     db.sentenceIndexToIndex
             .toSequence()

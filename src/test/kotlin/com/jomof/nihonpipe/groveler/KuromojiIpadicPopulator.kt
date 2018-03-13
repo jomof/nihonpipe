@@ -1,8 +1,7 @@
 package com.jomof.nihonpipe.groveler
 
 import com.atilika.kuromoji.ipadic.Tokenizer
-import com.jomof.nihonpipe.groveler.bitfield.BitField
-import com.jomof.nihonpipe.groveler.bitfield.toSetBitIndices
+import com.jomof.intset.IntSet
 import com.jomof.nihonpipe.groveler.schema.*
 import org.h2.mvstore.MVStore
 
@@ -54,9 +53,9 @@ fun populateKuromojiBatch(db: Store, millis: Int) {
                 ++after
             }
             .map { (row, indices) ->
-                Row(row, db[indices]
+                Row(row, db.getIndexed(indices)
                         .filterIsInstance<TanakaCorpusSentence>()
-                        .takeOnly())
+                        .single())
             }.map { (row, tanaka) ->
                 Row(row, kuromoji(tanaka.japanese.replace(" ", "")))
             }
@@ -77,13 +76,13 @@ fun populateKuromojiTokenSentenceStatistics(db: Store) {
             .map { (row, tokens) ->
                 Row(row, tokens
                         .map { token -> Pair(token, db.vocabToIndex[token.baseForm]) }
-                        .filter { (token, vocab) -> vocab != null })
+                        .filter { (_, vocab) -> vocab != null })
             }.filter { (_, tokens) ->
                 tokens.isNotEmpty()
             }.map { (row, tokens) ->
                 Row(row, tokens
                         .map { (kuromoji, vocab) ->
-                            Pair(kuromoji, db[vocab!!])
+                            Pair(kuromoji, db.getIndexed(vocab!!))
                         })
             }
             .map { (row, tokens) ->
@@ -98,7 +97,7 @@ fun populateKuromojiTokenSentenceStatistics(db: Store) {
                 var optCoreJlpt = Statistics()
                 var waniKaniVsJlptWaniKaniLevel = Statistics()
                 var waniKaniVsJlptJlptLevel = Statistics()
-                tokens.forEach { (kuromoji, vocabs) ->
+                tokens.forEach { (_, vocabs) ->
                     vocabs.forEach { vocab ->
                         when (vocab) {
                             is WaniKaniVocab -> {
@@ -147,8 +146,8 @@ fun populateKuromojiTokenSentenceStructure(db: Store) {
     if (db.levels.containsKey(LevelType.SENTENCE_SKELETON)) {
         return
     }
-    val skeletonToSentence = mutableMapOf<String, BitField>()
-    val grammarElementToSentence = mutableMapOf<String, BitField>()
+    val skeletonToSentence = mutableMapOf<String, IntSet>()
+    val grammarElementToSentence = mutableMapOf<String, IntSet>()
 
     db.sentenceIndexToIndex
             .toSequence()
@@ -160,8 +159,8 @@ fun populateKuromojiTokenSentenceStructure(db: Store) {
 
     db.set(LevelType.GRAMMAR_ELEMENT, LevelInfo(grammarElementToSentence
             .toList()
-            .sortedWith(compareByDescending<Pair<String, BitField>>
-            { it.second.toSetBitIndices().count() }
+            .sortedWith(compareByDescending<Pair<String, IntSet>>
+            { it.second.size }
                     .thenBy { it.first.length })
             .chunked(2)
             .take(60)
@@ -179,8 +178,8 @@ fun populateKuromojiTokenSentenceStructure(db: Store) {
 
     db.set(LevelType.SENTENCE_SKELETON, LevelInfo(skeletonToSentence
             .toList()
-            .sortedWith(compareByDescending<Pair<String, BitField>>
-            { it.second.toSetBitIndices().count() }
+            .sortedWith(compareByDescending<Pair<String, IntSet>>
+            { it.second.size }
                     .thenBy { it.first.length })
             .chunked(6)
             .take(60)

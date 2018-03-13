@@ -1,6 +1,6 @@
 package com.jomof.nihonpipe.groveler.schema
 
-import com.jomof.nihonpipe.groveler.bitfield.BitField
+import com.jomof.intset.IntSet
 import java.io.Serializable
 
 /**
@@ -30,7 +30,7 @@ enum class LevelType {
 data class LevelElement(
         val level: Int,
         val key: String,
-        val sentenceIndex: BitField) : Serializable
+        val sentenceIndex: IntSet) : Serializable
 
 /**
  * A single level containing several level elements (for example, sentence skeletons

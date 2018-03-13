@@ -1,27 +1,31 @@
 package com.jomof.nihonpipe.groveler.schema
 
-import com.jomof.nihonpipe.groveler.bitfield.BitField
-import com.jomof.nihonpipe.groveler.bitfield.toSetBitIndices
+import com.jomof.intset.IntSet
 import org.h2.mvstore.MVMap
 
 data class Row<out V>(val index: Int, val value: V)
 
 class FluentIndices<V, out T : IndexedTable<V>>(
-        val filter: BitField,
+        val filter: IntSet,
         val filterTable: FilterTable,
         val table: T) : Sequence<Row<V>> {
     override fun iterator(): Iterator<Row<V>> = filter
-            .toSetBitIndices()
-            .map { index -> Row(index, table[index]!!) }
+            .map { index ->
+                val result = table[index]
+                if (result == null) {
+                    throw RuntimeException()
+                }
+                Row(index, result)
+            }
             .iterator()
 }
 
 fun <V : Indexed, T : IndexedTable<V>> FluentIndices<V, T>.count() =
-        filter.toSetBitIndices().count()
+        filter.size
 
 interface IndexedTable<V> : Map<Int, V> {
     fun toSequence(): FluentIndices<V, IndexedTable<V>>
-    val contains: BitField
+    val contains: IntSet
     val name: String
 }
 
@@ -29,7 +33,7 @@ class MutableIndexedTable<T : Indexed>(
         private val filterTable: FilterTable,
         private val table: MVMap<Int, T>) : IndexedTable<T> {
 
-    override val contains: BitField
+    override val contains: IntSet
         get() = filterTable.tableContainsBitField(this)
     override val name = table.name!!
 

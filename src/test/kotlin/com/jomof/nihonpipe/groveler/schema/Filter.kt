@@ -1,6 +1,6 @@
 package com.jomof.nihonpipe.groveler.schema
 
-import com.jomof.nihonpipe.groveler.bitfield.BitField
+import com.jomof.intset.IntSet
 import java.io.Serializable
 
-data class Filter(val bitfield: BitField) : Indexed, Serializable
+data class Filter(val bitfield: IntSet) : Indexed, Serializable

@@ -1,7 +1,5 @@
 package com.jomof.nihonpipe.groveler
 
-import com.jomof.nihonpipe.groveler.bitfield.and
-import com.jomof.nihonpipe.groveler.bitfield.toSetBitIndices
 import com.jomof.nihonpipe.groveler.schema.LevelType
 import com.jomof.nihonpipe.groveler.schema.Store
 import org.junit.Test
@@ -28,30 +26,18 @@ class GamePlay {
         val skeletonBitField = skeletonLevelInfo.sentencesByLevel[0].levelElements[0].sentenceIndex
         val grammarBitField = grammarLevelInfo.sentencesByLevel[0].levelElements[0].sentenceIndex
         val waniKaniBitField = waniKaniLevelInfo.sentencesByLevel[0].levelElements[0].sentenceIndex
-        val intersect = skeletonBitField and grammarBitField
-        println("skeleton = ${skeletonBitField.toSetBitIndices().count()}")
-        println("grammarBitField = ${grammarBitField.toSetBitIndices().count()}")
-        println("waniKaniBitField = ${waniKaniBitField.toSetBitIndices().count()}")
-        println("common = ${intersect.toSetBitIndices().count()}")
+        val intersect = skeletonBitField intersect grammarBitField
+        println("skeleton = ${skeletonBitField.size}")
+        println("grammarBitField = ${grammarBitField.size}")
+        println("waniKaniBitField = ${waniKaniBitField.size}")
+        println("common = ${intersect.size}")
 
         waniKaniLevelInfo.sentencesByLevel
 //                .filter { (level, list) ->  (list[0].sentenceIndex and intersect).size > 0 }
 //                .take(1)
                 .onEach {
-                    println("${it.level} = ${it.levelElements[0].sentenceIndex.toSetBitIndices().count()}")
+                    println("${it.level} = ${it.levelElements[0].sentenceIndex.size}")
                 }
         db.close()
-
-//        db.sentenceIndexToIndex
-//                .toSequence()
-//                .keepOnlyRowsContaining(intersect)
-//                .keepInstances<TanakaCorpusSentence>(db)
-//                .onEach { (row, sentence) ->
-//                    println("${sentence.japanese} ${sentence.english}")
-//                }
-//                .count()
-
-
     }
-
 }
