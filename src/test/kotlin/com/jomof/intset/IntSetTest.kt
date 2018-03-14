@@ -9,6 +9,13 @@ import java.util.*
 class IntSetTest {
 
     @Test
+    fun insertZero() {
+        val set = intSetOf()
+        set.add(0)
+        assertThat(set.size).isEqualTo(1)
+    }
+
+    @Test
     fun iterate2() {
         val set = intSetOf(63)
         val list = set.toList()

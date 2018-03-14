@@ -13,4 +13,4 @@ data class OptimizedKoreVocab(
         val vocab: String,
         val kana: String,
         val english: String,
-        val pos: String) : Serializable, Indexed
+        val pos: String) : Serializable

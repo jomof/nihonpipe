@@ -23,18 +23,18 @@ fun createPairNode(first: Node, second: Node): Node {
                     left.elements + right.elements)
         }
         return if (left is AllSetNode && right is LongPageNode) {
-            PairNode(1, left, right)
+            PairNode(left, right)
         } else if (left is AllSetNode && right is AllSetNode) {
             AllSetNode(PageRange(
                     left.pageRange.first,
                     right.pageRange.last))
         } else if (left is PairNode && right is PairNode) {
-            PairNode(1, left, right)
+            PairNode(left, right)
         } else if (left.javaClass == right.javaClass) {
             throw RuntimeException()
         } else {
-            PairNode(1, left, right)
+            PairNode(left, right)
         }
     }
-    return PairNode(1, left, right)
+    return PairNode(left, right)
 }

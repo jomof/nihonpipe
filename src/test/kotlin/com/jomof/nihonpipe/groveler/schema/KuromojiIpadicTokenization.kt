@@ -26,28 +26,18 @@ fun KuromojiIpadicTokenization.grammarSummaryForm(): Set<String> {
 }
 
 fun KuromojiIpadicTokenization.particleSkeletonForm(): String {
-    var lastWasX = false
     return tokens.joinToString("") { token ->
         when {
             token.partOfSpeechLevel1.contains("助詞") -> {
-                lastWasX = false
                 token.surface
             }
             token.partOfSpeechLevel1.contains("動詞") -> {
-                lastWasX = false
                 token.surface
             }
             token.partOfSpeechLevel1.contains("記号") -> {
-                lastWasX = false
                 token.surface
             }
-            else -> when (lastWasX) {
-                true -> ""
-                else -> {
-                    lastWasX = false
-                    "x"
-                }
-            }
+            else -> "x"
         }
     }
 }

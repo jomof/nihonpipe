@@ -45,13 +45,9 @@ class IntSet(
         return copy
     }
 
-    fun maxDepth(): Int {
-        return top.maxDepth()
-    }
-
-    fun pageCount(): Int {
-        return top.pageCount()
-    }
+    fun maxDepth() = top.maxDepth()
+    fun pageCount() = top.pageCount()
+    fun serializationSize() = top.serializationSize()
 
     override fun addAll(elements: Collection<Int>) = TODO("not implemented")
     override fun iterator() = IntSetMutableIterator(this)

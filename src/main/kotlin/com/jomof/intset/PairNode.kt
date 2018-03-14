@@ -5,7 +5,6 @@ import java.io.ObjectOutput
 import kotlin.coroutines.experimental.buildSequence
 
 class PairNode(
-        i: Int,
         first: Node,
         second: Node) : Node {
     var left: Node

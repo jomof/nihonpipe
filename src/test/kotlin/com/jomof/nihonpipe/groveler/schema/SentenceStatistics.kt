@@ -2,7 +2,7 @@ package com.jomof.nihonpipe.groveler.schema
 
 import java.io.Serializable
 
-data class KuromojiIpadicSentenceStatistics(
+data class SentenceStatistics(
         val waniKaniLevel: Statistics,
         val jishoJlpt: Statistics,
         val optCore: Statistics,
@@ -13,4 +13,4 @@ data class KuromojiIpadicSentenceStatistics(
         val optCoreOptSenIndex: Statistics,
         val optCoreJlpt: Statistics,
         val waniKaniVsJlptWaniKaniLevel: Statistics,
-        val waniKaniVsJlptJlptLevel: Statistics) : Indexed, Serializable
+        val waniKaniVsJlptJlptLevel: Statistics) : Serializable

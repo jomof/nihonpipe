@@ -9,4 +9,4 @@ data class WaniKaniVsJlptVocab(
         val jlptLevel: Jlpt,
         val sense1: String,
         val sense2: String,
-        val sense3: String) : Indexed, Serializable
+        val sense3: String) : Serializable

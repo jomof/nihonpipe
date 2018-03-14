@@ -6,4 +6,4 @@ data class WaniKaniVocab(
         val vocab: String,
         val kana: String,
         val meaning: String,
-        val level: Int) : Serializable, Indexed
+        val level: Int) : Serializable

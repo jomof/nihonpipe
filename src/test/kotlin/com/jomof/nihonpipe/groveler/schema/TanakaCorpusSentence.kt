@@ -7,4 +7,4 @@ data class TanakaCorpusSentence(
         val code: String,
         val tid: String,
         val english: String,
-        val filename: String) : Serializable, Indexed
+        val filename: String) : Serializable
