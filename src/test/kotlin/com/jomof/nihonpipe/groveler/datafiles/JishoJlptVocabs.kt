@@ -3,7 +3,7 @@ package com.jomof.nihonpipe.groveler.datafiles
 import com.jomof.nihonpipe.groveler.*
 import com.jomof.nihonpipe.groveler.schema.JishoVocab
 import com.jomof.nihonpipe.groveler.schema.Jlpt
-import com.jomof.nihonpipe.groveler.schema.jlptToInt
+import com.jomof.nihonpipe.groveler.schema.Jlpt.*
 import org.h2.mvstore.MVStore
 import java.io.File
 
@@ -26,7 +26,7 @@ class JishoJlptVocabs private constructor(
 
     private fun translateJishoJLPT(
             file: File,
-            level: Int,
+            level: Jlpt,
             map: MutableMap<String, List<String>>) {
         val lines = file.readLines()
         for (n in 1 until lines.size) {
@@ -38,17 +38,17 @@ class JishoJlptVocabs private constructor(
             val kana = fields[1]
             val jlpt = "JLPT$level"
             val english = fields[3]
-            map[english] = listOf(vocab, kana, jlpt)
+            map[english] = listOf(vocab, kana, level.name)
         }
     }
 
     private fun translateJishoJLPT() {
         val map = mutableMapOf<String, List<String>>()
-        translateJishoJLPT(jishoJLPT5, jlptToInt("jlpt5"), map)
-        translateJishoJLPT(jishoJLPT4, jlptToInt("jlpt4"), map)
-        translateJishoJLPT(jishoJLPT3, jlptToInt("jlpt3"), map)
-        translateJishoJLPT(jishoJLPT2, jlptToInt("jlpt2"), map)
-        translateJishoJLPT(jishoJLPT1, jlptToInt("jlpt1"), map)
+        translateJishoJLPT(jishoJLPT5, JLPT5, map)
+        translateJishoJLPT(jishoJLPT4, JLPT4, map)
+        translateJishoJLPT(jishoJLPT3, JLPT3, map)
+        translateJishoJLPT(jishoJLPT2, JLPT2, map)
+        translateJishoJLPT(jishoJLPT1, JLPT1, map)
 
         map.map { (english, values) ->
             listOf(values[0], values[1], values[2], english)
