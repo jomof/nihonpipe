@@ -60,6 +60,13 @@ class H2Populator {
 
     @Test
     fun wanikaniLevelFilter() {
-        WanikaniLevelFilter.filterOf
+        WanikaniLevelFilter.filterOf.levels
+                .toList()
+                .sortedByDescending { (_, filter) ->
+                    filter.size
+                }
+                .forEach { (level, filter) ->
+                    println("$level = ${filter.size}")
+                }
     }
 }

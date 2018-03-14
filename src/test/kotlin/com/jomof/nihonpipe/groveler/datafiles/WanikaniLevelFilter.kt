@@ -14,6 +14,8 @@ class WanikaniLevelFilter {
     private val wanikaniLevels = db.openMap<Int, Set<Int>>(
             "WanikaniSummaryFilter")
 
+    val levels: Map<Int, Set<Int>> = wanikaniLevels
+
     init {
         if (wanikaniLevels.isEmpty()) {
             val tanaka = TanakaCorpusSentences.tanaka
