@@ -1,11 +1,11 @@
 package com.jomof.intset
 
 class IntSetMutableIterator(intSet: IntSet) : MutableIterator<Int> {
-    var offset = 0
+    private var offset = 0
     var page = 0
     var elements = 0L
-    var pages = intSet.pages().iterator()
-    var lastHasNext: Boolean? = null
+    private var pages = intSet.pages().iterator()
+    private var lastHasNext: Boolean? = null
 
     override fun hasNext(): Boolean {
         if (lastHasNext != null) {
