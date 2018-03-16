@@ -1,5 +1,6 @@
 package com.jomof.nihonpipe.groveler.datafiles
 
+import com.jomof.intset.IntSet
 import com.jomof.intset.intSetOf
 import com.jomof.nihonpipe.groveler.schema.particleSkeletonForm
 import com.jomof.nihonpipe.groveler.sentenceSkeletonFilter
@@ -10,14 +11,16 @@ class SentenceSkeletonFilter {
             .fileName(sentenceSkeletonFilter.absolutePath)
             .compress()
             .open()!!
-    private val skeletonFilter = db.openMap<String, Set<Int>>(
+    private val skeletonFilter = db.openMap<String, IntSet>(
             "SkeletonFilter")
+
+    val skeletons: Map<String, IntSet> = skeletonFilter
 
     init {
         if (skeletonFilter.isEmpty()) {
-            val tanaka = TanakaCorpusSentences.tanaka
+            val tanaka = TranslatedSentences.tanaka
             val tokenize = KuromojiIpadicCache.tokenize
-            val map = mutableMapOf<String, MutableSet<Int>>()
+            val map = mutableMapOf<String, IntSet>()
             for ((index, sentence) in tanaka.sentences) {
                 val tokenization = tokenize(sentence.japanese)
                 val skeleton = tokenization.particleSkeletonForm()
@@ -32,7 +35,7 @@ class SentenceSkeletonFilter {
 
             db.compactRewriteFully()
             save()
-            TanakaCorpusSentences.save()
+            TranslatedSentences.save()
             KuromojiIpadicCache.save()
         }
     }

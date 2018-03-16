@@ -17,6 +17,8 @@ class WanikaniVsJlptVocabs private constructor(
     private val wanikaniVsJlpt = db.openMap<String, WaniKaniVsJlptVocab>(
             "WanikaniVsJlptVocabs")
 
+    val vocabs: Map<String, WaniKaniVsJlptVocab> = wanikaniVsJlpt
+
     operator fun invoke(vocab: String) = wanikaniVsJlpt[vocab]
 
     init {

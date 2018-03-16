@@ -15,15 +15,20 @@ class KuromojiIpadicCache private constructor(
     private val kuromojiCache = db.openMap<String, KuromojiIpadicTokenization>(
             "KuromojiIpadic")
 
-    private fun tokenize(sentence: String): KuromojiIpadicTokenization {
-        val cleaned = sentence.replace(" ", "")
+    fun contains(japanese: String): Boolean {
+        val cleaned = japanese.replace(" ", "")
+        return kuromojiCache.contains(cleaned)
+    }
+
+    private fun tokenize(japanese: String): KuromojiIpadicTokenization {
+        val cleaned = japanese.replace(" ", "")
         val lookup = kuromojiCache[cleaned]
         if (lookup != null) {
             return lookup
         }
         kuromojiCache[cleaned] =
                 KuromojiIpadicTokenization(Tokenizer()
-                        .tokenize(sentence)
+                        .tokenize(japanese)
                         .map { token ->
                             KuromojiIpadicToken(
                                     surface = token.surface,
@@ -37,7 +42,7 @@ class KuromojiIpadicCache private constructor(
                                     pronunciation = token.pronunciation!!,
                                     reading = token.reading!!)
                         })
-        return tokenize(sentence)
+        return tokenize(japanese)
     }
 
     operator fun invoke(sentence: String) = tokenize(sentence)

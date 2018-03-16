@@ -23,7 +23,7 @@ class H2Populator {
 
     @Test
     fun tanakaCorpus() {
-        TanakaCorpusSentences.tanaka
+        TranslatedSentences.tanaka
     }
 
     @Test
@@ -60,13 +60,62 @@ class H2Populator {
 
     @Test
     fun wanikaniLevelFilter() {
-        WanikaniLevelFilter.filterOf.levels
-                .toList()
-                .sortedByDescending { (_, filter) ->
-                    filter.size
-                }
-                .forEach { (level, filter) ->
-                    println("$level = ${filter.size}")
-                }
+        val sentencesOf = WanikaniLevelFilter.filterOf
+        sentencesOf(42)
+    }
+
+    @Test
+    fun vocabToSentenceFilter() {
+        val sentencesOf = VocabToSentenceFilter.sentencesOf
+        sentencesOf("友達")
+    }
+
+    @Test
+    fun sentenceSkeletonLevels() {
+        val skeletonLevels = SentenceSkeletonLevels()
+        skeletonLevels[5]
+    }
+
+    @Test
+    fun waniKaniVocabLevels() {
+        val levels = WanikaniVocabLevels()
+    }
+
+    @Test
+    fun brother() {
+        val tokenize = KuromojiIpadicCache.tokenize
+        val tokenization = tokenize("お兄さんの身長はいくつですか")
+        assertThat(tokenization.tokens).hasSize(8)
+        KuromojiIpadicCache.save()
+    }
+
+    @Test
+    fun oneigaishimas() {
+        val tokenize = KuromojiIpadicCache.tokenize
+        val tokenization = tokenize("フライトのリコンファームをお願いします")
+        assertThat(tokenization.tokens).hasSize(7)
+        KuromojiIpadicCache.save()
+    }
+
+    @Test
+    fun player() {
+        data class Score(
+                val correct: Short = 0,
+                val incorrect: Short = 0)
+
+        class LevelMap(
+                val currentLevel: Int = 0,
+                val levels: List<Map<String, Score>> = listOf())
+
+        data class Player(
+                val wanikaniScores: LevelMap = LevelMap(),
+                val sentenceSkeletonScores: LevelMap = LevelMap(),
+                val grammarSummaryScores: LevelMap = LevelMap())
+
+        val player = Player()
+        val skeletonLevels = SentenceSkeletonLevels()
+        val wanikaniVocabLevels = WanikaniVocabLevels()
+
+
     }
 }
