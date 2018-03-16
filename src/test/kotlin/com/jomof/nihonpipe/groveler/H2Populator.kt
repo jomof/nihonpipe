@@ -3,8 +3,10 @@ package com.jomof.nihonpipe.groveler
 import com.google.common.truth.Truth.assertThat
 import com.jomof.intset.IntSet
 import com.jomof.intset.intSetOf
+import com.jomof.nihonpipe.groveler.algorithm.getsert
 import com.jomof.nihonpipe.groveler.datafiles.*
 import org.junit.Test
+import kotlin.math.max
 
 class H2Populator {
 
@@ -107,30 +109,87 @@ class H2Populator {
         println("$level")
     }
 
-    enum class LadderKind {
-        WANIKANI_VOCAB_LADDER,
-        SENTENCE_SKELETON_LADDER,
-        GRAMMAR_SUMMARY_LADDER;
+    data class Score(
+            val correct: Int = 0,
+            val incorrect: Int = 0) {
+        fun value() = correct - max(incorrect, 0)
     }
+
+    enum class LadderKind(
+            val levelProvider: LevelProvider) {
+        WANIKANI_VOCAB_LADDER(WanikaniVocabLevels()),
+        SENTENCE_SKELETON_LADDER(SentenceSkeletonLevels()),
+        GRAMMAR_SUMMARY_LADDER(GrammarSummaryLevels());
+    }
+
+    enum class MezzoScore(
+            private val scoreRange: IntRange) {
+        APPRENTICE(0..5),
+        GURU(6..10),
+        MASTER(11..15),
+        ENLIGHTENED(16..20),
+        BURNED(21..Int.MAX_VALUE);
+
+        companion object {
+            fun fromScore(score: Score): MezzoScore {
+                for (mezzo in values()) {
+                    if (score.value() in mezzo.scoreRange) {
+                        return mezzo
+                    }
+                }
+                throw RuntimeException()
+            }
+        }
+    }
+
+    data class LevelMap(
+            val currentLevel: Int = 0,
+            val levels: List<Map<String, Score>> = listOf())
+
+    class GameConstants {
+        /**
+         * The minimum number of apprentice levels needed.
+         */
+        val minApprenticeLevels = 10
+    }
+
+    data class Player(
+            val sentencesStudying: IntSet = intSetOf(),
+            val ladders: MutableMap<LadderKind, LevelMap> = mutableMapOf()) {
+
+        fun levelMap(ladderKind: LadderKind) = ladders.getsert(ladderKind) {
+            LevelMap()
+        }
+
+        fun newSentencesNeeded() {
+            val apprenticeCounts = mutableMapOf<LadderKind, Int>()
+            for (ladderKind in LadderKind.values()) {
+                // Get a count of APPRENTICE item for each ladderKind
+                val levelMap = levelMap(ladderKind)
+                var apprenticeCount = 0
+                for (level in levelMap.levels) {
+                    for ((key, score) in level) {
+                        val mezzoLevel = MezzoScore.fromScore(score)
+                        if (mezzoLevel == MezzoScore.APPRENTICE) {
+                            ++apprenticeCount
+                        }
+                    }
+                }
+                apprenticeCounts[ladderKind] = apprenticeCount
+            }
+
+            // Now we have a count of how many apprentice items there are for each ladder.
+            // The number we *need* is (minApprenticeLevels - ladder apprentice levels)
+            // How do we choose new sentences?
+            // For each kind of ladder we look for sentences at the current level or lower
+            // that satisfy
+        }
+    }
+
 
     @Test
     fun player() {
-        data class Score(
-                val correct: Short = 0,
-                val incorrect: Short = 0)
-
-        class LevelMap(
-                val currentLevel: Int = 0,
-                val levels: List<Map<String, Score>> = listOf())
-
-        data class Player(
-                val sentencesStudying: IntSet = intSetOf(),
-                val ladders: Map<LadderKind, LevelMap> = mapOf())
-
         val player = Player()
-        val skeletonLevels = SentenceSkeletonLevels()
-        val wanikaniVocabLevels = WanikaniVocabLevels()
-
-
+        player.newSentencesNeeded()
     }
 }
