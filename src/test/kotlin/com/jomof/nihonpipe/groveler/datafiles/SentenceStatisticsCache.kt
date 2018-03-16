@@ -42,7 +42,6 @@ class SentenceStatisticsCache private constructor(
         kuromojiIpadicTokenization.tokens.forEach { token ->
             val wanikaniVsJlptVocab = wanikaniVsJlptVocabs(token.baseForm)
             val wanikaniVocab = wanikaniVocabs(token.baseForm)
-            val jishoJlptVocab = jishoJlptVocabs(token.baseForm)
 
             if (wanikaniVsJlptVocab != null) {
                 waniKaniVsJlptWaniKaniLevel += wanikaniVsJlptVocab.wanikaniLevel
@@ -90,7 +89,7 @@ class SentenceStatisticsCache private constructor(
                     return instance!!
                 }
                 instance = SentenceStatisticsCache()
-                return summarize
+                return instance!!
             }
 
         fun save() {

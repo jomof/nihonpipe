@@ -48,7 +48,7 @@ class SentenceSkeletonFilter {
                     return instance!!
                 }
                 instance = SentenceSkeletonFilter()
-                return filterOf
+                return instance!!
             }
 
         fun save() {

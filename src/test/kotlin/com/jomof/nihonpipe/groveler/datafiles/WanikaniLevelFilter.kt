@@ -55,7 +55,7 @@ class WanikaniLevelFilter {
                     return instance!!
                 }
                 instance = WanikaniLevelFilter()
-                return filterOf
+                return instance!!
             }
 
         fun save() {

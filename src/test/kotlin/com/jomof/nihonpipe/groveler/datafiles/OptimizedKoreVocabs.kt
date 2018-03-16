@@ -72,7 +72,7 @@ class OptimizedKoreVocabs private constructor(
                     return instance!!
                 }
                 instance = OptimizedKoreVocabs()
-                return vocabOf
+                return instance!!
             }
 
         fun save() {

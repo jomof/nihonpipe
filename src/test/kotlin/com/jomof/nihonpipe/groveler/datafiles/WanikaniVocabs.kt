@@ -50,7 +50,7 @@ class WanikaniVocabs private constructor(
                     return instance!!
                 }
                 instance = WanikaniVocabs()
-                return vocabOf
+                return instance!!
             }
 
         fun save() {

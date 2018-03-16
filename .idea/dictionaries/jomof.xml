@@ -1,15 +1,28 @@
 <component name="ProjectDictionaryState">
   <dictionary name="jomof">
     <words>
+      <w>coiterate</w>
+      <w>coiterator</w>
+      <w>copage</w>
       <w>cosegment</w>
       <w>ipadic</w>
+      <w>jacy</w>
       <w>jisho</w>
       <w>jlpt</w>
+      <w>kana</w>
+      <w>kani</w>
+      <w>kores</w>
       <w>kuromoji</w>
+      <w>oneigaishimas</w>
       <w>populator</w>
+      <w>semsem</w>
       <w>tanaka</w>
       <w>tokenization</w>
       <w>unpunctuated</w>
+      <w>wani</w>
+      <w>wanikani</w>
+      <w>wanikanivsjlpt</w>
+      <w>wwwjdic</w>
     </words>
   </dictionary>
 </component>

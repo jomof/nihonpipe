@@ -3,21 +3,20 @@ package com.jomof.nihonpipe.groveler.datafiles
 import com.jomof.intset.IntSet
 import com.jomof.intset.intSetOf
 import com.jomof.nihonpipe.groveler.vocabToSentenceFilter
+import org.h2.mvstore.MVMap
 import org.h2.mvstore.MVStore
 
 class VocabToSentenceFilter {
-    private val db = MVStore.Builder()
-            .fileName(vocabToSentenceFilter.absolutePath)
-            .compress()
-            .open()!!
+    operator fun get(vocab: String) = VocabToSentenceFilter.instance[vocab] ?: intSetOf()
 
-    private val vocabFilter = db.openMap<String, IntSet>(
-            "VocabToSentenceFilter")
+    companion object {
+        private fun create() = MVStore.Builder()
+                .fileName(vocabToSentenceFilter.absolutePath!!)
+                .compress()
+                .open()!!
+                .openMap<String, IntSet>("VocabToSentenceFilter")
 
-    operator fun invoke(vocab: String) = vocabFilter[vocab] ?: intSetOf()
-
-    init {
-        if (vocabFilter.isEmpty()) {
+        private fun populate(table: MVMap<String, IntSet>) {
             val tanaka = TranslatedSentences.tanaka
             val tokenize = KuromojiIpadicCache.tokenize
             val map = mutableMapOf<String, IntSet>()
@@ -32,32 +31,23 @@ class VocabToSentenceFilter {
 
             map.entries
                     .forEach { (skeleton, ix) ->
-                        vocabFilter[skeleton] = ix
+                        table[skeleton] = ix
                     }
 
-            db.compactRewriteFully()
-            save()
-            TranslatedSentences.save()
-            KuromojiIpadicCache.save()
+            table.store.commit()
         }
-    }
 
-    companion object {
-        private var instance: VocabToSentenceFilter? = null
-        val sentencesOf: VocabToSentenceFilter
+        private var theTable: MVMap<String, IntSet>? = null
+        private val instance: MVMap<String, IntSet>
             get() {
-                if (instance != null) {
-                    return instance!!
+                if (theTable == null) {
+                    val table = create()
+                    if (table.isEmpty()) {
+                        populate(table)
+                    }
+                    theTable = table
                 }
-                instance = VocabToSentenceFilter()
-                return sentencesOf
+                return theTable!!
             }
-
-        fun save() {
-            if (instance != null) {
-                instance!!.db.close()
-                instance = null
-            }
-        }
     }
 }

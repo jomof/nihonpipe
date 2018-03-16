@@ -1,6 +1,8 @@
 package com.jomof.nihonpipe.groveler
 
 import com.google.common.truth.Truth.assertThat
+import com.jomof.intset.IntSet
+import com.jomof.intset.intSetOf
 import com.jomof.nihonpipe.groveler.datafiles.*
 import org.junit.Test
 
@@ -34,7 +36,7 @@ class H2Populator {
     @Test
     fun statistics() {
         val summarize = SentenceStatisticsCache.summarize
-        val stats = summarize("ええ、誕生日に 友達の クラークさんに もらいました")
+        val stats = summarize("ええ誕生日に友達のクラークさんにもらいました")
         assertThat(stats.waniKaniLevel.min).isEqualTo(2)
         assertThat(stats.waniKaniLevel.max).isEqualTo(18)
         SentenceStatisticsCache.save()
@@ -43,7 +45,7 @@ class H2Populator {
     @Test
     fun tokenization() {
         val tokenize = KuromojiIpadicCache.tokenize
-        val tokenization = tokenize("ええ、誕生日に 友達の クラークさんに もらいました")
+        val tokenization = tokenize("ええ誕生日に友達のクラークさんにもらいました")
         assertThat(tokenization.tokens).hasSize(13)
         KuromojiIpadicCache.save()
     }
@@ -66,8 +68,8 @@ class H2Populator {
 
     @Test
     fun vocabToSentenceFilter() {
-        val sentencesOf = VocabToSentenceFilter.sentencesOf
-        sentencesOf("友達")
+        val vocabToSentence = VocabToSentenceFilter()
+        vocabToSentence["友達"]
     }
 
     @Test
@@ -79,6 +81,7 @@ class H2Populator {
     @Test
     fun waniKaniVocabLevels() {
         val levels = WanikaniVocabLevels()
+        levels[42]
     }
 
     @Test
@@ -98,6 +101,19 @@ class H2Populator {
     }
 
     @Test
+    fun grammarSummaryLevels() {
+        val levels = GrammarSummaryLevels()
+        val level = levels[5]
+        println("$level")
+    }
+
+    enum class LadderKind {
+        WANIKANI_VOCAB_LADDER,
+        SENTENCE_SKELETON_LADDER,
+        GRAMMAR_SUMMARY_LADDER;
+    }
+
+    @Test
     fun player() {
         data class Score(
                 val correct: Short = 0,
@@ -108,9 +124,8 @@ class H2Populator {
                 val levels: List<Map<String, Score>> = listOf())
 
         data class Player(
-                val wanikaniScores: LevelMap = LevelMap(),
-                val sentenceSkeletonScores: LevelMap = LevelMap(),
-                val grammarSummaryScores: LevelMap = LevelMap())
+                val sentencesStudying: IntSet = intSetOf(),
+                val ladders: Map<LadderKind, LevelMap> = mapOf())
 
         val player = Player()
         val skeletonLevels = SentenceSkeletonLevels()

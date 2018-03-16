@@ -36,7 +36,6 @@ class JishoJlptVocabs private constructor(
             }
             val vocab = fields[0]
             val kana = fields[1]
-            val jlpt = "JLPT$level"
             val english = fields[3]
             map[english] = listOf(vocab, kana, level.name)
         }
@@ -71,7 +70,7 @@ class JishoJlptVocabs private constructor(
                     return instance!!
                 }
                 instance = JishoJlptVocabs()
-                return vocabOf
+                return instance!!
             }
 
         fun save() {

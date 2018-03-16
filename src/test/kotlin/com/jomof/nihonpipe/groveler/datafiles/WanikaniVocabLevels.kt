@@ -7,8 +7,9 @@ import com.jomof.nihonpipe.groveler.wanikaniVocabLevelsBin
 import org.h2.mvstore.MVMap
 import org.h2.mvstore.MVStore
 
-class WanikaniVocabLevels {
-    operator fun get(level: Int) = instance[level]
+class WanikaniVocabLevels : LevelProvider {
+    override operator fun get(level: Int) = instance[level]!!
+    override val size: Int get() = instance.size
 
     companion object {
         private fun create() = MVStore.Builder()
@@ -18,15 +19,15 @@ class WanikaniVocabLevels {
                 .openMap<Int, List<KeySentences>>("WanikaniVocabLevelsBin")
 
         private fun populate(table: MVMap<Int, List<KeySentences>>) {
-            val sentencesOf = VocabToSentenceFilter.sentencesOf
+            val vocabToSentenceFilter = VocabToSentenceFilter()
             val tokenize = KuromojiIpadicCache.tokenize
             WanikaniVsJlptVocabs
                     .vocabOf
                     .vocabs
                     .entries
-                    .filter { (vocab, info) -> info.wanikaniLevel != 100 }
+                    .filter { (_, info) -> info.wanikaniLevel != 100 }
                     .map { (vocab, info) ->
-                        val sentences = sentencesOf(vocab)
+                        val sentences = vocabToSentenceFilter[vocab]
                         if (sentences.size > 0) {
                             Triple(info.vocab, info.wanikaniLevel, sentences)
                         } else {
@@ -35,7 +36,7 @@ class WanikaniVocabLevels {
                             var acc: IntSet? = null
                             tokenization
                                     .tokens
-                                    .map { sentencesOf(it.baseForm) }
+                                    .map { vocabToSentenceFilter[it.baseForm] }
                                     .forEach { set ->
                                         acc = (acc ?: set) intersect set
                                     }
@@ -43,10 +44,10 @@ class WanikaniVocabLevels {
                             Triple(info.vocab, info.wanikaniLevel, acc!!)
                         }
                     }
-                    .groupBy { (vocab, level, sentences) -> level - 1 }
+                    .groupBy { (_, level, _) -> level - 1 }
                     .forEach { (level, list) ->
                         table[level] = list
-                                .map { (vocab, level, sentences) ->
+                                .map { (vocab, _, sentences) ->
                                     KeySentences(vocab, sentences)
                                 }
                     }

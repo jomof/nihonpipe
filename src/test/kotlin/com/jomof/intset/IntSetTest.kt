@@ -3,8 +3,6 @@ package com.jomof.intset
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import java.io.*
-import java.lang.Math.abs
-import java.util.*
 
 class IntSetTest {
 
@@ -164,10 +162,10 @@ class IntSetTest {
     }
 
 
-    fun serialize(set: IntSet): ByteArray {
+    private fun serialize(set: IntSet): ByteArray {
         val bos = ByteArrayOutputStream()
-        var out: ObjectOutput?
-        var bytes: ByteArray
+        val out: ObjectOutput?
+        val bytes: ByteArray
         try {
             out = ObjectOutputStream(bos)
             out.writeObject(set)
@@ -183,7 +181,7 @@ class IntSetTest {
         return bytes
     }
 
-    fun deserialize(bytes: ByteArray): IntSet {
+    private fun deserialize(bytes: ByteArray): IntSet {
         val bis = ByteArrayInputStream(bytes)
         var i: ObjectInput? = null
         try {
@@ -210,7 +208,7 @@ class IntSetTest {
         assertThat(set.contains(133)).isFalse()
         val bytes = serialize(set)
         assertThat(bytes.size).isEqualTo(60)
-        var set2 = deserialize(bytes)
+        val set2 = deserialize(bytes)
         soak(set2)
         assertThat(set2.contains(131)).isFalse()
         assertThat(set2.contains(132)).isTrue()
@@ -224,7 +222,7 @@ class IntSetTest {
         soak(set)
         val bytes = serialize(set)
         assertThat(bytes.size).isEqualTo(52)
-        var set2 = deserialize(bytes)
+        val set2 = deserialize(bytes)
         assertThat(set2.contains(63)).isTrue()
         assertThat(set2.contains(64)).isFalse()
         soak(set2)
@@ -243,7 +241,7 @@ class IntSetTest {
         soak(set)
         val bytes = serialize(set)
         assertThat(bytes.size).isEqualTo(48)
-        var set2 = deserialize(bytes)
+        val set2 = deserialize(bytes)
         soak(set2)
         assertThat(set2.contains(63)).isFalse()
         soak(set2)
@@ -265,20 +263,6 @@ class IntSetTest {
         set += 0..1024
         soak(set)
         assertThat(set.pages().count()).isEqualTo(17)
-    }
-
-    //@Test
-    fun rage() {
-        val random = Random(192)
-        val set = intSetOf()
-        var i = 0
-        while (true) {
-            val v = abs(random.nextInt())
-            set += v
-            soak(set)
-            assertThat(set.contains(v)).named("$v:$i").isTrue()
-            ++i
-        }
     }
 
     @Test
@@ -343,7 +327,7 @@ class IntSetTest {
         assertThat(bf3.contains(5)).isFalse()
     }
 
-    fun soak(set: IntSet) {
+    private fun soak(set: IntSet) {
         val bytes1 = serialize(set)
         val set2 = deserialize(bytes1)
         val bytes2 = serialize(set2)

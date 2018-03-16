@@ -55,7 +55,7 @@ class KuromojiIpadicCache private constructor(
                     return instance!!
                 }
                 instance = KuromojiIpadicCache()
-                return tokenize
+                return instance!!
             }
 
         fun save() {

@@ -78,7 +78,7 @@ class WanikaniVsJlptVocabs private constructor(
                     return instance!!
                 }
                 instance = WanikaniVsJlptVocabs()
-                return vocabOf
+                return instance!!
             }
 
         fun save() {

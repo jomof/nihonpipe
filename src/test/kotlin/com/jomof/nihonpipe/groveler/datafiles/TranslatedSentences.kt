@@ -59,7 +59,7 @@ class TranslatedSentences private constructor(
     val sentences: Map<Int, TranslatedSentence> = translatedSentences
 
     private fun translateTanakaCorpus(offset: Int, file: File): Int {
-        var offset = offset
+        var localOffset = offset
         val lines = file.readLines()
 
         for (i in (0 until lines.size step 3)) {
@@ -67,11 +67,11 @@ class TranslatedSentences private constructor(
             val semsem = japaneseLine.indexOf(";;")
             val japanese = japaneseLine.substring(10, semsem)
             val english = lines[i + 1]
-            translatedSentences[offset++] = TranslatedSentence(
+            translatedSentences[localOffset++] = TranslatedSentence(
                     japanese,
                     english)
         }
-        return offset
+        return localOffset
     }
 
     private fun translateTanakaCorpus(): Int {
@@ -98,7 +98,7 @@ class TranslatedSentences private constructor(
                     return instance!!
                 }
                 instance = TranslatedSentences()
-                return tanaka
+                return instance!!
             }
 
         fun save() {

@@ -1,5 +1,6 @@
 package com.jomof.nihonpipe.groveler.datafiles
 
+import com.jomof.intset.IntSet
 import com.jomof.intset.intSetOf
 import com.jomof.nihonpipe.groveler.grammarSummaryFilter
 import com.jomof.nihonpipe.groveler.schema.grammarSummaryForm
@@ -10,14 +11,16 @@ class GrammarSummaryFilter {
             .fileName(grammarSummaryFilter.absolutePath)
             .compress()
             .open()!!
-    private val grammarSummary = db.openMap<String, Set<Int>>(
+    private val grammarSummary = db.openMap<String, IntSet>(
             "GrammarSummaryFilter")
+
+    val grammarSummaries: Map<String, IntSet> = grammarSummary
 
     init {
         if (grammarSummary.isEmpty()) {
             val tanaka = TranslatedSentences.tanaka
             val tokenize = KuromojiIpadicCache.tokenize
-            val map = mutableMapOf<String, MutableSet<Int>>()
+            val map = mutableMapOf<String, IntSet>()
             for ((index, sentence) in tanaka.sentences) {
                 val tokenization = tokenize(sentence.japanese)
                 val summary = tokenization.grammarSummaryForm()
@@ -47,7 +50,7 @@ class GrammarSummaryFilter {
                     return instance!!
                 }
                 instance = GrammarSummaryFilter()
-                return filterOf
+                return instance!!
             }
 
         fun save() {
