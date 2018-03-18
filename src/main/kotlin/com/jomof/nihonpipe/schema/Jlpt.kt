@@ -1,4 +1,4 @@
-package com.jomof.nihonpipe.groveler.schema
+package com.jomof.nihonpipe.schema
 
 enum class Jlpt {
     JLPT6,

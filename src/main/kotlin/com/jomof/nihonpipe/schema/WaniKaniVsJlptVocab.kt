@@ -1,4 +1,4 @@
-package com.jomof.nihonpipe.groveler.schema
+package com.jomof.nihonpipe.schema
 
 import java.io.Serializable
 

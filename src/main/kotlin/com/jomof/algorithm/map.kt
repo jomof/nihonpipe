@@ -1,4 +1,4 @@
-package com.jomof.nihonpipe.groveler.algorithm
+package com.jomof.algorithm
 
 
 /**

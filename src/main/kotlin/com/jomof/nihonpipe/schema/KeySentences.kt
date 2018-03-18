@@ -1,4 +1,4 @@
-package com.jomof.nihonpipe.groveler.schema
+package com.jomof.nihonpipe.schema
 
 import com.jomof.intset.IntSet
 import java.io.Serializable

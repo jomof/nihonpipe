@@ -1,9 +1,14 @@
 package com.jomof.nihonpipe.groveler.schema
 
+import com.jomof.nihonpipe.schema.Indexed
 import java.io.Serializable
 
 data class KuromojiIpadicTokenization(
-        val tokens: List<KuromojiIpadicToken>) : Indexed, Serializable
+        val tokens: List<KuromojiIpadicToken>) : Indexed, Serializable {
+    companion object {
+        private const val serialVersionUID = -7094035836985017858L
+    }
+}
 
 
 fun KuromojiIpadicTokenization.grammarSummaryForm(): Set<String> {
