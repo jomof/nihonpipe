@@ -23,7 +23,7 @@ class TranslatedSentences private constructor(
         if (translatedSentences.isEmpty()) {
             var offset = translateTanakaCorpus()
 
-            // Some additional tanaka sentences
+            // Some additional sentences sentences
             tanakaWWWJDICExamplesResidueFile
                     .forEachLine { line ->
                         when (line[0]) {
@@ -92,7 +92,7 @@ class TranslatedSentences private constructor(
 
     companion object {
         private var instance: TranslatedSentences? = null
-        val tanaka: TranslatedSentences
+        val sentences: TranslatedSentences
             get() {
                 if (instance != null) {
                     return instance!!

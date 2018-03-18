@@ -9,9 +9,7 @@ class PairNode(
         second: Node) : Node {
     var left: Node
     var right: Node
-    override val pageRange: PageRange
-        get () =
-            PageRange(left.pageRange.first, right.pageRange.last)
+    override val pageRange : PageRange
 
     init {
         if (first.pageRange.first > second.pageRange.first) {
@@ -24,6 +22,9 @@ class PairNode(
         if (left is AllSetNode && right is AllSetNode) {
             throw RuntimeException()
         }
+        pageRange = PageRange(left.pageRange.first, right.pageRange.last)
+        assert(!full())
+        assert(!empty())
     }
 
     override fun pages(): Sequence<Page> = buildSequence {
@@ -40,15 +41,10 @@ class PairNode(
     }
 
     private fun balanced(
-            page: Int,
             left: Node,
             middle: Node,
             right: Node): Node {
-        return if (page % 2 == 1) {
-            createPairNode(left, createPairNode(middle, right))
-        } else {
-            createPairNode(createPairNode(left, middle), right)
-        }
+        return createPairNode(left, createPairNode(middle, right))
     }
 
     override fun add(
@@ -64,17 +60,17 @@ class PairNode(
             }
             page > left.pageRange.last && page < right.pageRange.first -> {
                 val new = LongPageNode.of(page, offset)
-                update(balanced(page, left, new, right))
+                update(balanced(left, new, right))
                 false
             }
             page > right.pageRange.last -> {
                 val new = LongPageNode.of(page, offset)
-                update(balanced(page, left, right, new))
+                update(balanced(left, right, new))
                 false
             }
             page < left.pageRange.first -> {
                 val new = LongPageNode.of(page, offset)
-                update(balanced(page, new, left, right))
+                update(balanced(new, left, right))
                 false
             }
             else -> throw RuntimeException()
@@ -90,22 +86,19 @@ class PairNode(
             startPage in right.pageRange -> right.setPage(startPage, elements) { right = it }
             startPage > left.pageRange.last && startPage < right.pageRange.first -> {
                 update(balanced(
-                        startPage,
                         left,
                         LongPageNode(startPage, arrayOf(elements)),
                         right))
             }
             startPage > right.pageRange.last -> {
                 update(balanced(
-                        startPage,
                         left,
                         right,
-                        LongPageNode(startPage, arrayOf(elements))))
+                        createPageNode(startPage, elements)))
             }
             startPage < left.pageRange.first -> {
                 update(balanced(
-                        startPage,
-                        LongPageNode(startPage, arrayOf(elements)),
+                        createPageNode(startPage, elements),
                         left,
                         right))
             }
@@ -124,8 +117,7 @@ class PairNode(
     override val size: Int
         get() = left.size + right.size
 
-    override fun toString() = "${left.pageRange.first}..${left.pageRange.last} " +
-            "${right.pageRange.first}..${right.pageRange.last}"
+    override fun toString() = "$left, $right"
 
     companion object {
         fun of(i: ObjectInput): Node {

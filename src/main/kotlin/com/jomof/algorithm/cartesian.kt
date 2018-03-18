@@ -1,4 +1,4 @@
-package com.jomof.nihonpipe.groveler.algorithm
+package com.jomof.algorithm
 
 
 fun cartesian(a: IntRange, b: IntRange, action: (a: Int, b: Int) -> Unit) {
@@ -32,3 +32,10 @@ fun <A, B, C> cartesian(a: List<A>, b: List<B>, c: List<C>, action: (a: A, b: B,
         action(a[i], b[j], c[k])
     }
 }
+
+inline fun <A> Array<A>.combinations() =
+    (0 until (1L shl size))
+        .asSequence()
+        .map {
+            it.toBitList().map { get(it) }
+        }

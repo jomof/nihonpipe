@@ -49,7 +49,10 @@ class IntSet(
     fun pageCount() = top.pageCount()
     fun serializationSize() = top.serializationSize()
 
-    override fun addAll(elements: Collection<Int>) = TODO("not implemented")
+    override fun addAll(elements: Collection<Int>) : Boolean {
+        for (element in elements) add(element)
+        return false
+    }
     override fun iterator() = IntSetMutableIterator(this)
     override fun remove(element: Int) = TODO("not implemented")
     override fun removeAll(elements: Collection<Int>) = TODO("not implemented")

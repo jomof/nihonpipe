@@ -88,33 +88,4 @@ class WanikaniVsJlptVocabs private constructor(
             }
         }
     }
-
-//    private fun populateWaniKaniSentencesLevels() {
-//        if (db.levels.containsKey(LevelType.WANIKANI_LEVEL)) {
-//            return
-//        }
-//        val waniKaniLevelToSentence = mutableMapOf<Int, IntSet>()
-//        var index = 0
-//        db.sentenceIndexToIndex
-//                .toSequence()
-//                .keepOnlyRowsContaining(db.kuromojiIpadicSentenceStatistics)
-//                .keepInstances<SentenceStatistics>(db)
-//                .indexInto(waniKaniLevelToSentence) { row ->
-//                    row.waniKaniVsJlptWaniKaniLevel.max
-//                }
-//                .onEach {
-//                    if (index++ % 1000 == 0) println("$index")
-//                }
-//                .count()
-//        db.set(LevelType.WANIKANI_LEVEL, LevelInfo(waniKaniLevelToSentence
-//                .toList()
-//                .sortedBy { (level, _) -> level }
-//                .map { (level, bitfield) ->
-//                    Level(
-//                            level,
-//                            listOf(LevelElement(level, "wanikani level $level", bitfield)))
-//                }))
-//        println("$waniKaniLevelToSentence")
-//
-//    }
 }

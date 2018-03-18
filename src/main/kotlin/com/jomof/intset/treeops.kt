@@ -2,6 +2,44 @@ package com.jomof.intset
 
 import kotlin.math.max
 
+infix fun Node.adjacent(other : Node) =
+        this.pageRange.last == other.pageRange.first - 1
+fun Node.full() : Boolean {
+    return when (this) {
+        is EmptyNode -> false
+        is AllSetNode -> true
+        is PairNode -> left.full() and right.full()
+        is LongPageNode -> false
+        else -> throw RuntimeException()
+    }
+}
+
+fun Node.empty() : Boolean {
+    return when (this) {
+        is EmptyNode -> true
+        is AllSetNode -> false
+        is PairNode -> left.empty() and right.empty()
+        is LongPageNode -> false
+        else -> throw RuntimeException()
+    }
+}
+
+fun Node.toAdjacentPages() : List<Long> {
+    return when (this) {
+        is EmptyNode -> listOf(0)
+        is AllSetNode -> listOf(1)
+        is PairNode -> {
+            assert(left.pageRange.last == right.pageRange.first - 1) {
+                "expected adjacent pages"
+            }
+            left.toAdjacentPages() + right.toAdjacentPages()
+        }
+        is LongPageNode -> elements.asList()
+        else -> throw RuntimeException()
+    }
+}
+
+
 fun Node.maxDepth(): Int {
     return when (this) {
         is EmptyNode -> 1

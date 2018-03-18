@@ -6,6 +6,10 @@ import java.io.ObjectOutput
 class LongPageNode(
         startPage: Int,
         var elements: Array<Long>) : Node {
+    init {
+        assert(!elements.all { it == -1L })
+        assert(!elements.all { it == 0L })
+    }
     override val code: NodeCode
         get() = if (elements.size == 1) {
             NodeCode.LONG_PAGE
@@ -57,8 +61,8 @@ class LongPageNode(
             this.elements[index] = elements
         } else {
             update(createPairNode(
-                    this, LongPageNode(
-                    startPage, arrayOf(elements))))
+                    this, createPageNode(
+                    startPage, elements)))
         }
     }
 
@@ -81,6 +85,8 @@ class LongPageNode(
                         Page(pageRange.first + index, elements)
                     }
                     .asSequence()
+
+    override fun toString() = "$size in $pageRange"
 
     companion object {
 

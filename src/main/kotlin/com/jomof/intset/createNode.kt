@@ -15,26 +15,53 @@ fun createPairNode(first: Node, second: Node): Node {
             } else {
                 Pair(first, second)
             }
+    when(left) {
+        is EmptyNode -> return right
+        is AllSetNode -> when(right) {
+            is AllSetNode -> when {
+                left adjacent right ->
+                        return AllSetNode(left.pageRange union right.pageRange)
+            }
+            is LongPageNode -> when {
+                right.full() -> return AllSetNode(left.pageRange union right.pageRange)
+            }
+        }
+        is PairNode -> when {
+            left.right adjacent right -> return when {
+                left.right is AllSetNode -> createPairNode(
+                        left.left,
+                        AllSetNode(left.right.pageRange union right.pageRange))
+                else ->
+                    // Rotate
+                    createPairNode(left.left, createPairNode(left.right, right))
+            }
+        }
+        is LongPageNode -> when(right) {
+                is PairNode -> when {
+                    left.pageRange adjacent right.left.pageRange -> return when(right.left) {
+                        is AllSetNode -> PairNode(left, right)
+                        else -> createPairNode(createPairNode(left, right.left), right.right)
+                    }
+                }
+                is EmptyNode -> return left
+        }
+    }
+
     // If they're adjacent do something smarter
-    if (left.pageRange.last == right.pageRange.first - 1) {
-        if (left is LongPageNode && right is LongPageNode) {
-            return LongPageNode(
-                    left.pageRange.first,
-                    left.elements + right.elements)
+    if (left.pageRange adjacent right.pageRange) {
+        if (left.size == left.pageRange.count * 64
+                && right.size == right.pageRange.count * 64) {
+            return AllSetNode(PageRange(left.pageRange.first, right.pageRange.last))
         }
-        return if (left is AllSetNode && right is LongPageNode) {
-            PairNode(left, right)
-        } else if (left is AllSetNode && right is AllSetNode) {
-            AllSetNode(PageRange(
-                    left.pageRange.first,
-                    right.pageRange.last))
-        } else if (left is PairNode && right is PairNode) {
-            PairNode(left, right)
-        } else if (left.javaClass == right.javaClass) {
-            throw RuntimeException()
-        } else {
-            PairNode(left, right)
+        if (left.size == left.pageRange.count * 64) {
+            return PairNode(AllSetNode(left.pageRange), right)
         }
+        if (right.size == right.pageRange.count * 64) {
+            return PairNode(left, AllSetNode(right.pageRange))
+        }
+
+        val pages = PairNode(left, right).toAdjacentPages()
+        return LongPageNode(left.pageRange.first, pages.toTypedArray())
     }
     return PairNode(left, right)
 }

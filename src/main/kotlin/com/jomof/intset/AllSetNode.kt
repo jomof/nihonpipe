@@ -34,7 +34,7 @@ class AllSetNode(
     }
 
     override fun contains(page: Int, offset: Int) = page in pageRange
-    override val size: Int get() = 64
+    override val size: Int get() = pageRange.count * 64
 
     override fun writeExternal(out: ObjectOutput) {
         out.writeByte(code.ordinal)
@@ -59,4 +59,7 @@ class AllSetNode(
             return AllSetNode(PageRange(startPage, startPage))
         }
     }
+
+
+    override fun toString() = "all set in $pageRange"
 }

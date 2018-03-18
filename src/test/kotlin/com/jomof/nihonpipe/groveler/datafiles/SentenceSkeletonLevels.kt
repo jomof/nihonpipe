@@ -1,6 +1,8 @@
 package com.jomof.nihonpipe.groveler.datafiles
 
 import com.jomof.nihonpipe.groveler.schema.KeySentences
+import com.jomof.nihonpipe.groveler.schema.KuromojiIpadicTokenization
+import com.jomof.nihonpipe.groveler.schema.particleSkeletonForm
 import com.jomof.nihonpipe.groveler.sentenceSkeletonLevelsBin
 import org.h2.mvstore.MVMap
 import org.h2.mvstore.MVStore
@@ -8,7 +10,8 @@ import org.h2.mvstore.MVStore
 class SentenceSkeletonLevels : LevelProvider {
     override operator fun get(level: Int) = instance[level]!!
     override val size: Int get() = instance.size
-
+    override fun keysOf(tokenization : KuromojiIpadicTokenization) =
+            setOf(tokenization.particleSkeletonForm())
     companion object {
         private var theTable: MVMap<Int, List<KeySentences>>? = null
         private fun create() = MVStore.Builder()

@@ -33,6 +33,8 @@ class IntSetMutableIterator(intSet: IntSet) : MutableIterator<Int> {
                 }
                 ++offset
                 elements = elements shr 1
+                val mask = (1L shl 63).inv()
+                elements = elements and mask
                 true
             }
         }

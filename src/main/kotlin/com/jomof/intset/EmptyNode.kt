@@ -25,6 +25,8 @@ class EmptyNode private constructor() : Node {
 
     override fun pages() = listOf<Page>().asSequence()
 
+    override fun toString() = "all unset in $pageRange"
+
     companion object {
         val instance = EmptyNode()
     }

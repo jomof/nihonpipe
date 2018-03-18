@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: com.atilika.kuromoji:kuromoji-core:0.9.0">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.atilika.kuromoji/kuromoji-core/0.9.0/6ff237d50355a35c01387e2d8e75015ac6da266a/kuromoji-core-0.9.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.atilika.kuromoji/kuromoji-core/0.9.0/5cb26b7c2fbbf8c76097e1790da440b462c983ce/kuromoji-core-0.9.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

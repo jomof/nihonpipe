@@ -19,7 +19,7 @@ class WanikaniLevelFilter {
 
     init {
         if (wanikaniLevels.isEmpty()) {
-            val tanaka = TranslatedSentences.tanaka
+            val tanaka = TranslatedSentences.sentences
             val tokenize = KuromojiIpadicCache.tokenize
             val vocabOf = WanikaniVsJlptVocabs.vocabOf
             val map = mutableMapOf<Int, IntSet>()

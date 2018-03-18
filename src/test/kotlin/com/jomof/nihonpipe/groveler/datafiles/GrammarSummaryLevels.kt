@@ -2,12 +2,16 @@ package com.jomof.nihonpipe.groveler.datafiles
 
 import com.jomof.nihonpipe.groveler.grammarSummaryLevels
 import com.jomof.nihonpipe.groveler.schema.KeySentences
+import com.jomof.nihonpipe.groveler.schema.KuromojiIpadicTokenization
+import com.jomof.nihonpipe.groveler.schema.grammarSummaryForm
 import org.h2.mvstore.MVMap
 import org.h2.mvstore.MVStore
 
 class GrammarSummaryLevels : LevelProvider {
     override operator fun get(level: Int) = instance[level]!!
     override val size: Int get() = instance.size
+    override fun keysOf(tokenization: KuromojiIpadicTokenization) =
+            tokenization.grammarSummaryForm()
 
     companion object {
         private var theTable: MVMap<Int, List<KeySentences>>? = null
@@ -26,15 +30,11 @@ class GrammarSummaryLevels : LevelProvider {
                     .sortedByDescending { (_, ix) ->
                         ix.size
                     }
-                    .onEach { (summary, sentences) ->
-                        println("$summary : ${sentences.size}")
-                    }
                     .chunked(2)
                     .forEachIndexed { index, summary ->
                         table[index] = summary
                                 .map { (vocab, sentences) -> KeySentences(vocab, sentences) }
                     }
-            println("LEVELS = ${table.size}")
             table.store.commit()
         }
 
