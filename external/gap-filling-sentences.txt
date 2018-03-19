@@ -5,3 +5,10 @@ A: 箱には七つのものがあります。		There are seven things in the box
 A: この果物は不味い。	This fruit has a bad taste.
 A: 一列に並んで下さい。	Please line up in a row.
 A: 私の日本語教師の犬には名刺があります。	My Japanese teacher's dog has a business card.
+A: たなかさんは今年の六月に一人で日本に来ました。	Mr. Tanaka came to Japan alone this June.
+A: たなかさんは一人で日本に来ました。	Mr. Tanaka came to Japan alone.
+A: 一人です。	I am alone.
+A: りんごを七つ下さい。	Please give me 7 apples.
+A: ビールを八つ下さい。	Please give me 8 beers.
+A: 新聞を一つ下さい。	Please give me 1 newspaper.
+A: 入口はどこですか。	Where is the entrance?

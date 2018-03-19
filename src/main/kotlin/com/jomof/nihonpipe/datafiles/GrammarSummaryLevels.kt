@@ -3,7 +3,7 @@ package com.jomof.nihonpipe.datafiles
 import com.jomof.intset.IntSet
 import com.jomof.intset.intSetOf
 import com.jomof.intset.union
-import com.jomof.nihonpipe.grammarSummaryLevels
+import com.jomof.nihonpipe.grammarSummaryLevelsBin
 import com.jomof.nihonpipe.groveler.schema.KuromojiIpadicTokenization
 import com.jomof.nihonpipe.groveler.schema.grammarSummaryForm
 import com.jomof.nihonpipe.schema.KeySentences
@@ -26,7 +26,7 @@ class GrammarSummaryLevels : LevelProvider {
                 MVMap<Int, List<KeySentences>>,
                 MVMap<Int, IntSet>> {
             val db = MVStore.Builder()
-                    .fileName(grammarSummaryLevels.absolutePath!!)
+                    .fileName(grammarSummaryLevelsBin.absolutePath!!)
                     .compress()
                     .open()!!
             val keyLevels =
@@ -39,6 +39,7 @@ class GrammarSummaryLevels : LevelProvider {
         private fun populate(
                 table: MVMap<Int, List<KeySentences>>,
                 levels: MVMap<Int, IntSet>) {
+            var accumulatedLevels = intSetOf()
             GrammarSummaryFilter
                     .filterOf
                     .grammarSummaries
@@ -51,11 +52,10 @@ class GrammarSummaryLevels : LevelProvider {
                     .forEachIndexed { level, summary ->
                         table[level] = summary
                                 .map { (vocab, sentences) -> KeySentences(vocab, sentences) }
-                        var result = intSetOf()
                         for ((_, sentences) in summary) {
-                            result = result union sentences
+                            accumulatedLevels = accumulatedLevels union sentences
                         }
-                        levels[level] = result
+                        levels[level] = accumulatedLevels
                     }
             table.store.commit()
         }

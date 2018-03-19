@@ -1,17 +1,31 @@
 package com.jomof.nihonpipe.play
 
-import com.jomof.algorithm.combinations
 import com.jomof.algorithm.getsert
 import com.jomof.intset.IntSet
 import com.jomof.intset.intSetOf
 import com.jomof.intset.intersect
+import com.jomof.intset.union
 import com.jomof.nihonpipe.datafiles.KuromojiIpadicCache
 import com.jomof.nihonpipe.datafiles.TranslatedSentences
 import com.jomof.nihonpipe.groveler.schema.particleSkeletonForm
+import kotlin.math.min
 
 data class Player(
         val sentencesStudying: IntSet = intSetOf(),
         private val ladders: MutableMap<LadderKind, Scores> = mutableMapOf()) {
+
+    fun allSentenceScoreCoordinates(): Set<ScoreCoordinate> {
+        val result = mutableSetOf<ScoreCoordinate>()
+        for (ladderKind in LadderKind.values()) {
+            val scores = ladders.getsert(ladderKind) { Scores() }
+            val level = scores.currentLevel
+            val levelProvider = ladderKind.levelProvider
+            for ((key, _) in levelProvider.getKeySentences(level)) {
+                result += ScoreCoordinate(ladderKind, level, key)
+            }
+        }
+        return result
+    }
 
     fun sentenceScoreCoordinates(sentence: Int): Set<ScoreCoordinate> {
         val (japanese, _) = TranslatedSentences.sentences.sentences[sentence]!!
@@ -37,18 +51,28 @@ data class Player(
         return ladder[coordinate.level, coordinate.key]
     }
 
-    fun newSentenceValue(sentence: Int): Int {
+    private fun newSentenceValue(sentence: Int): Int {
+        if (sentencesStudying.contains(sentence)) {
+            return 0
+        }
+        val apprenticeLevelsBefore = apprenticeLevelCoordinates(sentencesStudying)
+        val apprenticeLevelsAfter = apprenticeLevelCoordinates(
+                sentencesStudying union intSetOf(sentence))
+        val apprenticeLevelsAdded = apprenticeLevelsAfter - apprenticeLevelsBefore
+        if (apprenticeLevelsAdded == 0) {
+            return 0
+        }
         val coordinates = sentenceScoreCoordinates(sentence)
-        var value = 0
+        var value = apprenticeLevelsAdded
         for (coordinate in coordinates) {
             val score = getScore(coordinate)
-            if (score.attempts() > 0) {
-                // small value if this score is already covered
-                value++
-            } else {
-                value += 3
+            value += coordinate.ladderKind.valueOfNewSentence
+            if (score.attempts() == 0) {
+                // Larger value if this key isn't covered yet
+                value += 2
             }
         }
+
         return value
     }
 
@@ -65,65 +89,70 @@ data class Player(
     }
 
     fun addNewSentencesIfNecessary() {
+        var searchRadius = 0
+        while (true) {
+            val currentApprenticeLevelCoordinates =
+                    apprenticeLevelCoordinates(sentencesStudying)
+            val apprenticeCoordinatesNeeded = 10 - currentApprenticeLevelCoordinates
+            if (apprenticeCoordinatesNeeded <= 0) {
+                return
+            }
+            val result = listOf(LadderKind.values())
+                    .map { ladderKinds ->
+                        var candidates: IntSet? = null
+                        for (ladderKind in ladderKinds) {
+                            val levelProvider = ladderKind.levelProvider
+                            val scores = ladders.getsert(ladderKind) { Scores() }
+                            val currentLevel = scores.currentLevel
+                            var combined: IntSet = levelProvider.getSentences(
+                                    min(currentLevel + searchRadius, levelProvider.size - 1))
+                            candidates = if (candidates == null) {
+                                combined
+                            } else {
+                                candidates intersect combined
+                            }
+                        }
+                        val result = (candidates ?: intSetOf())
+
+                        Pair(ladderKinds, result)
+                    }
+                    .sortedBy { it.second.size }
+                    .map { it.second }
+                    .flatten()
+                    .filter { !sentencesStudying.contains(it) }
+                    .distinctBy { it }
+                    .map { Pair(newSentenceValue(it), it) }
+                    .sortedByDescending { it.first }
+                    .take(1)
+                    .filter { it.first > 0 }
+                    .onEach { (value, sentence) ->
+                        val tokenize = KuromojiIpadicCache.tokenize
+                        val (japanese, english) = TranslatedSentences.sentences.sentences[sentence]!!
+                        val tokenization = tokenize(japanese)
+                        val skeleton = tokenization.particleSkeletonForm()
+                        println("$sentence $value skeleton=$skeleton japanese=$japanese english=$english")
+                    }
+                    .singleOrNull()
+            if (result == null || result.first == 0) {
+                searchRadius++
+            } else {
+                sentencesStudying += result.second
+            }
+        }
+    }
+
+    private fun apprenticeLevelCoordinates(
+            sentences: IntSet): Int {
         val coordinates = mutableSetOf<ScoreCoordinate>()
-        for (sentence in sentencesStudying) {
+        for (sentence in sentences) {
             for (coordinate in sentenceScoreCoordinates(sentence)) {
                 coordinates.add(coordinate)
             }
         }
-        val currentApprenticeLevelCoordinates = coordinates
+        return coordinates
                 .filter {
                     it.toMezzoLevel(getScore(it).value()) == MezzoScore.APPRENTICE
                 }
                 .count()
-        val apprenticeCoordinatesNeeded = 10 - currentApprenticeLevelCoordinates
-        if (apprenticeCoordinatesNeeded <= 0) {
-            return
-        }
-        val sentences = intSetOf()
-        println("-----")
-        sentences += LadderKind.values()
-                .combinations()
-                .toList()
-                .sortedByDescending { ladderKinds -> ladderKinds.size }
-                .map { ladderKinds ->
-                    var candidates: IntSet? = null
-                    for (ladderKind in ladderKinds) {
-                        val scores = ladders.getsert(ladderKind) { Scores() }
-                        val levelProvider = ladderKind.levelProvider
-                        val combined =
-                                levelProvider.getSentences(scores.currentLevel)
-                        candidates = if (candidates == null) {
-                            combined
-                        } else {
-                            candidates intersect combined
-                        }
-                    }
-                    val result = (candidates ?: intSetOf())
-
-                    Pair(ladderKinds, result)
-                }
-                .sortedBy { it.second.size }
-                .onEach { (ladderKinds, result) ->
-                    println("$ladderKinds provides ${result.size} sentences")
-                }
-                .map { it.second }
-                .flatten()
-                .filter { !sentencesStudying.contains(it) }
-                .take(apprenticeCoordinatesNeeded * 20)
-                .distinctBy { it }
-                .map { Pair(newSentenceValue(it), it) }
-                .sortedByDescending { it.first }
-                .take(apprenticeCoordinatesNeeded)
-                .onEach { (value, sentence) ->
-                    val tokenize = KuromojiIpadicCache.tokenize
-                    val (japanese, english) = TranslatedSentences.sentences.sentences[sentence]!!
-                    val tokenization = tokenize(japanese)
-                    val skeleton = tokenization.particleSkeletonForm()
-                    println("$sentence $value skeleton=$skeleton japanese=$japanese english=$english")
-                }
-                .map { it.second }
-
-        sentencesStudying += sentences
     }
 }

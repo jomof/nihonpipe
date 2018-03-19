@@ -2,7 +2,6 @@ package com.jomof.nihonpipe.datafiles
 
 import com.jomof.intset.IntSet
 import com.jomof.intset.intSetOf
-import com.jomof.intset.union
 import com.jomof.nihonpipe.groveler.schema.KuromojiIpadicTokenization
 import com.jomof.nihonpipe.groveler.schema.particleSkeletonForm
 import com.jomof.nihonpipe.schema.KeySentences
@@ -39,28 +38,32 @@ class SentenceSkeletonLevels : LevelProvider {
         private fun populate(
                 table: MVMap<Int, List<KeySentences>>,
                 levels: MVMap<Int, IntSet>) {
-            SentenceSkeletonFilter
+            val accumulatedLevels = intSetOf()
+            val sorted = SentenceSkeletonFilter
                     .filterOf
                     .skeletons
                     .entries
-                    .filter { (_, ix) -> ix.size > 5 }
                     .sortedByDescending { (_, ix) ->
                         ix.size
                     }
-                    .chunked(5)
-                    .forEachIndexed { level, skeletons ->
-                        table[level] = skeletons
-                                .map { (vocab, sentences)
-                                    ->
-                                    KeySentences(vocab, sentences)
-                                }
-                        var result = intSetOf()
-                        for ((_, sentences) in skeletons) {
-                            result = result union sentences
-                        }
-                        levels[level] = result
-                    }
-
+            var totalSize = 0
+            var level = 0
+            var keySentences = mutableListOf<KeySentences>()
+            var acceptableSize = 115.0
+            val growthRate = 1.08
+            for ((skeleton, sentences) in sorted) {
+                accumulatedLevels += sentences
+                keySentences.add(KeySentences(skeleton, sentences))
+                totalSize += sentences.size
+                if (totalSize > acceptableSize) {
+                    table[level] = keySentences
+                    levels[level] = accumulatedLevels.copy()
+                    keySentences = mutableListOf()
+                    totalSize = 0
+                    level++
+                    acceptableSize *= growthRate
+                }
+            }
             table.store.commit()
         }
 

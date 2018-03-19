@@ -2,7 +2,6 @@ package com.jomof.nihonpipe.datafiles
 
 import com.jomof.intset.IntSet
 import com.jomof.intset.intSetOf
-import com.jomof.intset.intersect
 import com.jomof.intset.union
 import com.jomof.nihonpipe.groveler.schema.KuromojiIpadicTokenization
 import com.jomof.nihonpipe.schema.KeySentences
@@ -40,6 +39,7 @@ class WanikaniVocabLevels : LevelProvider {
                 levels: MVMap<Int, IntSet>) {
             val vocabToSentenceFilter = VocabToSentenceFilter()
             val tokenize = KuromojiIpadicCache.tokenize
+            var accumulatedLevels = intSetOf()
             WanikaniVsJlptVocabs
                     .vocabOf
                     .vocabs
@@ -47,22 +47,9 @@ class WanikaniVocabLevels : LevelProvider {
                     .filter { (_, info) -> info.wanikaniLevel != 100 }
                     .map { (vocab, info) ->
                         val sentences = vocabToSentenceFilter[vocab]
-                        if (sentences.size > 0) {
-                            Triple(info.vocab, info.wanikaniLevel, sentences)
-                        } else {
-                            // Try to parse the vocab
-                            val tokenization = tokenize(info.vocab)
-                            var acc: IntSet? = null
-                            tokenization
-                                    .tokens
-                                    .map { vocabToSentenceFilter[it.baseForm] }
-                                    .forEach { set ->
-                                        acc = (acc ?: set) intersect set
-                                    }
-                            // Some of these will have no matching sentences
-                            Triple(info.vocab, info.wanikaniLevel, acc!!)
-                        }
+                        Triple(info.vocab, info.wanikaniLevel, sentences)
                     }
+                    .filter { it.third.size > 0 }
                     .groupBy { (_, level, _) -> level - 1 }
                     .onEach { (level, list) ->
                         keySentences[level] = list
@@ -71,11 +58,10 @@ class WanikaniVocabLevels : LevelProvider {
                                 }
                     }
                     .onEach { (level, list) ->
-                        var result = intSetOf()
                         for ((_, _, sentences) in list) {
-                            result = result union sentences
+                            accumulatedLevels = accumulatedLevels union sentences
                         }
-                        levels[level] = result
+                        levels[level] = accumulatedLevels
                     }
             keySentences.store.commit()
         }

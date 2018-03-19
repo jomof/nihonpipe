@@ -33,9 +33,3 @@ fun <A, B, C> cartesian(a: List<A>, b: List<B>, c: List<C>, action: (a: A, b: B,
     }
 }
 
-inline fun <A> Array<A>.combinations() =
-    (0 until (1L shl size))
-        .asSequence()
-        .map {
-            it.toBitList().map { get(it) }
-        }
