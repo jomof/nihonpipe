@@ -12,3 +12,25 @@ A: りんごを七つ下さい。	Please give me 7 apples.
 A: ビールを八つ下さい。	Please give me 8 beers.
 A: 新聞を一つ下さい。	Please give me 1 newspaper.
 A: 入口はどこですか。	Where is the entrance?
+A: 林さんはスミスさんに本をあげました。	Mr. Hayashi gave Mr. Smith a book.
+A: 歌舞伎はどうでしたか。	How was Kabuki?
+A: 日本語が分かりましたか。	Did you understand Japanese?
+A: とても綺麗でした。	It was very beautiful.
+A: 私はうれしいです。	I'm happy.
+A: 先月は涼しくなかったです。	It was not cool last month.
+A: あの男の人はすばらしいです。	That man is wonderful.
+A: 交番は遠いです。	The police box is far.
+A: このペンは青いです。	This pen is blue.
+A: 母は美しかったです。	My mother was beautiful.
+A: 駅は静かではありません。	The station is not quiet.
+A: 本は安くなかったです。	The book was not cheap.
+A: 私は悲しくなかったです。	I was not sad.
+A: 私のかさは黄色いです。	My umbrella is yellow.
+A: ビールはおいしいですか。	Is the beer tasty?
+A: パーティーは面白かったです。	The party was interesting.
+A: 髪は茶色くありません。	The hair is not brown.
+A: 地下鉄は便利でした。	The subway was convenient.
+A: 車は大きくないです。	The car is not big.
+A: 来週は暖かくないです。	Next week will not be warm.
+A: 女の人は親切です。	The woman is kind.
+A: 遅くなかったです。	It was not late.

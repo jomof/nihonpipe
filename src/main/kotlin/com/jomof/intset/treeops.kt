@@ -99,7 +99,7 @@ fun Node.forEach(action: (Int) -> Unit) {
         }
         is LongPageNode -> {
             val firstBit = pageRange.first * 64
-            for (bit in pageRange.first * 64..pageRange.last * 64) {
+            for (bit in pageRange.first * 64 until ((pageRange.last + 1) * 64)) {
                 val element = bit - firstBit
                 val page = pageOf(element)
                 val offset = offsetOf(element)

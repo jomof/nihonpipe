@@ -1,0 +1,20 @@
+A: Places of things
+B: 上	above, on, over
+B: 下	under, below
+B: 前	in front of
+B: 後ろ	behind
+B: 右	right of
+B: 左	left of
+B: 先	before
+B: 横	next to
+B: 隣り	next to
+B: 側	next to
+B: 中	inside
+B: 辺	around here
+B: 角	at the corner of
+B: 隅	in the corner of
+B: 奥	inside the building
+B: 外	outside
+B: 内	inside
+B: 間	in between
+B: 近く	close to, near to

@@ -14,15 +14,36 @@ class Play {
 
     @Test
     fun simplePlayer() {
-        (0..10000).forEach {
+        (0..1000).forEach {
             Player(mutableMapOf(
                     "入口はどこですか。" to Score(100, 0),
                     "私の日本語教師の犬には名刺があります。" to Score(50, 50)))
         }
     }
+
+    @Test
+    fun reportMezzoLevels() {
+        val player = Player(mutableMapOf(
+                "入口はどこですか。" to Score(100, 0),
+                "私の日本語教師の犬には名刺があります。" to Score(60, 50),
+                "日本語が分かりましたか。" to Score(75, 50)))
+        player.reportMezzoLevels()
+    }
+
+    @Test
+    fun reportMissingLevelKeys() {
+        val player = Player(mutableMapOf(
+                "入口はどこですか。" to Score(100, 0),
+                "私の日本語教師の犬には名刺があります。" to Score(60, 50),
+                "日本語が分かりましたか。" to Score(75, 50)))
+        val incomplete = player.incompleteLadderLevelKeys()
+        val report = incomplete.entries.joinToString("\r\n")
+        println("$report")
+    }
+
     @Test
     fun analyzeSentence() {
-        val target = "入口はどこですか。"
+        val target = "遅くなかったです。"
         val found =
                 TranslatedSentences()
                         .sentences
