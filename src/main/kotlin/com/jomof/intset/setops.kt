@@ -46,3 +46,7 @@ infix fun IntSet.minus(other: IntSet): IntSet {
             }
     return result
 }
+
+fun IntSet.forEachElement(action: (Int) -> Unit) {
+    return top.forEach(action)
+}

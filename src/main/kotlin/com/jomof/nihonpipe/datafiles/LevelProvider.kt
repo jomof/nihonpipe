@@ -6,7 +6,8 @@ import com.jomof.nihonpipe.schema.KeySentences
 
 interface LevelProvider {
     fun getKeySentences(level: Int): List<KeySentences>
-    fun getSentences(level: Int): IntSet
+    fun getLevelSentences(level: Int): IntSet
     val size: Int
+    fun getLevelSizes(): List<Int>
     fun keysOf(tokenization: KuromojiIpadicTokenization): Set<String>
 }

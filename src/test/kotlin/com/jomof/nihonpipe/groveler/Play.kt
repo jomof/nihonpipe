@@ -1,7 +1,5 @@
 package com.jomof.nihonpipe.groveler
 
-import com.google.common.truth.Truth
-import com.google.common.truth.Truth.assertThat
 import com.jomof.nihonpipe.datafiles.KuromojiIpadicCache
 import com.jomof.nihonpipe.datafiles.SentenceSkeletonFilter
 import com.jomof.nihonpipe.datafiles.TranslatedSentences
@@ -9,45 +7,24 @@ import com.jomof.nihonpipe.datafiles.VocabToSentenceFilter
 import com.jomof.nihonpipe.groveler.schema.particleSkeletonForm
 import com.jomof.nihonpipe.play.LadderKind
 import com.jomof.nihonpipe.play.Player
+import com.jomof.nihonpipe.play.Score
 import org.junit.Test
 
 class Play {
 
     @Test
-    fun addNewSentencesIfNecessaryIsIdempotent() {
-        val player = Player()
-        player.addNewSentencesIfNecessary()
-        Truth.assertThat(player.sentencesStudying).hasSize(10)
-        player.addNewSentencesIfNecessary()
-        Truth.assertThat(player.sentencesStudying).hasSize(10)
-    }
-
-    @Test
-    fun initialScoreCoordinates() {
-        val player = Player()
-        val coordinates = player.sentenceScoreCoordinates(50195)
-    }
-
-    @Test
-    fun scoreSaves() {
-        val player = Player()
-        player.sentencesStudying += 1160
-        player.scoreCorrect(1160)
-        val coordinates = player.sentenceScoreCoordinates(1160)
-        assertThat(coordinates).hasSize(5)
-        coordinates.forEach {
-            val score = player.getScore(it)
-            assertThat(score.attempts()).isEqualTo(1)
-            assertThat(score.correct).isEqualTo(1)
+    fun simplePlayer() {
+        (0..10000).forEach {
+            Player(mutableMapOf(
+                    "入口はどこですか。" to Score(100, 0),
+                    "私の日本語教師の犬には名刺があります。" to Score(50, 50)))
         }
     }
-
     @Test
     fun analyzeSentence() {
         val target = "入口はどこですか。"
         val found =
-                TranslatedSentences
-                        .sentences
+                TranslatedSentences()
                         .sentences
                         .filter { (key, sentence) ->
                             sentence.japanese == target
@@ -85,61 +62,8 @@ class Play {
             locateInLevel(ladderKind)
         }
 
-        var player = Player()
-        var matchingCoordinates = player.sentenceScoreCoordinates(index)
-        println("matching coordinates $matchingCoordinates")
-
         val vocabToSentenceFilter = VocabToSentenceFilter()
 
-    }
 
-    @Test
-    fun iteratePlayer() {
-        val player = Player()
-        fun totalNoCovered() =
-                player.allSentenceScoreCoordinates()
-                        .map {
-                            player.getScore(it)
-                        }.map {
-                            if (it.value() > 0) 0 else 1
-                        }.sum()
-
-        fun itemsNotCovered() =
-                player.allSentenceScoreCoordinates()
-                        .filter {
-                            player.getScore(it).value() == 0
-                        }.joinToString {
-                            it.key
-                        }
-
-        fun scoreAllCorrect() {
-            for (sentence in player.sentencesStudying) {
-                player.scoreCorrect(sentence)
-            }
-
-            println("total not covered: ${totalNoCovered()}: ${itemsNotCovered()}")
-        }
-
-        for (i in 0..2) {
-            println("total not covered: ${totalNoCovered()}")
-            player.addNewSentencesIfNecessary()
-            scoreAllCorrect()
-            player.addNewSentencesIfNecessary()
-            scoreAllCorrect()
-            player.addNewSentencesIfNecessary()
-            scoreAllCorrect()
-            player.addNewSentencesIfNecessary()
-            scoreAllCorrect()
-            player.addNewSentencesIfNecessary()
-            scoreAllCorrect()
-            player.addNewSentencesIfNecessary()
-            scoreAllCorrect()
-            player.addNewSentencesIfNecessary()
-            scoreAllCorrect()
-            player.addNewSentencesIfNecessary()
-            scoreAllCorrect()
-            player.addNewSentencesIfNecessary()
-            scoreAllCorrect()
-        }
     }
 }

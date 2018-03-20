@@ -23,7 +23,7 @@ class H2Populator {
 
     @Test
     fun tanakaCorpus() {
-        TranslatedSentences.sentences
+        TranslatedSentences()
     }
 
     @Test

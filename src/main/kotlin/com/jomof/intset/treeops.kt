@@ -83,3 +83,32 @@ fun Node.serializationSize(): Int {
         else -> throw RuntimeException()
     }
 }
+
+fun Node.forEach(action: (Int) -> Unit) {
+    return when (this) {
+        is EmptyNode -> {
+        }
+        is AllSetNode -> {
+            for (i in pageRange.first * 64..pageRange.last * 64) {
+                action(i)
+            }
+        }
+        is PairNode -> {
+            left.forEach(action)
+            right.forEach(action)
+        }
+        is LongPageNode -> {
+            val firstBit = pageRange.first * 64
+            for (bit in pageRange.first * 64..pageRange.last * 64) {
+                val element = bit - firstBit
+                val page = pageOf(element)
+                val offset = offsetOf(element)
+                val mask = bitOf(offset)
+                if ((elements[page] and mask) != 0L) {
+                    action(bit)
+                }
+            }
+        }
+        else -> throw RuntimeException()
+    }
+}

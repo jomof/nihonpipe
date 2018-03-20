@@ -19,7 +19,7 @@ class WanikaniLevelFilter {
 
     init {
         if (wanikaniLevels.isEmpty()) {
-            val tanaka = TranslatedSentences.sentences
+            val tanaka = TranslatedSentences()
             val tokenize = KuromojiIpadicCache.tokenize
             val vocabOf = WanikaniVsJlptVocabs.vocabOf
             val map = mutableMapOf<Int, IntSet>()
@@ -42,7 +42,6 @@ class WanikaniLevelFilter {
 
             db.compactRewriteFully()
             save()
-            TranslatedSentences.save()
             KuromojiIpadicCache.save()
         }
     }

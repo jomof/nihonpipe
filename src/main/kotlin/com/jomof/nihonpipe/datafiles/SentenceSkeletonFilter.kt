@@ -18,7 +18,7 @@ class SentenceSkeletonFilter {
 
     init {
         if (skeletonFilter.isEmpty()) {
-            val tanaka = TranslatedSentences.sentences
+            val tanaka = TranslatedSentences()
             val tokenize = KuromojiIpadicCache.tokenize
             val map = mutableMapOf<String, IntSet>()
             for ((index, sentence) in tanaka.sentences) {
@@ -35,7 +35,6 @@ class SentenceSkeletonFilter {
 
             db.compactRewriteFully()
             save()
-            TranslatedSentences.save()
             KuromojiIpadicCache.save()
         }
     }

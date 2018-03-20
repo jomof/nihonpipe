@@ -12,11 +12,18 @@ import org.h2.mvstore.MVStore
 
 class GrammarSummaryLevels : LevelProvider {
     override fun getKeySentences(level: Int) = instance.first[level]!!
-    override fun getSentences(level: Int) = instance.second[level]!!
+    override fun getLevelSentences(level: Int) = instance.second[level]!!
     override val size: Int get() = instance.first.size
     override fun keysOf(tokenization: KuromojiIpadicTokenization) =
             tokenization.grammarSummaryForm()
 
+    override fun getLevelSizes(): List<Int> {
+        return instance
+                .first
+                .entries
+                .sortedBy { it.key }
+                .map { it.value.size }
+    }
     companion object {
         private var theTable: Pair<
                 MVMap<Int, List<KeySentences>>,
@@ -39,7 +46,7 @@ class GrammarSummaryLevels : LevelProvider {
         private fun populate(
                 table: MVMap<Int, List<KeySentences>>,
                 levels: MVMap<Int, IntSet>) {
-            var accumulatedLevels = intSetOf()
+
             GrammarSummaryFilter
                     .filterOf
                     .grammarSummaries
@@ -52,6 +59,7 @@ class GrammarSummaryLevels : LevelProvider {
                     .forEachIndexed { level, summary ->
                         table[level] = summary
                                 .map { (vocab, sentences) -> KeySentences(vocab, sentences) }
+                        var accumulatedLevels = intSetOf()
                         for ((_, sentences) in summary) {
                             accumulatedLevels = accumulatedLevels union sentences
                         }

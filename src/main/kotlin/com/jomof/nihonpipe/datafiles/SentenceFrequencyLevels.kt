@@ -15,10 +15,16 @@ import kotlin.math.max
 class SentenceFrequencyLevels : LevelProvider {
 
     override fun getKeySentences(level: Int) = instance.first[level]!!
-    override fun getSentences(level: Int) = instance.second[level]!!
+    override fun getLevelSentences(level: Int) = instance.second[level]!!
     override val size: Int get() = instance.first.size
     override fun keysOf(tokenization: KuromojiIpadicTokenization) = setOf(groupName)
-
+    override fun getLevelSizes(): List<Int> {
+        return instance
+                .first
+                .entries
+                .sortedBy { it.key }
+                .map { it.value.size }
+    }
     companion object {
         private const val groupName = "the-frequency-group"
         private var theTable: Pair<
@@ -45,8 +51,7 @@ class SentenceFrequencyLevels : LevelProvider {
         )
 
         fun frequencyOrder(index: Int): Long {
-            val sentence = TranslatedSentences
-                    .sentences
+            val sentence = TranslatedSentences()
                     .sentences[index]!!
             val summarize = SentenceStatisticsCache.summarize
             val (japanese, english) = sentence
@@ -128,12 +133,9 @@ class SentenceFrequencyLevels : LevelProvider {
         private fun populate(
                 table: MVMap<Int, List<KeySentences>>,
                 levels: MVMap<Int, IntSet>) {
-            var accumulatedLevels = intSetOf()
-            val chunkSize =
-                    TranslatedSentences.sentences.sentences.size / 20
-            TranslatedSentences
-                    .sentences
-                    .sentences
+            val translatedSentences = TranslatedSentences().sentences
+            val chunkSize = translatedSentences.size / 20
+            translatedSentences
                     .entries
                     .map { (index, sentence) ->
 
@@ -151,6 +153,7 @@ class SentenceFrequencyLevels : LevelProvider {
                     }
                     .forEachIndexed { level, all: IntSet ->
                         table[level] = listOf(KeySentences(groupName, all))
+                        var accumulatedLevels = intSetOf()
                         accumulatedLevels = accumulatedLevels union all
                         levels[level] = accumulatedLevels
                     }

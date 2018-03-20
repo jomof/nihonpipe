@@ -11,7 +11,7 @@ import org.h2.mvstore.MVStore
 
 class WanikaniVocabLevels : LevelProvider {
     override fun getKeySentences(level: Int) = instance.first[level]!!
-    override fun getSentences(level: Int) = instance.second[level]!!
+    override fun getLevelSentences(level: Int) = instance.second[level]!!
     override val size: Int get() = instance.first.size
     override fun keysOf(tokenization: KuromojiIpadicTokenization): Set<String> {
         return tokenization.tokens
@@ -19,6 +19,13 @@ class WanikaniVocabLevels : LevelProvider {
                 .toSet()
     }
 
+    override fun getLevelSizes(): List<Int> {
+        return instance
+                .first
+                .entries
+                .sortedBy { it.key }
+                .map { it.value.size }
+    }
     companion object {
         private fun create(): Pair<
                 MVMap<Int, List<KeySentences>>,
@@ -38,8 +45,6 @@ class WanikaniVocabLevels : LevelProvider {
                 keySentences: MVMap<Int, List<KeySentences>>,
                 levels: MVMap<Int, IntSet>) {
             val vocabToSentenceFilter = VocabToSentenceFilter()
-            val tokenize = KuromojiIpadicCache.tokenize
-            var accumulatedLevels = intSetOf()
             WanikaniVsJlptVocabs
                     .vocabOf
                     .vocabs
@@ -58,6 +63,7 @@ class WanikaniVocabLevels : LevelProvider {
                                 }
                     }
                     .onEach { (level, list) ->
+                        var accumulatedLevels = intSetOf()
                         for ((_, _, sentences) in list) {
                             accumulatedLevels = accumulatedLevels union sentences
                         }

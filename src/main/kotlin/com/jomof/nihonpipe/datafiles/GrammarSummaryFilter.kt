@@ -18,7 +18,7 @@ class GrammarSummaryFilter {
 
     init {
         if (grammarSummary.isEmpty()) {
-            val tanaka = TranslatedSentences.sentences
+            val tanaka = TranslatedSentences()
             val tokenize = KuromojiIpadicCache.tokenize
             val map = mutableMapOf<String, IntSet>()
             for ((index, sentence) in tanaka.sentences) {
@@ -37,7 +37,6 @@ class GrammarSummaryFilter {
 
             db.compactRewriteFully()
             save()
-            TranslatedSentences.save()
             KuromojiIpadicCache.save()
         }
     }

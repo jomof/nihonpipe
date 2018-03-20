@@ -5,7 +5,7 @@ import java.io.ObjectInput
 import java.io.ObjectOutput
 
 class IntSet(
-        private var top: Node = EmptyNode.instance)
+        internal var top: Node = EmptyNode.instance)
     : MutableSet<Int>, Externalizable {
     override val size: Int get() = top.size
 
@@ -58,8 +58,8 @@ class IntSet(
     override fun removeAll(elements: Collection<Int>) = TODO("not implemented")
     override fun retainAll(elements: Collection<Int>) = TODO("not implemented")
     override fun containsAll(elements: Collection<Int>) = TODO("not implemented")
-    override fun isEmpty() = TODO("not implemented")
-    override fun toString() = "IntSet(size = $size)"
+    override fun isEmpty() = size == 0
+    override fun toString() = "IntSet(size = $size, $top)"
 
     override fun equals(other: Any?): Boolean {
         if (other == null) {
@@ -75,6 +75,10 @@ class IntSet(
                     equal = left == right
                 }
         return equal
+    }
+
+    companion object {
+        private const val serialVersionUID = 6790746115289250686L
     }
 }
 

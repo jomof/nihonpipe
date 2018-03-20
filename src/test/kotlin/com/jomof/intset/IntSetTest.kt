@@ -532,5 +532,8 @@ class IntSetTest {
                 .count()
         assertThat(set == set).isTrue()
 
+        val forEached = intSetOf()
+        set.forEach { forEached += it }
+        assertThat(set == forEached).isTrue()
     }
 }

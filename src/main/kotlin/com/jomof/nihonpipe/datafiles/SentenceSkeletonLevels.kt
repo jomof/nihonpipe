@@ -11,10 +11,18 @@ import org.h2.mvstore.MVStore
 
 class SentenceSkeletonLevels : LevelProvider {
     override fun getKeySentences(level: Int) = instance.first[level]!!
-    override fun getSentences(level: Int) = instance.second[level]!!
+    override fun getLevelSentences(level: Int) = instance.second[level]!!
     override val size: Int get() = instance.first.size
     override fun keysOf(tokenization: KuromojiIpadicTokenization) =
             setOf(tokenization.particleSkeletonForm())
+
+    override fun getLevelSizes(): List<Int> {
+        return instance
+                .first
+                .entries
+                .sortedBy { it.key }
+                .map { it.value.size }
+    }
 
     companion object {
         private var theTable: Pair<
@@ -58,6 +66,7 @@ class SentenceSkeletonLevels : LevelProvider {
                 if (totalSize > acceptableSize) {
                     table[level] = keySentences
                     levels[level] = accumulatedLevels.copy()
+                    accumulatedLevels.clear()
                     keySentences = mutableListOf()
                     totalSize = 0
                     level++
