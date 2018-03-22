@@ -1,123 +1,65 @@
 A: Prefectures of Japan
-B:
-
-Hokkaido 北海道
-1. Hokkaido 北海道
-
-Tohoku 東北
-2. Aomori 青森
-
-3. Akita 秋田
-
-4. Iwate 岩手
-
-5. Yamagata 山形
-
-6. Miyagi 宮城
-
-7. Fukushima 福島
-
-Kanto 関東
-8. Tochigi 栃木
-
-9. Gunma 群馬
-
-10. Ibaraki 茨城
-
-11. Saitama 埼玉
-
-12. Tokyo 東京
-
-13. Chiba 千葉
-
-14. Kanagawa 神奈川
-
-Chubu 中部
-15. Niigata 新潟
-
-16. Ishikawa 石川
-
-17. Toyama 富山
-
-18. Nagano 長野
-
-19. Fukui 福井
-
-20. Gifu 岐阜
-
-21. Yamanashi 山梨
-
-22. Aichi 愛知
-
-23. Shizuoka 静岡
-
-Kansai 関西
-24. Hyogo 兵庫
-
-25. Kyoto 京都
-
-26. Shiga 滋賀
-
-27. Osaka 大阪
-
-28. Nara 奈良
-
-29. Mie 三重
-
-30. Wakayama 和歌山
-
-Chugoku 中国
-31. Tottori 鳥取
-32. Shimane 島根
-
-33. Okayama 岡山
-
-34. Hiroshima 広島
-
-35. Yamaguchi 山口
-
-Shikoku 四国
-36. Kagawa 香川
-
-37. Ehime 愛媛
-
-38. Tokushima 徳島
-
-39. Kochi 高知
-
-Kyushu & Okinawa 九州・沖縄
-40. Fukuoka 福岡
-
-41. Saga 佐賀
-
-42. Nagasaki 長崎
-
-43. Kumamoto 熊本
-
-44. Oita 大分
-
-45. Miyazaki 宮崎
-
-46. Kagoshima 鹿児島
-
-47. Okinawa 沖縄
-
-Largest prefecture - Hokkaido
-
-Smallest prefecture - Kagawa
-
-Prefectures with both Pacific and Japan Sea coasts - Aomori & Hyogo
-
-Prefecture with the highest population density - Tokyo
-
-Prefecture with the most islands - Nagasaki
-
-Prefecture with the most dogs - Aichi
-
-Prefecture with the largest rice yield - Niigata
-
-Prefecture with the most cows - Hokkaido
-
-Prefecture with the smallest population - Tottori
-
-Poorest prefecture - Okinawa
+B: 北海道	Hokkaido
+B: 東北	Tohoku
+B: 青森	Aomori
+B: 秋田	Akita
+B: 岩手	Iwate
+B: 山形	Yamagata
+B: 宮城	Miyagi
+B: 福島	Fukushima
+B: 関東	Kanto
+B: 栃木	Tochigi
+B: 群馬	Gunma
+B: 茨城	Ibaraki
+B: 埼玉	Saitama
+B: 東京	Tokyo
+B: 千葉	Chiba
+B: 神奈川	Kanagawa
+B: 中部	Chubu
+B: 新潟	Niigata
+B: 石川	Ishikawa
+B: 富山	Toyama
+B: 長野	Nagano
+B: 福井	Fukui
+B: 岐阜	Gifu
+B: 山梨	Yamanashi
+B: 愛知	Aichi
+B: 静岡	Shizuoka
+B: 関西	Kansai
+B: 兵庫	Hyogo
+B: 京都	Kyoto
+B: 滋賀	Shiga
+B: 大阪	Osaka
+B: 奈良	Nara
+B: 三重	Mie
+B: 和歌山	Wakayama
+B: 中国	Chugoku
+B: 鳥取	Tottori
+B: 島根	Shimane
+B: 岡山	Okayama
+B: 広島	Hiroshima
+B: 山口	Yamaguchi
+B: 四国	Shikoku
+B: 香川	Kagawa
+B: 愛媛	Ehime
+B: 徳島	Tokushima
+B: 九州	Kyushu
+B: 沖縄	Okinawa
+B: 福岡	Fukuoka
+B: 佐賀	Saga
+B: 長崎	Nagasaki
+B: 熊本	Kumamoto
+B: 大分	Oita
+B: 宮崎	Miyazaki
+B: 鹿児島	Kagoshima
+B: 沖縄	Okinawa
+C: Largest prefecture - Hokkaido
+C: Smallest prefecture - Kagawa
+C: Prefectures with both Pacific and Japan Sea coasts - Aomori & Hyogo
+C: Prefecture with the highest population density - Tokyo
+C: Prefecture with the most islands - Nagasaki
+C: Prefecture with the most dogs - Aichi
+C: Prefecture with the largest rice yield - Niigata
+C: Prefecture with the most cows - Hokkaido
+C: Prefecture with the smallest population - Tottori
+C: Poorest prefecture - Okinawa
