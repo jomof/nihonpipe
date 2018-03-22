@@ -14,7 +14,7 @@ class GrammarSummaryLevels : LevelProvider {
     override fun getKeySentences(level: Int) = instance.first[level]!!
     override fun getLevelSentences(level: Int) = instance.second[level]!!
     override val size: Int get() = instance.first.size
-    override fun keysOf(tokenization: KuromojiIpadicTokenization) =
+    fun keysOf(tokenization: KuromojiIpadicTokenization) =
             tokenization.grammarSummaryForm()
 
     override fun getLevelSizes(): List<Int> {

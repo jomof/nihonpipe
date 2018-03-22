@@ -1,0 +1,3 @@
+A: Seasons
+B: 四季	seasons
+B: 冬	winter

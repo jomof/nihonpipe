@@ -1,0 +1,4 @@
+A: Telling time
+B: 同時	same time
+B: ぐらい	around
+B: 秒	second

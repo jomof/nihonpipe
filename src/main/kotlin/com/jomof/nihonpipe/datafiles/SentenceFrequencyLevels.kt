@@ -2,8 +2,6 @@ package com.jomof.nihonpipe.datafiles
 
 import com.jomof.intset.IntSet
 import com.jomof.intset.intSetOf
-import com.jomof.intset.union
-import com.jomof.nihonpipe.groveler.schema.KuromojiIpadicTokenization
 import com.jomof.nihonpipe.schema.Jlpt
 import com.jomof.nihonpipe.schema.KeySentences
 import com.jomof.nihonpipe.sentenceFrequencyLevelsBin
@@ -17,7 +15,6 @@ class SentenceFrequencyLevels : LevelProvider {
     override fun getKeySentences(level: Int) = instance.first[level]!!
     override fun getLevelSentences(level: Int) = instance.second[level]!!
     override val size: Int get() = instance.first.size
-    override fun keysOf(tokenization: KuromojiIpadicTokenization) = setOf(groupName)
     override fun getLevelSizes(): List<Int> {
         return instance
                 .first
@@ -26,7 +23,6 @@ class SentenceFrequencyLevels : LevelProvider {
                 .map { it.value.size }
     }
     companion object {
-        private const val groupName = "the-frequency-group"
         private var theTable: Pair<
                 MVMap<Int, List<KeySentences>>,
                 MVMap<Int, IntSet>>? = null
@@ -45,11 +41,6 @@ class SentenceFrequencyLevels : LevelProvider {
             return Pair(keyLevels, levels)
         }
 
-        private val sentenceShitList = setOf(
-                33109, // She is like a hen with one chicken.
-                155373 // English blank
-        )
-
         fun frequencyOrder(index: Int): Long {
             val sentence = TranslatedSentences()
                     .sentences[index]!!
@@ -57,9 +48,6 @@ class SentenceFrequencyLevels : LevelProvider {
             val (japanese, english) = sentence
             val summary = summarize(japanese)
             var frequency = 0L
-
-            // Check the shitlist
-            frequency += if (sentenceShitList.contains(index)) 1 else 0
 
             // Things like Katakana won't have been analyzed for frequency
             // so make a rough estimate by counting the number of katakana
@@ -134,27 +122,35 @@ class SentenceFrequencyLevels : LevelProvider {
                 table: MVMap<Int, List<KeySentences>>,
                 levels: MVMap<Int, IntSet>) {
             val translatedSentences = TranslatedSentences().sentences
-            val chunkSize = translatedSentences.size / 20
+            val chunkSize = translatedSentences.size / 60
             translatedSentences
                     .entries
-                    .map { (index, sentence) ->
+                    .map { (index, _) ->
 
                         Pair(index, frequencyOrder(index))
                     }
                     .sortedBy { (_, frequency) -> frequency }
                     .chunked(chunkSize)
                     .dropLast(1) // Drop the last level because it is proper shit
-                    .map { sentences ->
-                        val all = intSetOf()
-                        for ((sentence, _) in sentences) {
-                            all += sentence
-                        }
-                        all
+                    .mapIndexed { level, sentences ->
+                        sentences
+                                .chunked(sentences.size / 30) // Subchunks per level
+                                .mapIndexed { chunkNumber, chunkSentences ->
+                                    val all = intSetOf()
+                                    for ((sentence, _) in chunkSentences) {
+                                        all += sentence
+                                    }
+                                    KeySentences(
+                                            "frequency-group-$level-$chunkNumber",
+                                            all)
+                                }
                     }
-                    .forEachIndexed { level, all: IntSet ->
-                        table[level] = listOf(KeySentences(groupName, all))
-                        var accumulatedLevels = intSetOf()
-                        accumulatedLevels = accumulatedLevels union all
+                    .forEachIndexed { level, keySentences ->
+                        table[level] = keySentences
+                        val accumulatedLevels = intSetOf()
+                        keySentences.forEach { (_, sentences) ->
+                            accumulatedLevels += sentences
+                        }
                         levels[level] = accumulatedLevels
                     }
             println("levels = ${levels.size}")

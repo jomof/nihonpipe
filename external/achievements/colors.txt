@@ -1,0 +1,5 @@
+A: Taste the rainbow
+B: 白い	white
+B: 黄色	yellow
+B: 黄色い	yellow
+

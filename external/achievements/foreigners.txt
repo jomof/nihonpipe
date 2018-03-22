@@ -1,0 +1,3 @@
+A: Foreigners
+B: イギリス人	englishman
+B: 外人	foreigner

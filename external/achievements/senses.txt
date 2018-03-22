@@ -10,6 +10,7 @@ B: さわる	to feel
 B: 聴	hear
 B: 聞く	to hear
 B: 聞こえる	to be heard
+B: 音	sound
 B: 視	sight
 B: 見る	to see
 B: 見える	to be seen

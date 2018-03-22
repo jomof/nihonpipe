@@ -32,18 +32,56 @@ class Play {
 
     @Test
     fun reportMissingLevelKeys() {
-        val player = Player(mutableMapOf(
-                "入口はどこですか。" to Score(100, 0),
-                "私の日本語教師の犬には名刺があります。" to Score(60, 50),
-                "日本語が分かりましたか。" to Score(75, 50)))
-        val incomplete = player.incompleteLadderLevelKeys()
-        val report = incomplete.entries.joinToString("\r\n")
+        (0..0).forEach {
+            val player = Player(mutableMapOf(
+                    "入口はどこですか。" to Score(100, 0),
+                    "私の日本語教師の犬には名刺があります。" to Score(60, 50),
+                    "日本語が分かりましたか。" to Score(75, 50),
+                    "ばい菌だらけだ！" to Score(7, 0),
+                    "今こそ一気に取引をまとめるときだ。" to Score(12, 2),
+                    "新聞を一つ下さい。" to Score(22, 2),
+                    "入口はどこですか。" to Score(32, 9),
+                    "りんごを七つ下さい。" to Score(64, 9)))
+            val incomplete =
+                    player.incompleteLadderLevelKeys()
+            val report = incomplete
+                    .entries
+                    .joinToString("\r\n") { (ladder, keySentence) ->
+                        val keys = keySentence.joinToString { (key, sentences) -> "$key[${sentences.size}]" }
+                        "${ladder.first} ${ladder.second} of " +
+                                "${ladder.first.levelProvider.size} = $keys"
+                    }
+            println("$report")
+        }
+    }
+
+    @Test
+    fun addNextSentence() {
+        val player = Player(mutableMapOf())
+
+        val translated = TranslatedSentences()
+        (0..1000).forEach {
+            val nextSentence = player.findNextSentence()
+            val sentence = translated.sentences[nextSentence]
+            player.addSentence(sentence!!.japanese)
+            println("$sentence")
+        }
+        val incomplete =
+                player.incompleteLadderLevelKeys()
+        val report = incomplete
+                .entries
+                .joinToString("\r\n") { (ladder, keySentence) ->
+                    val keys = keySentence.joinToString { (key, sentences) -> "$key[${sentences.size}]" }
+                    "${ladder.first} ${ladder.second} of " +
+                            "${ladder.first.levelProvider.size} = $keys"
+                }
         println("$report")
     }
 
     @Test
     fun analyzeSentence() {
-        val target = "遅くなかったです。"
+        val target = "人工 着色 料 。"
+        //val target = "オレ に 八つ 当たり する な よ 。"
         val found =
                 TranslatedSentences()
                         .sentences

@@ -13,7 +13,7 @@ class SentenceSkeletonLevels : LevelProvider {
     override fun getKeySentences(level: Int) = instance.first[level]!!
     override fun getLevelSentences(level: Int) = instance.second[level]!!
     override val size: Int get() = instance.first.size
-    override fun keysOf(tokenization: KuromojiIpadicTokenization) =
+    fun keysOf(tokenization: KuromojiIpadicTokenization) =
             setOf(tokenization.particleSkeletonForm())
 
     override fun getLevelSizes(): List<Int> {
@@ -73,6 +73,8 @@ class SentenceSkeletonLevels : LevelProvider {
                     acceptableSize *= growthRate
                 }
             }
+            table[level] = keySentences
+            levels[level] = accumulatedLevels.copy()
             table.store.commit()
         }
 

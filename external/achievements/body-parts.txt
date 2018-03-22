@@ -1,0 +1,2 @@
+A: Body Parts
+B: 右手	right hand

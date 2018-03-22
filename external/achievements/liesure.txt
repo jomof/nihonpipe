@@ -1,0 +1,7 @@
+A: Leisure activities
+B: 日光浴	sunbathe
+B: 冒険	adventure
+B: 記念日	holiday
+B: 映画	movie
+B: 写真	photograph
+B: 楽しみ	anticipation

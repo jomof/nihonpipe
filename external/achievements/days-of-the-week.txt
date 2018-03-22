@@ -1,0 +1,2 @@
+A: Days of the week
+B: 水曜日	wednesday

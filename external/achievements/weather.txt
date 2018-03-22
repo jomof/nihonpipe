@@ -1,0 +1,2 @@
+A: weather
+B: 大気	atmosphere

@@ -1,0 +1,2 @@
+A: Civics
+B: 役場	town hall

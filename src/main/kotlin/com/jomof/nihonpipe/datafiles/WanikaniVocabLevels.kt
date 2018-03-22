@@ -13,7 +13,7 @@ class WanikaniVocabLevels : LevelProvider {
     override fun getKeySentences(level: Int) = instance.first[level]!!
     override fun getLevelSentences(level: Int) = instance.second[level]!!
     override val size: Int get() = instance.first.size
-    override fun keysOf(tokenization: KuromojiIpadicTokenization): Set<String> {
+    fun keysOf(tokenization: KuromojiIpadicTokenization): Set<String> {
         return tokenization.tokens
                 .map { token -> token.baseForm }
                 .toSet()

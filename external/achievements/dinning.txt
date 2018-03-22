@@ -1,0 +1,2 @@
+A: Dining
+B: 弁当	bento

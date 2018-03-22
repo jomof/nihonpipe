@@ -1,7 +1,7 @@
 A: ばい菌だらけだ！	There are germs everywhere!
 A: 一概には言えない。	It can not be said unconditionally.
 A: 今こそ一気に取引をまとめるときだ。	Now is the time to clinch the deal.
-A: 箱には七つのものがあります。		There are seven things in the box.
+A: 箱には七つのものがあります。	There are seven things in the box.
 A: この果物は不味い。	This fruit has a bad taste.
 A: 一列に並んで下さい。	Please line up in a row.
 A: 私の日本語教師の犬には名刺があります。	My Japanese teacher's dog has a business card.
@@ -34,3 +34,6 @@ A: 車は大きくないです。	The car is not big.
 A: 来週は暖かくないです。	Next week will not be warm.
 A: 女の人は親切です。	The woman is kind.
 A: 遅くなかったです。	It was not late.
+A: がんばって、ルーンバーさん。	Hang in there Roomba-san.
+A: ファイルをみっつください。	Please give me three rolls of film.
+A: それをください。	Please give me that one.

@@ -1,37 +1,44 @@
 package com.jomof.nihonpipe.play
 
 import com.jomof.algorithm.getsert
+import com.jomof.intset.IntSet
 import com.jomof.intset.forEachElement
 import com.jomof.intset.intSetOf
 import com.jomof.nihonpipe.datafiles.TranslatedSentences
 
 data class Player(
         private val sentencesStudying: MutableMap<String, Score>) {
-    private val studying = intSetOf()
-    private val keyScores = mutableMapOf<ScoreCoordinate, Score>()
+    private var keyScores: Map<ScoreCoordinate, Score>
 
     init {
-        reconstructScores()
+        keyScores = reconstructScores(sentencesStudying)
     }
 
-    private fun existingScoreMap() =
-            keyScores
-                    .entries
-                    .map { (coordinate, score) ->
-                        Pair(coordinate, score)
-                    }
-                    .toMap()
+    fun addSentence(sentence: String) {
+        assert(!sentencesStudying.contains(sentence))
+        sentencesStudying[sentence] = Score()
+        keyScores = reconstructScores(sentencesStudying)
+    }
 
-    fun incompleteLadderLevelKeys(): Map<Pair<LadderKind, Int>, List<String>> {
-        val existingScores = existingScoreMap()
-        val missing = mutableMapOf<Pair<LadderKind, Int>, List<String>>()
+    private fun existingScoreSet() =
+            keyScores.entries.map { it.key }.toSet()
+
+    /**
+     * Get the current level for each ladder along with the keys that are still
+     * missing for that ladder level.
+     */
+    fun incompleteLadderLevelKeys(): Map<Pair<LadderKind, Int>, List<Pair<String, IntSet>>> {
+        val existingScores = existingScoreSet()
+        val missing = mutableMapOf<
+                Pair<LadderKind, Int>,
+                List<Pair<String, IntSet>>>()
         LadderKind.values().forEach { ladderKind ->
             for (level in 0 until ladderKind.levelProvider.size) {
-                val incompletes = mutableListOf<String>()
-                for ((key, sentence) in ladderKind.levelProvider.getKeySentences(level)) {
+                val incompletes = mutableListOf<Pair<String, IntSet>>()
+                ladderKind.forEachKeySentence(level) { (key, sentences) ->
                     val coordinate = ScoreCoordinate(ladderKind, level, key)
-                    if (!existingScores.containsKey(coordinate)) {
-                        incompletes += key
+                    if (!existingScores.contains(coordinate)) {
+                        incompletes += Pair(key, sentences)
                     }
                 }
                 if (incompletes.size > 0) {
@@ -60,36 +67,108 @@ data class Player(
 
     }
 
+    fun findNextSentence(): Int {
+        val incompleteLevels = incompleteLadderLevelKeys()
+        val flattened = incompleteLevels
+                .toList()
+                .groupBy { it.first.second }
+                .toList()
+                .take(1)
+                .map { it.second }
+                .flatten()
+                .map { (ladderLevel, keys) ->
+                    val (ladderKind, level) = ladderLevel
+                    keys.map { (key, sentences) ->
+                        Pair(ScoreCoordinate(ladderKind, level, key), sentences)
+                    }
+                }
+                .flatten()
+                .sortedWith(compareBy({ it.first.level }, { it.second.size }))
+
+        // Needed for this level.
+        val neededForCurrentLevels = incompleteLevels
+                .map { (ladderLevel, list) ->
+                    val (ladder, level) = ladderLevel
+                    list.map { (key, sentences) -> ScoreCoordinate(ladder, level, key) }
+                }
+                .flatten()
+                .toSet()
+
+        // We want to find sentences that will increase the total number of
+        // scores by the smallest positive value. This represents the least
+        // cognitive burden to the learner.
+        val leastCognitiveBurdenList = flattened
+                .map { it.second }
+                .asSequence()
+                .flatten()
+                .asSequence()
+                .filterNot { unplayable.contains(it) }
+                .take(100)
+                .map { sentence ->
+                    var cognitiveBurden = 0
+                    LadderKind.forEachSentenceCoordinate(sentence) { scoreCoordinate ->
+                        if (!keyScores.containsKey(scoreCoordinate)
+                                && neededForCurrentLevels.contains(scoreCoordinate)) {
+                            cognitiveBurden += (scoreCoordinate.level + 1)
+                        }
+                    }
+                    Pair(cognitiveBurden, sentence)
+                }
+                .filter { it.first > 0 }
+                .sortedBy { it.first }
+                .groupBy { it.first }
+                .toList()
+        val leastCognitiveBurden = leastCognitiveBurdenList.first()
+
+        // To break ties, take the shortest
+        val shortestList = leastCognitiveBurden
+                .second
+                .map {
+                    Pair(TranslatedSentences().sentences[it.second]!!.japanese.length,
+                            it.second)
+                }
+                .sortedBy { it.first }
+                .groupBy { it.first }
+                .toList()
+        var shortest = shortestList
+                .first()
+                .second
+                .map { it.second }
+
+
+        return shortest.max()!!
+    }
+
     /**
      * Reconstruct scores from recorded sentence scores.
      */
-    private fun reconstructScores() {
-        keyScores.clear()
-        studying.clear()
+    private fun reconstructScores(
+            sentencesStudying: Map<String, Score>): Map<ScoreCoordinate, Score> {
+        val keyScores = mutableMapOf<ScoreCoordinate, Score>()
+        val studying = intSetOf()
 
         // Reconstruct keyScores from sentence scores
         val sentenceScoreMap = mutableMapOf<Int, Score>()
         val sentences = TranslatedSentences()
-        for ((japanese, sentenceScore) in sentencesStudying) {
+        for ((japanese, sentenceScore) in this.sentencesStudying) {
             val index = sentences.sentenceToIndex(japanese)!!
             studying += index
             sentenceScoreMap[index] = sentenceScore
         }
 
-        LadderKind.forEachLadderLevel { ladderKind, level ->
-            val levelSentences = ladderKind.levelProvider.getLevelSentences(level)
-            studying.forEachElement { index ->
-                if (levelSentences.contains(index)) {
-                    for ((key, sentences) in ladderKind.levelProvider.getKeySentences(level)) {
-                        if (sentences.contains(index)) {
-                            val sentenceScore = sentenceScoreMap[index]!!
-                            val scoreCoordinate = ScoreCoordinate(ladderKind, level, key)
-                            val keyScore = keyScores.getsert(scoreCoordinate) { Score() }
-                            keyScore.addFrom(sentenceScore)
-                        }
-                    }
-                }
+        studying.forEachElement { index ->
+            LadderKind.forEachSentenceCoordinate(index) { scoreCoordinate ->
+                val sentenceScore = sentenceScoreMap[index]!!
+                val keyScore = keyScores.getsert(scoreCoordinate) { Score() }
+                keyScore.addFrom(sentenceScore)
             }
         }
+        return keyScores
+    }
+
+    companion object {
+        val unplayable = listOf(
+                27071   // Artificial coloring material.
+        )
     }
 }
