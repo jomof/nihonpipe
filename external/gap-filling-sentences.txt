@@ -10,6 +10,7 @@ A: たなかさんは一人で日本に来ました。	Mr. Tanaka came to Japan 
 A: 一人です。	I am alone.
 A: りんごを七つ下さい。	Please give me 7 apples.
 A: ビールを八つ下さい。	Please give me 8 beers.
+A: ビー玉を六つ下さい。	Please give me 6 marbles.
 A: 新聞を一つ下さい。	Please give me 1 newspaper.
 A: 入口はどこですか。	Where is the entrance?
 A: 林さんはスミスさんに本をあげました。	Mr. Hayashi gave Mr. Smith a book.
@@ -37,3 +38,12 @@ A: 遅くなかったです。	It was not late.
 A: がんばって、ルーンバーさん。	Hang in there Roomba-san.
 A: ファイルをみっつください。	Please give me three rolls of film.
 A: それをください。	Please give me that one.
+A: 北海道は牛が一番多い県です。	Hokkaido is the prefecture with the most cows.
+A: 北海道は最大の県です。	Hokkaido is the largest prefecture.
+A: 香川は最も小さい県です。	Kagawa is the smallest prefecture.
+A: 東京都は人口密度が最も高い。	Tokyo has the highest population density.
+A: 長崎は島が最も多い県です。	Nagasaki is the prefecture with the most islands.
+A: 愛知県は犬が一番多い県です。	Aichi is the prefecture with the most dogs.
+A: 新潟は米収量が最も多い県です。	Niigata is the prefecture with the highest rice yield.
+A: 犬はベッドの上にいる。	The dog is on the bed.
+A: ピザは三角形です。	Pizza is a triangle.

@@ -1,0 +1,3 @@
+package com.jomof.nihonpipe.datafiles
+
+class SentenceFrequencyLadderTest

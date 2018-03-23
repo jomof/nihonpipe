@@ -53,13 +53,3 @@ B: 大分	Oita
 B: 宮崎	Miyazaki
 B: 鹿児島	Kagoshima
 B: 沖縄	Okinawa
-C: Largest prefecture - Hokkaido
-C: Smallest prefecture - Kagawa
-C: Prefectures with both Pacific and Japan Sea coasts - Aomori & Hyogo
-C: Prefecture with the highest population density - Tokyo
-C: Prefecture with the most islands - Nagasaki
-C: Prefecture with the most dogs - Aichi
-C: Prefecture with the largest rice yield - Niigata
-C: Prefecture with the most cows - Hokkaido
-C: Prefecture with the smallest population - Tottori
-C: Poorest prefecture - Okinawa

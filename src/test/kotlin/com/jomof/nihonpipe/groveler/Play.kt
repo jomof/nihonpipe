@@ -1,5 +1,7 @@
 package com.jomof.nihonpipe.groveler
 
+import com.google.common.truth.Truth.assertThat
+import com.jomof.intset.intSetOf
 import com.jomof.nihonpipe.datafiles.KuromojiIpadicCache
 import com.jomof.nihonpipe.datafiles.SentenceSkeletonFilter
 import com.jomof.nihonpipe.datafiles.TranslatedSentences
@@ -57,14 +59,19 @@ class Play {
 
     @Test
     fun addNextSentence() {
-        val player = Player(mutableMapOf())
+        val player = Player(mutableMapOf(
+                //  "お母さん は どこ 。" to Score(0,0)
+        ))
 
         val translated = TranslatedSentences()
-        (0..1000).forEach {
-            val nextSentence = player.findNextSentence()
+        (0..5000).forEach {
+            val (nextSentence, reasons) = player.findNextSentence()
             val sentence = translated.sentences[nextSentence]
             player.addSentence(sentence!!.japanese)
-            println("$sentence")
+            println("${sentence.japanese} ${sentence.english} $reasons")
+//            assertThat(sentence.japanese.length)
+//                    .named(sentence.toString())
+//                    .isLessThan(50)
         }
         val incomplete =
                 player.incompleteLadderLevelKeys()
@@ -79,28 +86,44 @@ class Play {
     }
 
     @Test
+    fun allSentencesAreCoveredByEachLadderLevel() {
+        val allSentenceCount = TranslatedSentences().sentences.size
+        for (ladderKind in LadderKind.values()) {
+            val sentences = intSetOf()
+            for (level in 0 until ladderKind.levelProvider.size) {
+                sentences += ladderKind.levelProvider.getLevelSentences(level)
+            }
+            if (sentences.size != allSentenceCount) {
+                (0..allSentenceCount).forEach { index ->
+                    if (!sentences.contains(index)) {
+                        val sentence = TranslatedSentences().sentences[index]
+                        assertThat(sentences.contains(index))
+                                .named("sentence $sentence is not covered by $ladderKind")
+                                .isTrue()
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
     fun analyzeSentence() {
-        val target = "人工 着色 料 。"
-        //val target = "オレ に 八つ 当たり する な よ 。"
-        val found =
-                TranslatedSentences()
-                        .sentences
-                        .filter { (key, sentence) ->
-                            sentence.japanese == target
-                        }
-                        .entries
-                        .toList()
-                        .single()
+        //val target = "大人 ２ 枚 ください 。"
+        val target = "彼 は 方向 音痴 だ 。"
+        //val target = "お母さん は どこ 。"
+        val index = TranslatedSentences().sentenceToIndex(target)
+        val found = TranslatedSentences().sentences[index]
+
         println("$found")
         val tokenization = KuromojiIpadicCache
                 .tokenize(target)
         println("tokens = ${tokenization.tokens}")
+        println("reading = ${tokenization.reading()}")
         println("skeleton = ${tokenization.particleSkeletonForm()}")
         val skeletonSentences = SentenceSkeletonFilter
                 .filterOf
                 .skeletons[tokenization.particleSkeletonForm()]!!
         println("There are ${skeletonSentences.size} sentences with this skeleton")
-        val index = found.key
         fun locateInLevel(ladderKind: LadderKind) {
             val provider = ladderKind.levelProvider
             var found = false

@@ -1,15 +1,19 @@
 package com.jomof.nihonpipe.play
 
+import com.jomof.intset.IntSet
 import com.jomof.nihonpipe.datafiles.*
 import com.jomof.nihonpipe.schema.KeySentences
 
 enum class LadderKind(
         val levelProvider: LevelProvider,
         val levelsPerMezzo: Int) {
-    WANIKANI_VOCAB_LADDER(WanikaniVocabLevels(), 5),
-    SENTENCE_SKELETON_LADDER(SentenceSkeletonLevels(), 15),
-    GRAMMAR_SUMMARY_LADDER(GrammarSummaryLevels(), 20),
-    SENTENCE_FREQUENCY_LADDER(SentenceFrequencyLevels(), 100);
+    SENTENCE_SKELETON_LADDER(SentenceSkeletonLadder(), 15),
+    JLPT_VOCAB_LADDER(JlptVocabLadder(), 5),
+    WANIKANI_VOCAB_LADDER(WanikaniVocabLadder(), 5),
+    GRAMMAR_SUMMARY_LADDER(GrammarSummaryLadder(), 20),
+    SENTENCE_LENGTH_LADDER(SentenceLengthLadder(), 20),
+    //SENTENCE_FREQUENCY_LADDER(SentenceFrequencyLadder(), 100)
+    ;
 
     fun forEachKeySentence(level: Int, action: (KeySentences) -> Unit) {
         for (keySentence in levelProvider.getKeySentences(level)) {
@@ -35,6 +39,14 @@ enum class LadderKind(
                             action(ScoreCoordinate(ladderKind, level, key))
                         }
                     }
+                }
+            }
+        }
+
+        fun forEachPossibleCoordinate(action: (ScoreCoordinate, IntSet) -> Unit) {
+            forEachLadderLevel { ladderKind, level ->
+                ladderKind.forEachKeySentence(level) { (key, sentences) ->
+                    action(ScoreCoordinate(ladderKind, level, key), sentences)
                 }
             }
         }

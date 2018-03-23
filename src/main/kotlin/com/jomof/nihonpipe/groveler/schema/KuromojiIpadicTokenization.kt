@@ -5,6 +5,12 @@ import java.io.Serializable
 
 data class KuromojiIpadicTokenization(
         val tokens: List<KuromojiIpadicToken>) : Indexed, Serializable {
+
+    /**
+     * Provides katakana reading for this sentence.
+     */
+    fun reading() = tokens.joinToString("") { it.reading }
+
     companion object {
         private const val serialVersionUID = -7094035836985017858L
     }

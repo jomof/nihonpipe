@@ -4,13 +4,13 @@ import com.jomof.intset.IntSet
 import com.jomof.intset.intSetOf
 import com.jomof.nihonpipe.schema.Jlpt
 import com.jomof.nihonpipe.schema.KeySentences
-import com.jomof.nihonpipe.sentenceFrequencyLevelsBin
+import com.jomof.nihonpipe.sentenceFrequencyLadderBin
 import org.h2.mvstore.MVMap
 import org.h2.mvstore.MVStore
 import java.lang.Character.UnicodeBlock.*
 import kotlin.math.max
 
-class SentenceFrequencyLevels : LevelProvider {
+class SentenceFrequencyLadder : LevelProvider {
 
     override fun getKeySentences(level: Int) = instance.first[level]!!
     override fun getLevelSentences(level: Int) = instance.second[level]!!
@@ -31,13 +31,13 @@ class SentenceFrequencyLevels : LevelProvider {
                 MVMap<Int, List<KeySentences>>,
                 MVMap<Int, IntSet>> {
             val db = MVStore.Builder()
-                    .fileName(sentenceFrequencyLevelsBin.absolutePath!!)
+                    .fileName(sentenceFrequencyLadderBin.absolutePath!!)
                     .compress()
                     .open()!!
             val keyLevels =
                     db.openMap<Int, List<KeySentences>>("SentenceFrequencyKeyLevels")
             val levels =
-                    db.openMap<Int, IntSet>("SentenceFrequencyLevels")
+                    db.openMap<Int, IntSet>("SentenceFrequencyLadder")
             return Pair(keyLevels, levels)
         }
 
@@ -122,7 +122,8 @@ class SentenceFrequencyLevels : LevelProvider {
                 table: MVMap<Int, List<KeySentences>>,
                 levels: MVMap<Int, IntSet>) {
             val translatedSentences = TranslatedSentences().sentences
-            val chunkSize = translatedSentences.size / 60
+            val chunkSize = translatedSentences.size / 59
+            val allSentences = intSetOf()
             translatedSentences
                     .entries
                     .map { (index, _) ->
@@ -150,10 +151,24 @@ class SentenceFrequencyLevels : LevelProvider {
                         val accumulatedLevels = intSetOf()
                         keySentences.forEach { (_, sentences) ->
                             accumulatedLevels += sentences
+                            allSentences += sentences
                         }
                         levels[level] = accumulatedLevels
                     }
-            println("levels = ${levels.size}")
+
+            val unmappedSentences = intSetOf()
+            (0 until TranslatedSentences().sentences.size).forEach {
+                if (!allSentences.contains(it)) {
+                    unmappedSentences += it
+                }
+            }
+            if (unmappedSentences.size > 0) {
+                // Put the rest of the sentences in a final level
+                val catchAllLevel = levels.size
+                levels[catchAllLevel] = unmappedSentences
+                table[catchAllLevel] = listOf(
+                        KeySentences("everything-but-sentence-frequency", unmappedSentences))
+            }
             table.store.commit()
         }
 

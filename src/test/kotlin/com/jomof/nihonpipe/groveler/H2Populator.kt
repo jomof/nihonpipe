@@ -72,13 +72,13 @@ class H2Populator {
 
     @Test
     fun sentenceSkeletonLevels() {
-        val skeletonLevels = SentenceSkeletonLevels()
+        val skeletonLevels = SentenceSkeletonLadder()
         skeletonLevels.getKeySentences(5)
     }
 
     @Test
     fun waniKaniVocabLevels() {
-        val levels = WanikaniVocabLevels()
+        val levels = WanikaniVocabLadder()
         levels.getKeySentences(42)
     }
 
@@ -106,7 +106,7 @@ class H2Populator {
 
     @Test
     fun grammarSummaryLevels() {
-        val levels = GrammarSummaryLevels()
+        val levels = GrammarSummaryLadder()
         val level = levels.getKeySentences(5)
         println("$level")
     }

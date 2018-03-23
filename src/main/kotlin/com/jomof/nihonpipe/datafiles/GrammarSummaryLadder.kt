@@ -2,19 +2,19 @@ package com.jomof.nihonpipe.datafiles
 
 import com.jomof.intset.IntSet
 import com.jomof.intset.intSetOf
+import com.jomof.nihonpipe.grammarSummaryLadderBin
 import com.jomof.nihonpipe.groveler.schema.KuromojiIpadicTokenization
-import com.jomof.nihonpipe.groveler.schema.particleSkeletonForm
+import com.jomof.nihonpipe.groveler.schema.grammarSummaryForm
 import com.jomof.nihonpipe.schema.KeySentences
-import com.jomof.nihonpipe.sentenceSkeletonLevelsBin
 import org.h2.mvstore.MVMap
 import org.h2.mvstore.MVStore
 
-class SentenceSkeletonLevels : LevelProvider {
+class GrammarSummaryLadder : LevelProvider {
     override fun getKeySentences(level: Int) = instance.first[level]!!
     override fun getLevelSentences(level: Int) = instance.second[level]!!
     override val size: Int get() = instance.first.size
     fun keysOf(tokenization: KuromojiIpadicTokenization) =
-            setOf(tokenization.particleSkeletonForm())
+            tokenization.grammarSummaryForm()
 
     override fun getLevelSizes(): List<Int> {
         return instance
@@ -23,7 +23,6 @@ class SentenceSkeletonLevels : LevelProvider {
                 .sortedBy { it.key }
                 .map { it.value.size }
     }
-
     companion object {
         private var theTable: Pair<
                 MVMap<Int, List<KeySentences>>,
@@ -33,48 +32,38 @@ class SentenceSkeletonLevels : LevelProvider {
                 MVMap<Int, List<KeySentences>>,
                 MVMap<Int, IntSet>> {
             val db = MVStore.Builder()
-                    .fileName(sentenceSkeletonLevelsBin.absolutePath!!)
+                    .fileName(grammarSummaryLadderBin.absolutePath!!)
                     .compress()
                     .open()!!
             val keyLevels =
-                    db.openMap<Int, List<KeySentences>>("SentenceSkeletonKeyLevels")
+                    db.openMap<Int, List<KeySentences>>("GrammarSummaryKeyLevels")
             val levels =
-                    db.openMap<Int, IntSet>("SentenceSkeletonLevels")
+                    db.openMap<Int, IntSet>("GrammarSummaryLadder")
             return Pair(keyLevels, levels)
         }
 
         private fun populate(
                 table: MVMap<Int, List<KeySentences>>,
                 levels: MVMap<Int, IntSet>) {
-            val accumulatedLevels = intSetOf()
-            val sorted = SentenceSkeletonFilter
+
+            GrammarSummaryFilter
                     .filterOf
-                    .skeletons
+                    .grammarSummaries
                     .entries
+                    .filter { (_, ix) -> ix.size > 5 }
                     .sortedByDescending { (_, ix) ->
                         ix.size
                     }
-            var totalSize = 0
-            var level = 0
-            var keySentences = mutableListOf<KeySentences>()
-            var acceptableSize = 115.0
-            val growthRate = 1.08
-            for ((skeleton, sentences) in sorted) {
-                accumulatedLevels += sentences
-                keySentences.add(KeySentences(skeleton, sentences))
-                totalSize += sentences.size
-                if (totalSize > acceptableSize) {
-                    table[level] = keySentences
-                    levels[level] = accumulatedLevels.copy()
-                    accumulatedLevels.clear()
-                    keySentences = mutableListOf()
-                    totalSize = 0
-                    level++
-                    acceptableSize *= growthRate
-                }
-            }
-            table[level] = keySentences
-            levels[level] = accumulatedLevels.copy()
+                    .chunked(2)
+                    .forEachIndexed { level, summary ->
+                        table[level] = summary
+                                .map { (vocab, sentences) -> KeySentences(vocab, sentences) }
+                        val accumulatedLevels = intSetOf()
+                        for ((_, sentences) in summary) {
+                            accumulatedLevels += sentences
+                        }
+                        levels[level] = accumulatedLevels
+                    }
             table.store.commit()
         }
 
@@ -84,9 +73,9 @@ class SentenceSkeletonLevels : LevelProvider {
             get() {
                 if (theTable == null) {
                     val table = create()
-                    val (keyLevels, levels) = table
+                    val (keySentences, levels) = table
                     if (levels.isEmpty()) {
-                        populate(keyLevels, levels)
+                        populate(keySentences, levels)
                     }
                     theTable = table
                 }

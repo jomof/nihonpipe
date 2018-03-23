@@ -2,20 +2,15 @@ package com.jomof.nihonpipe.datafiles
 
 import com.jomof.intset.IntSet
 import com.jomof.intset.intSetOf
-import com.jomof.intset.union
-import com.jomof.nihonpipe.grammarSummaryLevelsBin
-import com.jomof.nihonpipe.groveler.schema.KuromojiIpadicTokenization
-import com.jomof.nihonpipe.groveler.schema.grammarSummaryForm
 import com.jomof.nihonpipe.schema.KeySentences
+import com.jomof.nihonpipe.sentenceLengthLadder
 import org.h2.mvstore.MVMap
 import org.h2.mvstore.MVStore
 
-class GrammarSummaryLevels : LevelProvider {
+class SentenceLengthLadder : LevelProvider {
     override fun getKeySentences(level: Int) = instance.first[level]!!
     override fun getLevelSentences(level: Int) = instance.second[level]!!
     override val size: Int get() = instance.first.size
-    fun keysOf(tokenization: KuromojiIpadicTokenization) =
-            tokenization.grammarSummaryForm()
 
     override fun getLevelSizes(): List<Int> {
         return instance
@@ -24,6 +19,7 @@ class GrammarSummaryLevels : LevelProvider {
                 .sortedBy { it.key }
                 .map { it.value.size }
     }
+
     companion object {
         private var theTable: Pair<
                 MVMap<Int, List<KeySentences>>,
@@ -33,35 +29,37 @@ class GrammarSummaryLevels : LevelProvider {
                 MVMap<Int, List<KeySentences>>,
                 MVMap<Int, IntSet>> {
             val db = MVStore.Builder()
-                    .fileName(grammarSummaryLevelsBin.absolutePath!!)
+                    .fileName(sentenceLengthLadder.absolutePath!!)
                     .compress()
                     .open()!!
             val keyLevels =
-                    db.openMap<Int, List<KeySentences>>("GrammarSummaryKeyLevels")
+                    db.openMap<Int, List<KeySentences>>("SentenceLengthKeyLevels")
             val levels =
-                    db.openMap<Int, IntSet>("GrammarSummaryLevels")
+                    db.openMap<Int, IntSet>("SentenceLengthLadder")
             return Pair(keyLevels, levels)
         }
 
         private fun populate(
                 table: MVMap<Int, List<KeySentences>>,
                 levels: MVMap<Int, IntSet>) {
-
-            GrammarSummaryFilter
-                    .filterOf
-                    .grammarSummaries
+            TranslatedSentences()
+                    .sentences
                     .entries
-                    .filter { (_, ix) -> ix.size > 5 }
-                    .sortedByDescending { (_, ix) ->
-                        ix.size
+                    .sortedBy { it.value.japanese.length }
+                    .chunked(TranslatedSentences().sentences.size / 60)
+                    .mapIndexed { level, sentences ->
+                        val sentenceSet = intSetOf()
+                        sentences.forEach { (index, _) ->
+                            sentenceSet += index
+                        }
+                        val keySentences = KeySentences("length-$level", sentenceSet)
+                        listOf(keySentences)
                     }
-                    .chunked(2)
                     .forEachIndexed { level, summary ->
                         table[level] = summary
-                                .map { (vocab, sentences) -> KeySentences(vocab, sentences) }
-                        var accumulatedLevels = intSetOf()
+                        val accumulatedLevels = intSetOf()
                         for ((_, sentences) in summary) {
-                            accumulatedLevels = accumulatedLevels union sentences
+                            accumulatedLevels += sentences
                         }
                         levels[level] = accumulatedLevels
                     }

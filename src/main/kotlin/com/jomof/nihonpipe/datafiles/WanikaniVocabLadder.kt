@@ -2,22 +2,15 @@ package com.jomof.nihonpipe.datafiles
 
 import com.jomof.intset.IntSet
 import com.jomof.intset.intSetOf
-import com.jomof.intset.union
-import com.jomof.nihonpipe.groveler.schema.KuromojiIpadicTokenization
 import com.jomof.nihonpipe.schema.KeySentences
-import com.jomof.nihonpipe.wanikaniVocabLevelsBin
+import com.jomof.nihonpipe.wanikaniVocabLadderBin
 import org.h2.mvstore.MVMap
 import org.h2.mvstore.MVStore
 
-class WanikaniVocabLevels : LevelProvider {
+class WanikaniVocabLadder : LevelProvider {
     override fun getKeySentences(level: Int) = instance.first[level]!!
     override fun getLevelSentences(level: Int) = instance.second[level]!!
     override val size: Int get() = instance.first.size
-    fun keysOf(tokenization: KuromojiIpadicTokenization): Set<String> {
-        return tokenization.tokens
-                .map { token -> token.baseForm }
-                .toSet()
-    }
 
     override fun getLevelSizes(): List<Int> {
         return instance
@@ -31,7 +24,7 @@ class WanikaniVocabLevels : LevelProvider {
                 MVMap<Int, List<KeySentences>>,
                 MVMap<Int, IntSet>> {
             val db = MVStore.Builder()
-                    .fileName(wanikaniVocabLevelsBin.absolutePath!!)
+                    .fileName(wanikaniVocabLadderBin.absolutePath!!)
                     .compress()
                     .open()!!
             val keyLevels =
@@ -45,6 +38,7 @@ class WanikaniVocabLevels : LevelProvider {
                 keySentences: MVMap<Int, List<KeySentences>>,
                 levels: MVMap<Int, IntSet>) {
             val vocabToSentenceFilter = VocabToSentenceFilter()
+            val allSentences = intSetOf()
             WanikaniVsJlptVocabs
                     .vocabOf
                     .vocabs
@@ -63,12 +57,27 @@ class WanikaniVocabLevels : LevelProvider {
                                 }
                     }
                     .onEach { (level, list) ->
-                        var accumulatedLevels = intSetOf()
+                        val accumulatedLevels = intSetOf()
                         for ((_, _, sentences) in list) {
-                            accumulatedLevels = accumulatedLevels union sentences
+                            accumulatedLevels += sentences
+                            allSentences += sentences
                         }
                         levels[level] = accumulatedLevels
                     }
+
+            val unmappedSentences = intSetOf()
+            (0 until TranslatedSentences().sentences.size).forEach {
+                if (!allSentences.contains(it)) {
+                    unmappedSentences += it
+                }
+            }
+            if (unmappedSentences.size > 0) {
+                // Put the rest of the sentences in a final level
+                val catchAllLevel = levels.size
+                levels[catchAllLevel] = unmappedSentences
+                keySentences[catchAllLevel] = listOf(
+                        KeySentences("everything-but-wanikani", unmappedSentences))
+            }
             keySentences.store.commit()
         }
 
