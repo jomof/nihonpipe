@@ -1,15 +1,12 @@
 package com.jomof.nihonpipe.groveler
 
 import com.google.common.truth.Truth.assertThat
+import com.jomof.intset.forEachElement
 import com.jomof.intset.intSetOf
-import com.jomof.nihonpipe.datafiles.KuromojiIpadicCache
-import com.jomof.nihonpipe.datafiles.SentenceSkeletonFilter
-import com.jomof.nihonpipe.datafiles.TranslatedSentences
-import com.jomof.nihonpipe.datafiles.VocabToSentenceFilter
+import com.jomof.intset.minus
+import com.jomof.nihonpipe.datafiles.*
 import com.jomof.nihonpipe.groveler.schema.particleSkeletonForm
-import com.jomof.nihonpipe.play.LadderKind
-import com.jomof.nihonpipe.play.Player
-import com.jomof.nihonpipe.play.Score
+import com.jomof.nihonpipe.play.*
 import org.junit.Test
 
 class Play {
@@ -58,20 +55,48 @@ class Play {
     }
 
     @Test
+    fun bestSeedSentence() {
+        val sentenceSkeletonLadder = SentenceSkeletonLadder().getLevelSentences(0)
+        val grammarSummaryLadder = GrammarSummaryLadder().getLevelSentences(0)
+        val wanikaniVocabLadder = WanikaniVocabLadder().getLevelSentences(0)
+        val jlptVocabLadder = JlptVocabLadder().getLevelSentences(0)
+
+        val skeletonByGrammar = sentenceSkeletonLadder intersect grammarSummaryLadder
+        val wanikaniByJlpt = wanikaniVocabLadder intersect jlptVocabLadder
+
+        val total = skeletonByGrammar intersect  wanikaniByJlpt
+        for (sentence in total) {
+            val translated = TranslatedSentences().sentences[sentence]
+            println("$sentence $translated")
+        }
+
+
+    }
+
+    @Test
     fun addNextSentence() {
-        val player = Player(mutableMapOf(
-                //  "お母さん は どこ 。" to Score(0,0)
-        ))
+        val player = Player(mutableMapOf())
 
         val translated = TranslatedSentences()
         (0..5000).forEach {
+            if ((it) % 50 == 0) {
+                val incomplete =
+                        player.incompleteLadderLevelKeys()
+                val report = incomplete
+                        .entries
+                        .joinToString("\r\n") { (ladder, keySentence) ->
+                            val keys = keySentence.joinToString { (key, sentences) -> "$key[${sentences.size}]" }
+                            "${ladder.first} ${ladder.second} of " +
+                                    "${ladder.first.levelProvider.size} = $keys"
+                        }
+                println("$report")
+            }
             val (nextSentence, reasons) = player.findNextSentence()
             val sentence = translated.sentences[nextSentence]
             player.addSentence(sentence!!.japanese)
-            println("${sentence.japanese} ${sentence.english} $reasons")
-//            assertThat(sentence.japanese.length)
-//                    .named(sentence.toString())
-//                    .isLessThan(50)
+            println("#$it ${sentence.japanese} ${sentence.english} $reasons")
+
+
         }
         val incomplete =
                 player.incompleteLadderLevelKeys()
@@ -109,14 +134,20 @@ class Play {
     @Test
     fun analyzeSentence() {
         //val target = "大人 ２ 枚 ください 。"
-        val target = "彼 は 方向 音痴 だ 。"
+        //val target = "彼 は 方向 音痴 だ 。"
+        //val target = "もう 一つ ケーキ を 食べ て も いい です か 。"
+        val target = "ジム は 肩幅 が 広い 。"
+        //val target = "これ は 本 です 。"
         //val target = "お母さん は どこ 。"
-        val index = TranslatedSentences().sentenceToIndex(target)
+        //val target = "ここ は 今 乾期 です 。"
+        //val target = "バラ は 今 満開 です 。"
+        val index = TranslatedSentences().sentenceToIndex(target)!!
         val found = TranslatedSentences().sentences[index]
 
         println("$found")
         val tokenization = KuromojiIpadicCache
                 .tokenize(target)
+        println("sentence index = $index")
         println("tokens = ${tokenization.tokens}")
         println("reading = ${tokenization.reading()}")
         println("skeleton = ${tokenization.particleSkeletonForm()}")
@@ -144,8 +175,25 @@ class Play {
             locateInLevel(ladderKind)
         }
 
-        val vocabToSentenceFilter = VocabToSentenceFilter()
+        val (sentences, burden) =  LeastBurdenSentenceTransitions().getNextSentences(index)
+        println("The most similar sentences have burden $burden -> ")
+        for (ix in sentences) {
+            println("  $ix : ${TranslatedSentences().sentences[ix]}")
+        }
+    }
 
+    @Test
+    fun leastBurdenConnections() {
+        val leastBurdenTransitions = LeastBurdenSentenceTransitions()
+        val translated = TranslatedSentences().sentences
+        val index = ScoreCoordinateIndex()
+        for ((ixFrom, _) in index.sentences.withIndex()) {
+            val (sentences, burden) = leastBurdenTransitions.getNextSentences(ixFrom)
 
+            println("${translated[ixFrom]} with burden $burden -> ")
+            for (ix in sentences) {
+                println("  ${translated[ix]}")
+            }
+        }
     }
 }

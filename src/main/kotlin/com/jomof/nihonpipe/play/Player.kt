@@ -1,10 +1,9 @@
 package com.jomof.nihonpipe.play
 
 import com.jomof.algorithm.getsert
-import com.jomof.intset.IntSet
-import com.jomof.intset.forEachElement
-import com.jomof.intset.intSetOf
+import com.jomof.intset.*
 import com.jomof.nihonpipe.datafiles.TranslatedSentences
+import com.jomof.nihonpipe.schema.KeySentences
 
 data class Player(
         private val sentencesStudying: MutableMap<String, Score>) {
@@ -67,23 +66,34 @@ data class Player(
 
     }
 
-    fun findNextSentence(): Pair<Int, List<ScoreCoordinate>> {
+    fun adjacentSentences() : IntSet {
+        val allTransitions = intSetOf()
+        for(sentence in sentencesStudying.keys) {
+            val index = TranslatedSentences().sentenceToIndex(sentence)!!
+            allTransitions += LeastBurdenSentenceTransitions().getNextSentences(index).first
+        }
+        return allTransitions
+    }
+
+    fun findNextSentence2(): Pair<Int, List<ScoreCoordinate>> {
         val incompleteLevels = incompleteLadderLevelKeys()
         val ladderToLevel = incompleteLevels.keys.toMap()
-        val lowestLevel = ladderToLevel.values.min()!!
-        val (ladderLevel, keySentences) = incompleteLevels
-                .entries
-                .first { (ladderLevel, _) ->
-                    val (_, level) = ladderLevel
-                    level == lowestLevel
-                }
-        val keySentence = keySentences.first()
+        val adjacentSentences = adjacentToSentencesStudying().toUnion()
+        val sentencesOfLowestLevels = sentencesOfLowestLevels()
+        val intersection = adjacentSentences intersect sentencesOfLowestLevels.toUnion()
+
+        val sentences = when {
+            intersection.isNotEmpty() -> {
+                println("using graph")
+                intersection
+            }
+            else -> sentencesOfLowestLevels.first()
+        }
 
         // We want to find sentences that will increase the total number of
         // scores by the smallest positive value. This represents the least
         // cognitive burden to the learner.
-        val leastCognitiveBurdenList = keySentence
-                .second
+        val leastCognitiveBurdenList = sentences
                 .map { sentence ->
                     var cognitiveBurden = 0
                     val reasons = mutableListOf<ScoreCoordinate>()
@@ -122,6 +132,98 @@ data class Player(
 
 
         return Pair(shortest.second, shortest.third)
+    }
+
+    private fun adjacentToSentencesStudying(): List<IntSet> {
+        val incompleteLevels = incompleteLadderLevelKeys()
+        val ladderToLevel = incompleteLevels.keys.toMap()
+        val lowestLevel = ladderToLevel.values.min()!!
+        val adjacentSentences = adjacentSentences()
+        return incompleteLevels
+                .entries
+                .filter { (ladderLevel, _) ->
+                    val (_, level) = ladderLevel
+                    level == lowestLevel
+                }
+                .map { (ladderLevel, keySentences) ->
+                    val (ladder, _) = ladderLevel
+                    keySentences
+                }
+                .map { keySentences ->
+                    keySentences.map { (key, sentences) ->
+                        KeySentences(key, sentences intersect adjacentSentences)
+                    }
+                            .filter { (key, sentences) -> sentences.size > 0 }
+                }
+                .flatten()
+                .map { (key, sentences) -> sentences }
+    }
+
+    fun findNextSentence(): Pair<Int, List<ScoreCoordinate>> {
+        val incompleteLevels = incompleteLadderLevelKeys()
+        val ladderToLevel = incompleteLevels.keys.toMap()
+        val keySentence = sentencesOfLowestLevels().first()
+        val currentLowestLevel = ladderToLevel.values.min()!!
+
+        // We want to find sentences that will increase the total number of
+        // scores by the smallest positive value. This represents the least
+        // cognitive burden to the learner.
+        val leastCognitiveBurdenList = keySentence
+                .map { sentence ->
+                    var cognitiveBurden = 0
+                    val reasons = mutableListOf<ScoreCoordinate>()
+                    LadderKind.forEachSentenceCoordinate(sentence) { scoreCoordinate ->
+                        if (scoreCoordinate.level >= currentLowestLevel) {
+                            val levelCost = scoreCoordinate.level + 1
+                            cognitiveBurden += levelCost * levelCost
+                            if (scoreCoordinate.level == currentLowestLevel
+                                && !keyScores.containsKey(scoreCoordinate)) {
+                                reasons += scoreCoordinate
+                            }
+                        }
+                    }
+                    Triple(cognitiveBurden, sentence, reasons)
+                }
+                .filter { it.first > 0 }
+                .sortedBy { it.first }
+                .groupBy { it.first }
+                .toList()
+        val leastCognitiveBurden = leastCognitiveBurdenList.first()
+
+        // To break ties, take the shortest
+        val shortestList = leastCognitiveBurden
+                .second
+                .map {
+                    Triple(TranslatedSentences().sentences[it.second]!!.japanese.length,
+                            it.second, it.third)
+                }
+                .sortedBy { it.first }
+                .groupBy { it.first }
+                .toList()
+        val shortest = shortestList
+                .first()
+                .second
+                .maxBy { it.second }!!
+
+
+        return Pair(shortest.second, shortest.third)
+    }
+
+    private fun sentencesOfLowestLevels(): List<IntSet> {
+        val incompleteLevels = incompleteLadderLevelKeys()
+        val ladderToLevel = incompleteLevels.keys.toMap()
+        val lowestLevel = ladderToLevel.values.min()!!
+        return incompleteLevels
+                .entries
+                .filter { (ladderLevel, _) ->
+                    val (_, level) = ladderLevel
+                    level == lowestLevel
+                }
+                .sortedBy { (ladderLevel, list)  -> ladderLevel.first}
+                .map { (ladderLevel, list)  ->
+                    list }
+                .flatten()
+                .map { list -> list.second}
     }
 
     /**

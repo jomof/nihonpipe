@@ -7,10 +7,10 @@ import com.jomof.nihonpipe.schema.KeySentences
 enum class LadderKind(
         val levelProvider: LevelProvider,
         val levelsPerMezzo: Int) {
-    SENTENCE_SKELETON_LADDER(SentenceSkeletonLadder(), 15),
-    JLPT_VOCAB_LADDER(JlptVocabLadder(), 5),
     WANIKANI_VOCAB_LADDER(WanikaniVocabLadder(), 5),
+    SENTENCE_SKELETON_LADDER(SentenceSkeletonLadder(), 15),
     GRAMMAR_SUMMARY_LADDER(GrammarSummaryLadder(), 20),
+    JLPT_VOCAB_LADDER(JlptVocabLadder(), 5),
     SENTENCE_LENGTH_LADDER(SentenceLengthLadder(), 20),
     //SENTENCE_FREQUENCY_LADDER(SentenceFrequencyLadder(), 100)
     ;

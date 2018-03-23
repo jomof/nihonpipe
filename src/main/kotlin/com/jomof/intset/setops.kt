@@ -50,3 +50,9 @@ infix fun IntSet.minus(other: IntSet): IntSet {
 fun IntSet.forEachElement(action: (Int) -> Unit) {
     return top.forEach(action)
 }
+
+fun List<IntSet>.toUnion() : IntSet {
+    val union = intSetOf()
+    forEach { set -> union+= set}
+    return union
+}

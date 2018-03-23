@@ -23,8 +23,6 @@ class PairNode(
             throw RuntimeException()
         }
         pageRange = PageRange(left.pageRange.first, right.pageRange.last)
-        assert(!full())
-        assert(!empty())
     }
 
     override fun pages(): Sequence<Page> = buildSequence {
