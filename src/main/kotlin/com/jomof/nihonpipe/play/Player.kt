@@ -1,22 +1,29 @@
 package com.jomof.nihonpipe.play
 
 import com.jomof.algorithm.getsert
-import com.jomof.intset.*
+import com.jomof.algorithm.takeMaxBy
+import com.jomof.algorithm.takeMinBy
+import com.jomof.intset.IntSet
+import com.jomof.intset.forEachElement
+import com.jomof.intset.intSetOf
+import com.jomof.intset.minus
 import com.jomof.nihonpipe.datafiles.TranslatedSentences
-import com.jomof.nihonpipe.schema.KeySentences
+import kotlin.coroutines.experimental.buildSequence
 
 data class Player(
         private val sentencesStudying: MutableMap<String, Score>) {
-    private var keyScores: Map<ScoreCoordinate, Score>
+    private val keyScores = mutableMapOf<ScoreCoordinate, Score>()
+    private val studying = intSetOf()
+    val coordinates = intSetOf()
 
     init {
-        keyScores = reconstructScores(sentencesStudying)
+        reconstructScores()
     }
 
     fun addSentence(sentence: String) {
         assert(!sentencesStudying.contains(sentence))
         sentencesStudying[sentence] = Score()
-        keyScores = reconstructScores(sentencesStudying)
+        reconstructScores()
     }
 
     private fun existingScoreSet() =
@@ -66,161 +73,106 @@ data class Player(
 
     }
 
-    fun adjacentSentences() : IntSet {
-        val allTransitions = intSetOf()
-        for(sentence in sentencesStudying.keys) {
-            val index = TranslatedSentences().sentenceToIndex(sentence)!!
-            allTransitions += LeastBurdenSentenceTransitions().getNextSentences(index).first
-        }
-        return allTransitions
-    }
-
-    fun findNextSentence2(): Pair<Int, List<ScoreCoordinate>> {
-        val incompleteLevels = incompleteLadderLevelKeys()
-        val ladderToLevel = incompleteLevels.keys.toMap()
-        val adjacentSentences = adjacentToSentencesStudying().toUnion()
-        val sentencesOfLowestLevels = sentencesOfLowestLevels()
-        val intersection = adjacentSentences intersect sentencesOfLowestLevels.toUnion()
-
-        val sentences = when {
-            intersection.isNotEmpty() -> {
-                println("using graph")
-                intersection
+    fun <T> Iterable<T>.elseUse(alternate: () -> Iterable<T>): Sequence<T> {
+        var saw = false
+        return buildSequence {
+            forEach {
+                saw = true
+                yield(it)
             }
-            else -> sentencesOfLowestLevels.first()
+            if (!saw) {
+                yieldAll(alternate())
+            }
         }
+    }
+
+    fun <T> Sequence<T>.elseUse(alternate: () -> Iterable<T>): Sequence<T> {
+        var saw = false
+        return buildSequence {
+            forEach {
+                saw = true
+                yield(it)
+            }
+            if (!saw) {
+                yieldAll(alternate())
+            }
+        }
+    }
+
+    fun addOneSentence(): SentenceRank {
+        val sentences = TranslatedSentences().sentences
+        val keySentence =
+                when (studying.size % 5) {
+                    0 ->
+                        (0 until sentences.size)
+                    else ->
+                        sentencesOfLowestLevels(
+                                LadderKind.WANIKANI_VOCAB_LADDER,
+                                LadderKind.JLPT_VOCAB_LADDER).flatten()
+
+                }
+
 
         // We want to find sentences that will increase the total number of
         // scores by the smallest positive value. This represents the least
         // cognitive burden to the learner.
-        val leastCognitiveBurdenList = sentences
-                .map { sentence ->
-                    var cognitiveBurden = 0
-                    val reasons = mutableListOf<ScoreCoordinate>()
-                    LadderKind.forEachSentenceCoordinate(sentence) { scoreCoordinate ->
-                        val currentUserLevel = ladderToLevel[scoreCoordinate.ladderKind]!!
-                        if (scoreCoordinate.level >= currentUserLevel) {
-                            val levelCost = scoreCoordinate.level + 1
-                            cognitiveBurden += levelCost * levelCost
-                            if (scoreCoordinate.level == currentUserLevel) {
-                                reasons += scoreCoordinate
+        var leastBurdenSeen = Int.MAX_VALUE
+        val (marginalBurden, sentenceIndex, scoreCoordinates) = keySentence
+                .filter { !studying.contains(it) }
+                .mapNotNull { sentence ->
+                    val cognitiveBurden = burdenOf(sentence)
+                    if (cognitiveBurden > leastBurdenSeen) {
+                        null
+                    } else {
+                        val coordinateIndex = ScoreCoordinateIndex()
+                        val allReasons = coordinateIndex.sentences[sentence]
+                        val marginalReasons = allReasons minus coordinates
+                        if (!marginalReasons.isEmpty()) {
+                            if (cognitiveBurden != 0 && cognitiveBurden < leastBurdenSeen) {
+                                leastBurdenSeen = cognitiveBurden
                             }
+                            if (cognitiveBurden == leastBurdenSeen) {
+                                Triple(cognitiveBurden, sentence, marginalReasons)
+                            } else {
+                                null
+                            }
+                        } else {
+                            null
                         }
                     }
-                    Triple(cognitiveBurden, sentence, reasons)
                 }
                 .filter { it.first > 0 }
-                .sortedBy { it.first }
-                .groupBy { it.first }
-                .toList()
-        val leastCognitiveBurden = leastCognitiveBurdenList.first()
-
-        // To break ties, take the shortest
-        val shortestList = leastCognitiveBurden
-                .second
-                .map {
-                    Triple(TranslatedSentences().sentences[it.second]!!.japanese.length,
-                            it.second, it.third)
-                }
-                .sortedBy { it.first }
-                .groupBy { it.first }
-                .toList()
-        val shortest = shortestList
-                .first()
-                .second
-                .maxBy { it.second }!!
-
-
-        return Pair(shortest.second, shortest.third)
+                .asIterable()
+                .takeMinBy { it.first } // Take the least burden
+                .takeMinBy { it.third.size } // Take by fewest coordinates
+                .takeMinBy { sentences[it.second]!!.japanese.length } // Take by length
+                .takeMaxBy { it.second } // Take the last sentence
+                .single()
+        val translatedSentence = sentences[sentenceIndex]!!
+        addSentence(translatedSentence.japanese)
+        return SentenceRank(
+                rank = sentencesStudying.size,
+                sentenceIndex = sentenceIndex,
+                marginalScoreCoordinates = scoreCoordinates,
+                marginalBurden = marginalBurden)
     }
 
-    private fun adjacentToSentencesStudying(): List<IntSet> {
+
+    private fun sentencesOfLowestLevels(vararg ladders: LadderKind): List<IntSet> {
         val incompleteLevels = incompleteLadderLevelKeys()
-        val ladderToLevel = incompleteLevels.keys.toMap()
-        val lowestLevel = ladderToLevel.values.min()!!
-        val adjacentSentences = adjacentSentences()
-        return incompleteLevels
-                .entries
-                .filter { (ladderLevel, _) ->
-                    val (_, level) = ladderLevel
-                    level == lowestLevel
-                }
-                .map { (ladderLevel, keySentences) ->
-                    val (ladder, _) = ladderLevel
-                    keySentences
-                }
-                .map { keySentences ->
-                    keySentences.map { (key, sentences) ->
-                        KeySentences(key, sentences intersect adjacentSentences)
-                    }
-                            .filter { (key, sentences) -> sentences.size > 0 }
-                }
-                .flatten()
-                .map { (key, sentences) -> sentences }
-    }
 
-    fun findNextSentence(): Pair<Int, List<ScoreCoordinate>> {
-        val incompleteLevels = incompleteLadderLevelKeys()
-        val ladderToLevel = incompleteLevels.keys.toMap()
-        val keySentence = sentencesOfLowestLevels().first()
-        val currentLowestLevel = ladderToLevel.values.min()!!
-
-        // We want to find sentences that will increase the total number of
-        // scores by the smallest positive value. This represents the least
-        // cognitive burden to the learner.
-        val leastCognitiveBurdenList = keySentence
-                .map { sentence ->
-                    var cognitiveBurden = 0
-                    val reasons = mutableListOf<ScoreCoordinate>()
-                    LadderKind.forEachSentenceCoordinate(sentence) { scoreCoordinate ->
-                        if (scoreCoordinate.level >= currentLowestLevel) {
-                            val levelCost = scoreCoordinate.level + 1
-                            cognitiveBurden += levelCost * levelCost
-                            if (scoreCoordinate.level == currentLowestLevel
-                                && !keyScores.containsKey(scoreCoordinate)) {
-                                reasons += scoreCoordinate
-                            }
-                        }
-                    }
-                    Triple(cognitiveBurden, sentence, reasons)
-                }
-                .filter { it.first > 0 }
-                .sortedBy { it.first }
-                .groupBy { it.first }
-                .toList()
-        val leastCognitiveBurden = leastCognitiveBurdenList.first()
-
-        // To break ties, take the shortest
-        val shortestList = leastCognitiveBurden
-                .second
-                .map {
-                    Triple(TranslatedSentences().sentences[it.second]!!.japanese.length,
-                            it.second, it.third)
-                }
-                .sortedBy { it.first }
-                .groupBy { it.first }
-                .toList()
-        val shortest = shortestList
-                .first()
-                .second
-                .maxBy { it.second }!!
-
-
-        return Pair(shortest.second, shortest.third)
-    }
-
-    private fun sentencesOfLowestLevels(): List<IntSet> {
-        val incompleteLevels = incompleteLadderLevelKeys()
-        val ladderToLevel = incompleteLevels.keys.toMap()
+        val ladderToLevel = incompleteLevels.keys
+                .filter { (ladder, _) -> ladders.contains(ladder) }
+                .toMap()
         val lowestLevel = ladderToLevel.values.min()!!
         return incompleteLevels
                 .entries
                 .filter { (ladderLevel, _) ->
-                    val (_, level) = ladderLevel
-                    level == lowestLevel
+                    val (ladder, level) = ladderLevel
+                    level == lowestLevel && ladders.contains(ladder)
                 }
-                .sortedBy { (ladderLevel, list)  -> ladderLevel.first}
-                .map { (ladderLevel, list)  ->
+                .sortedBy { (ladderLevel, _) -> ladderLevel.first }
+                .map { (_, list) ->
                     list }
                 .flatten()
                 .map { list -> list.second}
@@ -229,10 +181,10 @@ data class Player(
     /**
      * Reconstruct scores from recorded sentence scores.
      */
-    private fun reconstructScores(
-            sentencesStudying: Map<String, Score>): Map<ScoreCoordinate, Score> {
-        val keyScores = mutableMapOf<ScoreCoordinate, Score>()
-        val studying = intSetOf()
+    private fun reconstructScores() {
+        keyScores.clear()
+        studying.clear()
+        coordinates.clear()
 
         // Reconstruct keyScores from sentence scores
         val sentenceScoreMap = mutableMapOf<Int, Score>()
@@ -242,14 +194,38 @@ data class Player(
             studying += index
             sentenceScoreMap[index] = sentenceScore
         }
-
-        studying.forEachElement { index ->
-            LadderKind.forEachSentenceCoordinate(index) { scoreCoordinate ->
-                val sentenceScore = sentenceScoreMap[index]!!
+        val coordinateIndex = ScoreCoordinateIndex()
+        studying.forEachElement { sentence ->
+            val sentenceScore = sentenceScoreMap[sentence]!!
+            val scoreCoordinates = coordinateIndex.sentences[sentence]
+            coordinates += scoreCoordinates
+            scoreCoordinates.forEachElement { scoreCoordinateIndex ->
+                val scoreCoordinate = coordinateIndex.coordinates[scoreCoordinateIndex]
                 val keyScore = keyScores.getsert(scoreCoordinate) { Score() }
                 keyScore.addFrom(sentenceScore)
             }
         }
-        return keyScores
+    }
+
+    companion object {
+        private val cognitiveBurden = mutableMapOf<Int, Int>()
+        fun burdenOf(sentence: Int): Int {
+            return cognitiveBurden.getsert(sentence) {
+                val counts = mutableMapOf<String, Int>()
+                val costs = mutableMapOf<String, Int>()
+                val coordinateIndex = ScoreCoordinateIndex()
+                val allReasons = coordinateIndex.sentences[sentence]
+                allReasons.forEachElement { reason ->
+                    val (ladder, level, key) = coordinateIndex.coordinates[reason]
+                    val count = counts.getsert(key) { 0 }
+                    val cost = costs.getsert(key) { 0 }
+                    counts[key] = count + 1
+                    costs[key] = cost + (level + 1) * (level + 1) * ladder.levelsPerMezzo
+                }
+                counts.keys.sumBy { key ->
+                    costs[key]!! / counts[key]!!
+                }
+            }
+        }
     }
 }

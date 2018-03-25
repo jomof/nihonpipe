@@ -8,6 +8,7 @@ class ScoreCoordinateIndex {
     fun get(sentence: Int) = sentenceToScoreCoordinate[sentence]
     val sentences: Array<IntSet> get () = sentenceToScoreCoordinate
     val coordinates: List<ScoreCoordinate> get() = coordinateList
+    val coordinateToIndex: Map<ScoreCoordinate, Int> = coordinateMap
 
     companion object {
         private val coordinateMap = mutableMapOf<ScoreCoordinate, Int>()

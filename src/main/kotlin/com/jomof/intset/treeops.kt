@@ -89,7 +89,7 @@ fun Node.forEach(action: (Int) -> Unit) {
         is EmptyNode -> {
         }
         is AllSetNode -> {
-            for (i in pageRange.first * 64..pageRange.last * 64) {
+            for (i in pageRange.first * 64 until (pageRange.last + 1) * 64) {
                 action(i)
             }
         }

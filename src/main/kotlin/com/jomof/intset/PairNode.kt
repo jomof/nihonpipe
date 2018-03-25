@@ -85,18 +85,18 @@ class PairNode(
             startPage > left.pageRange.last && startPage < right.pageRange.first -> {
                 update(balanced(
                         left,
-                        LongPageNode(startPage, arrayOf(elements)),
+                        createPageNode(startPage, arrayOf(elements)),
                         right))
             }
             startPage > right.pageRange.last -> {
                 update(balanced(
                         left,
                         right,
-                        createPageNode(startPage, elements)))
+                        createPageNode(startPage, arrayOf(elements))))
             }
             startPage < left.pageRange.first -> {
                 update(balanced(
-                        createPageNode(startPage, elements),
+                        createPageNode(startPage, arrayOf(elements)),
                         left,
                         right))
             }

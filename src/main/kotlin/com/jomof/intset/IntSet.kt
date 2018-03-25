@@ -50,6 +50,12 @@ class IntSet(
     fun serializationSize() = top.serializationSize()
 
     override fun addAll(elements: Collection<Int>) : Boolean {
+        if (elements is IntSet) {
+            (pages() coiterate elements.pages())
+                    .forEach { (page, left, right) ->
+                        setPage(page, left or right)
+                    }
+        }
         for (element in elements) add(element)
         return false
     }
@@ -66,13 +72,24 @@ class IntSet(
             return false
         }
         if (other !is IntSet) {
+            if (other is Set<*>) {
+                for (obj in other) {
+                    if (obj !is Int) {
+                        return false
+                    }
+                    if (!contains(obj)) {
+                        return false
+                    }
+                }
+                return true
+            }
             return false
         }
         var equal = true
         (this.pages() coiterate other.pages())
                 .filter { equal }
                 .forEach { (page, left, right) ->
-                    equal = left == right
+                    equal = equal && (left == right)
                 }
         return equal
     }

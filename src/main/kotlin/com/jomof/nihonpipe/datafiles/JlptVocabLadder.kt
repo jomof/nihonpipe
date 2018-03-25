@@ -3,7 +3,6 @@ package com.jomof.nihonpipe.datafiles
 import com.jomof.intset.IntSet
 import com.jomof.intset.intSetOf
 import com.jomof.nihonpipe.jlptVocabLadderBin
-import com.jomof.nihonpipe.schema.Jlpt
 import com.jomof.nihonpipe.schema.KeySentences
 import org.h2.mvstore.MVMap
 import org.h2.mvstore.MVStore
@@ -54,11 +53,11 @@ class JlptVocabLadder : LevelProvider {
                             .groupBy { (_, level, _) -> level }
                             .toList()
                             .sortedBy { it.first }
-            val levelsPerJlptLevel = 60 / Jlpt.values().size
+            val levelsPerJlptLevel = 60 / (groupsOfJlptLevel.size)
             groupsOfJlptLevel
                     .map { (jlpt, group) ->
                         group
-                                .chunked(group.size / levelsPerJlptLevel)
+                                .chunked(1 + group.size / levelsPerJlptLevel)
                                 .map { levelElements ->
                                     levelElements.map { (key, _, sentences) ->
                                         KeySentences(key, sentences)

@@ -62,7 +62,7 @@ class LongPageNode(
         } else {
             update(createPairNode(
                     this, createPageNode(
-                    startPage, elements)))
+                    startPage, arrayOf(elements))))
         }
     }
 

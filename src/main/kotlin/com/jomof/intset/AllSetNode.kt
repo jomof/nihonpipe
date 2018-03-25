@@ -9,7 +9,7 @@ class AllSetNode(
             startPage: Int,
             elements: Long,
             update: (Node) -> Unit) {
-        val new = createPageNode(startPage, elements)
+        val new = createPageNode(startPage, arrayOf(elements))
         if (startPage in pageRange) {
             update(new)
         } else {

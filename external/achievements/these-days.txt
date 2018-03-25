@@ -4,3 +4,6 @@ B: today
 B: 曜日	week day
 B: 来週	next week
 B: 週末	weekend
+B: 土曜日	saturday
+B: 金曜日	friday
+B: 月曜日	sunday

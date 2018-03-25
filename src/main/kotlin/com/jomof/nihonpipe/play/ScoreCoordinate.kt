@@ -17,11 +17,12 @@ data class ScoreCoordinate(
 
     override fun toString(): String {
         val description = when (ladderKind) {
+            TOKEN_FREQUENCY_LADDER -> "token"
             WANIKANI_VOCAB_LADDER -> "wanikani"
             SENTENCE_SKELETON_LADDER -> "skeleton"
             JLPT_VOCAB_LADDER -> "jlpt"
             GRAMMAR_SUMMARY_LADDER -> "grammar"
-            SENTENCE_LENGTH_LADDER -> "length"
+        //SENTENCE_LENGTH_LADDER -> "length"
         }
         return "$description[$level]:$key"
     }

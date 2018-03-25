@@ -47,3 +47,25 @@ A: 愛知県は犬が一番多い県です。	Aichi is the prefecture with the m
 A: 新潟は米収量が最も多い県です。	Niigata is the prefecture with the highest rice yield.
 A: 犬はベッドの上にいる。	The dog is on the bed.
 A: ピザは三角形です。	Pizza is a triangle.
+A: 彼女はおとなしい性質だ。	She has a gentle disposition.
+A: 父は田舎に住んでいる。	My father lives in the country.
+A: 明日の夜、成田空港へ行く。	I will go to Narita Airport tomorrow evening.
+A: 私は田舎で生まれ育ちました。	I was born and raised in the country.
+A: 彼女は昨年世界一周旅行をした。	She traveled around the world last year.
+A: リンゴを丸ごと使ったケーキを作った。	I made a cake using the whole apple.
+A: 全ては丸ごと私の責任です。	Everything is entirely my responsibility.
+A: 箱の形は普通四角です。	The shape of a box is usually square.
+A: 私と一緒に外に来て。	Come outside with me.
+A: 来年　海外へ行きます。	Next year I'll go abroad.
+A: 父は来週海外へ行く予定だ。	My father is going to go abroad next week.
+A: 一石二鳥にする。	Kill two birds with one stone.
+A: いま二時半。	It's two-thirty now.
+A: 十二は偶数だ。	Twelve is an even number.
+A: 彼は二時頃来た。	He came about two.
+A: 二枚舌を使うな。	Keep not two tongues in one mouth.
+A: 二度としません。	I will not do it again.
+A: 二人は結婚した。	They got married.
+A: 二月には雪が多い。	We have a lot of snow in February.
+A: 祖母は大阪に住んでいる。	My grandmother lives on Osaka.
+A: 私たちは昨年、世界一周の旅に出かけた。	Last year we went on a trip around the world.
+A: 私たちは昨年旅に出かけた。	Went went on a trip last year.

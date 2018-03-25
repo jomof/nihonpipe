@@ -15,7 +15,7 @@ class EmptyNode private constructor() : Node {
     }
 
     override fun setPage(startPage: Int, elements: Long, update: (Node) -> Unit) {
-        update(createPageNode(startPage, elements))
+        update(createPageNode(startPage, arrayOf(elements)))
     }
 
     override fun contains(page: Int, offset: Int) = false

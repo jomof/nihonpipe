@@ -1,20 +1,18 @@
 package com.jomof.nihonpipe.datafiles
 
+import com.jomof.algorithm.getsert
 import com.jomof.intset.IntSet
 import com.jomof.intset.intSetOf
-import com.jomof.nihonpipe.grammarSummaryLadderBin
-import com.jomof.nihonpipe.groveler.schema.KuromojiIpadicTokenization
-import com.jomof.nihonpipe.groveler.schema.grammarSummaryForm
+import com.jomof.nihonpipe.groveler.schema.KuromojiIpadicToken
 import com.jomof.nihonpipe.schema.KeySentences
+import com.jomof.nihonpipe.tokenFrequencyLadderBin
 import org.h2.mvstore.MVMap
 import org.h2.mvstore.MVStore
 
-class GrammarSummaryLadder : LevelProvider {
+class TokenFrequencyLadder : LevelProvider {
     override fun getKeySentences(level: Int) = instance.first[level]!!
     override fun getLevelSentences(level: Int) = instance.second[level]!!
     override val size: Int get() = instance.first.size
-    fun keysOf(tokenization: KuromojiIpadicTokenization) =
-            tokenization.grammarSummaryForm()
 
     override fun getLevelSizes(): List<Int> {
         return instance
@@ -23,6 +21,7 @@ class GrammarSummaryLadder : LevelProvider {
                 .sortedBy { it.key }
                 .map { it.value.size }
     }
+
     companion object {
         private var theTable: Pair<
                 MVMap<Int, List<KeySentences>>,
@@ -32,13 +31,13 @@ class GrammarSummaryLadder : LevelProvider {
                 MVMap<Int, List<KeySentences>>,
                 MVMap<Int, IntSet>> {
             val db = MVStore.Builder()
-                    .fileName(grammarSummaryLadderBin.absolutePath!!)
+                    .fileName(tokenFrequencyLadderBin.absolutePath!!)
                     .compress()
                     .open()!!
             val keyLevels =
-                    db.openMap<Int, List<KeySentences>>("GrammarSummaryKeyLevels")
+                    db.openMap<Int, List<KeySentences>>("TokenFrequencyLadderKeyLevels")
             val levels =
-                    db.openMap<Int, IntSet>("GrammarSummaryLadder")
+                    db.openMap<Int, IntSet>("TokenFrequencyLadderLevels")
             return Pair(keyLevels, levels)
         }
 
@@ -46,21 +45,25 @@ class GrammarSummaryLadder : LevelProvider {
                 table: MVMap<Int, List<KeySentences>>,
                 levels: MVMap<Int, IntSet>) {
 
-            val list = GrammarSummaryFilter
-                    .filterOf
-                    .grammarSummaries
-                    .entries
-                    .sortedByDescending { (_, ix) ->
-                        ix.size
-                    }.toList()
+            val sentences = TranslatedSentences().sentences
+            val map = mutableMapOf<KuromojiIpadicToken, IntSet>()
+            val tokenize = KuromojiIpadicCache.tokenize
+            sentences.forEach { indexed, translated ->
+                for (token in tokenize(translated.japanese).tokens) {
+                    val value = map.getsert(token) { intSetOf() }
+                    value += indexed
+                }
+            }
 
-            list
-                    .chunked(list.size / 50)
-                    .forEachIndexed { level, summary ->
-                        table[level] = summary
-                                .map { (vocab, sentences) -> KeySentences(vocab, sentences) }
+            map
+                    .entries
+                    .sortedByDescending { it.value.size }
+                    .chunked(map.size / 60)
+                    .forEachIndexed { level, keys ->
+                        table[level] = keys
+                                .map { (vocab, sentences) -> KeySentences(vocab.surface, sentences) }
                         val accumulatedLevels = intSetOf()
-                        for ((_, sentences) in summary) {
+                        for ((_, sentences) in keys) {
                             accumulatedLevels += sentences
                         }
                         levels[level] = accumulatedLevels

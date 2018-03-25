@@ -1,9 +1,7 @@
 package com.jomof.nihonpipe.groveler
 
 import com.google.common.truth.Truth.assertThat
-import com.jomof.intset.forEachElement
 import com.jomof.intset.intSetOf
-import com.jomof.intset.minus
 import com.jomof.nihonpipe.datafiles.*
 import com.jomof.nihonpipe.groveler.schema.particleSkeletonForm
 import com.jomof.nihonpipe.play.*
@@ -50,7 +48,7 @@ class Play {
                         "${ladder.first} ${ladder.second} of " +
                                 "${ladder.first.levelProvider.size} = $keys"
                     }
-            println("$report")
+            println(report)
         }
     }
 
@@ -69,15 +67,35 @@ class Play {
             val translated = TranslatedSentences().sentences[sentence]
             println("$sentence $translated")
         }
+    }
 
-
+    @Test
+    fun repro() {
+        val coordinateIndex = ScoreCoordinateIndex()
+        val target1 = "頭 の 毛 は 灰色 だっ た 。"
+        val target2 = "私 は 君 の 判断 を 尊重 する 。"
+        val index1 = TranslatedSentences().sentenceToIndex(target1)!!
+        val index2 = TranslatedSentences().sentenceToIndex(target2)!!
+        val reasons1 = coordinateIndex.sentences[index1]
+        val reasons2 = coordinateIndex.sentences[index2]
+        val player = Player(mutableMapOf())
+        assertThat(player.coordinates.size).isEqualTo(0)
+        player.addSentence(target1)
+        assertThat(player.coordinates).isEqualTo(reasons1)
+        assertThat(coordinateIndex.sentences[index1]).isEqualTo(reasons1)
+        assertThat(coordinateIndex.sentences[index2]).isEqualTo(reasons2)
+        player.addSentence(target2)
+        assertThat(player.coordinates).isNotEqualTo(reasons1)
+        assertThat(player.coordinates).isNotEqualTo(reasons2)
+        val combined = reasons1 union reasons2
+        assertThat(player.coordinates).isEqualTo(combined)
     }
 
     @Test
     fun addNextSentence() {
         val player = Player(mutableMapOf())
 
-        val translated = TranslatedSentences()
+        var highestBurden = 0
         (0..5000).forEach {
             if ((it) % 50 == 0) {
                 val incomplete =
@@ -86,17 +104,20 @@ class Play {
                         .entries
                         .joinToString("\r\n") { (ladder, keySentence) ->
                             val keys = keySentence.joinToString { (key, sentences) -> "$key[${sentences.size}]" }
-                            "${ladder.first} ${ladder.second} of " +
-                                    "${ladder.first.levelProvider.size} = $keys"
+                            val coveredKeys = keySentence.count()
+                            val totalKeys = ladder.first.levelProvider.getKeySentences(ladder.second).count()
+                            "${ladder.first} level ${ladder.second} of " +
+                                    "${ladder.first.levelProvider.size - 1} " +
+                                    "with ${totalKeys - coveredKeys} of $totalKeys keys covered = $keys"
                         }
-                println("$report")
+                println(report)
             }
-            val (nextSentence, reasons) = player.findNextSentence()
-            val sentence = translated.sentences[nextSentence]
-            player.addSentence(sentence!!.japanese)
-            println("#$it ${sentence.japanese} ${sentence.english} $reasons")
-
-
+            val sentence = player.addOneSentence()
+            println(sentence.toDisplayString())
+//            if (sentence.marginalBurden > highestBurden) {
+//                highestBurden = sentence.marginalBurden
+//                println("^-----New highest")
+//            }
         }
         val incomplete =
                 player.incompleteLadderLevelKeys()
@@ -107,7 +128,7 @@ class Play {
                     "${ladder.first} ${ladder.second} of " +
                             "${ladder.first.levelProvider.size} = $keys"
                 }
-        println("$report")
+        println(report)
     }
 
     @Test
@@ -136,7 +157,11 @@ class Play {
         //val target = "大人 ２ 枚 ください 。"
         //val target = "彼 は 方向 音痴 だ 。"
         //val target = "もう 一つ ケーキ を 食べ て も いい です か 。"
-        val target = "ジム は 肩幅 が 広い 。"
+        //val target = "ジム は 肩幅 が 広い 。"
+        //val target = "君 は 外来 思想 に 偏見 を 抱い て いる よう だ 。"
+        //val target = "頭 の 毛 は 灰色 だっ た 。"
+        val target = "私 は 君 の 判断 を 尊重 する 。"
+        //val target = "私と一緒に外に来て。"
         //val target = "これ は 本 です 。"
         //val target = "お母さん は どこ 。"
         //val target = "ここ は 今 乾期 です 。"
@@ -158,7 +183,8 @@ class Play {
         fun locateInLevel(ladderKind: LadderKind) {
             val provider = ladderKind.levelProvider
             var found = false
-            for (level in 0 until provider.size) {
+            val size = provider.size
+            for (level in 0 until size) {
                 val keySentences = provider.getKeySentences(level)
                 for (keySentence in keySentences) {
                     if (keySentence.sentences.contains(index)) {

@@ -50,6 +50,25 @@ class IntSetTest {
     }
 
     @Test
+    fun minus3() {
+        val bf1 = intSetOf(0..3)
+        val bf2 = intSetOf(2..3)
+        val result = bf1 minus bf2
+        assertThat(result.contains(0)).isTrue()
+        assertThat(result.contains(1)).isTrue()
+        assertThat(result.contains(2)).isFalse()
+        assertThat(result.contains(3)).isFalse()
+    }
+
+    @Test
+    fun twoPageEquals() {
+        val bf1 = intSetOf(4, 100)
+        val bf2 = intSetOf(5, 100)
+        assertThat(bf1 == bf2).isFalse()
+        assertThat(bf1).isNotEqualTo(bf2)
+    }
+
+    @Test
     fun maxDepth() {
         val set = intSetOf(0..8192 step 2)
         assertThat(set.maxDepth()).isEqualTo(1)
@@ -394,6 +413,39 @@ class IntSetTest {
     }
 
     @Test
+    fun setPermutations() {
+        val values = listOf(1, 63, 64, 127, 128, 255)
+        for (permutation1 in values.permutations()) {
+            val intSet1 = intSetOf(permutation1)
+            val ktSet1 = mutableSetOf<Int>()
+            ktSet1.addAll(permutation1)
+            assertThat(intSet1 == ktSet1).isTrue()
+            assertThat(ktSet1 == intSet1).isTrue()
+            for (permutation2 in values.permutations()) {
+                val intSet2 = intSetOf(permutation2)
+                val ktSet2 = mutableSetOf<Int>()
+                ktSet2.addAll(permutation1)
+                assertThat(intSet2 == ktSet2).isTrue()
+                val intSetUnion = intSet1 union intSet2
+                val ktSetUnion = ktSet1.union(ktSet2)
+                assertThat(intSetUnion == ktSetUnion).isTrue()
+                val intSetMinus = intSet1 minus intSet2
+                val ktSetMinus = ktSet1.minus(ktSet2)
+                assertThat(intSetMinus == ktSetMinus).isTrue()
+                val intSetIntersect = intSet1 intersect intSet2
+                val ktSetIntersect = ktSet1.intersect(ktSet2)
+                assertThat(intSetIntersect == ktSetIntersect).isTrue()
+                assertThat(intSet2 == ktSet2).isTrue()
+
+                val all = intSetOf()
+                all += intSet1
+                all += intSet2
+                assertThat(ktSetUnion).isEqualTo(all)
+            }
+        }
+    }
+
+    @Test
     fun iteratorRepro() {
         val set = intSetOf()
         set += 1
@@ -504,7 +556,8 @@ class IntSetTest {
         assertThat(bf3.contains(4)).isTrue()
         assertThat(bf3.contains(5)).isFalse()
     }
-    
+
+
     @Test
     fun reproCoalesceBug() {
         val filter = PairNode(AllSetNode(PageRange(0,0)), LongPageNode(1, arrayOf(1)))

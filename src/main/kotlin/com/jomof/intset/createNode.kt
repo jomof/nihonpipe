@@ -1,10 +1,11 @@
 package com.jomof.intset
 
-fun createPageNode(startPage: Int, elements: Long): Node {
-    return when (java.lang.Long.bitCount(elements)) {
+fun createPageNode(startPage: Int, elements: Array<Long>): Node {
+    var bits = elements.sumBy { java.lang.Long.bitCount(it) }
+    return when (bits) {
         0 -> EmptyNode.instance
-        64 -> AllSetNode(PageRange(startPage, startPage))
-        else -> LongPageNode(startPage, arrayOf(elements))
+        elements.size * 64 -> AllSetNode(PageRange(startPage, startPage))
+        else -> LongPageNode(startPage, elements)
     }
 }
 
