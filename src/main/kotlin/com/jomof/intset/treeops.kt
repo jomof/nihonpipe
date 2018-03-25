@@ -112,3 +112,38 @@ fun Node.forEach(action: (Int) -> Unit) {
         else -> throw RuntimeException()
     }
 }
+
+fun Node.doWhile(action: (Int) -> Boolean): Boolean {
+    when (this) {
+        is EmptyNode -> return true
+        is AllSetNode -> {
+            for (i in pageRange.first * 64 until (pageRange.last + 1) * 64) {
+                if (!action(i)) {
+                    return false
+                }
+            }
+            return true
+        }
+        is PairNode -> {
+            if (!left.doWhile(action)) return false
+            if (!right.doWhile(action)) return false
+            return true
+        }
+        is LongPageNode -> {
+            val firstBit = pageRange.first * 64
+            for (bit in pageRange.first * 64 until ((pageRange.last + 1) * 64)) {
+                val element = bit - firstBit
+                val page = pageOf(element)
+                val offset = offsetOf(element)
+                val mask = bitOf(offset)
+                if ((elements[page] and mask) != 0L) {
+                    if (!action(bit)) {
+                        return false
+                    }
+                }
+            }
+            return true
+        }
+        else -> throw RuntimeException()
+    }
+}

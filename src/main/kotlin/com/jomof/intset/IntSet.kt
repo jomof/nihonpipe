@@ -46,14 +46,16 @@ class IntSet(
     }
 
     fun maxDepth() = top.maxDepth()
-    fun pageCount() = top.pageCount()
+    fun doWhile(action: (Int) -> Boolean) = top.doWhile(action)
     fun serializationSize() = top.serializationSize()
 
     override fun addAll(elements: Collection<Int>) : Boolean {
         if (elements is IntSet) {
             (pages() coiterate elements.pages())
                     .forEach { (page, left, right) ->
-                        setPage(page, left or right)
+                        if (right != 0L && right != left) {
+                            setPage(page, left or right)
+                        }
                     }
         }
         for (element in elements) add(element)

@@ -20,6 +20,16 @@ class KuromojiIpadicCache private constructor(
         return kuromojiCache.contains(cleaned)
     }
 
+    fun reading(japanese: String): String {
+        val tokens = tokenize(japanese).tokens
+        return tokens.joinToString("") { token -> token.reading }
+    }
+
+    fun pronunciation(japanese: String): String {
+        val tokens = tokenize(japanese).tokens
+        return tokens.joinToString("") { token -> token.pronunciation }
+    }
+
     private fun tokenize(japanese: String): KuromojiIpadicTokenization {
         val cleaned = japanese.replace(" ", "")
         val lookup = kuromojiCache[cleaned]

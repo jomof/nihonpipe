@@ -8,7 +8,6 @@ import com.jomof.intset.forEachElement
 import com.jomof.intset.intSetOf
 import com.jomof.intset.minus
 import com.jomof.nihonpipe.datafiles.TranslatedSentences
-import kotlin.coroutines.experimental.buildSequence
 
 data class Player(
         private val sentencesStudying: MutableMap<String, Score>) {
@@ -20,10 +19,19 @@ data class Player(
         reconstructScores()
     }
 
-    fun addSentence(sentence: String) {
+    fun addSentence(sentence: String, score: Score = Score()) {
         assert(!sentencesStudying.contains(sentence))
-        sentencesStudying[sentence] = Score()
-        reconstructScores()
+        sentencesStudying[sentence] = score
+        val sentence = TranslatedSentences().sentenceToIndex(sentence)!!
+        studying += sentence
+        val coordinateIndex = ScoreCoordinateIndex()
+        val scoreCoordinates = coordinateIndex.sentences[sentence]
+        coordinates += scoreCoordinates
+        scoreCoordinates.forEachElement { scoreCoordinateIndex ->
+            val scoreCoordinate = coordinateIndex.coordinates[scoreCoordinateIndex]
+            val keyScore = keyScores.getsert(scoreCoordinate) { Score() }
+            keyScore.addFrom(score)
+        }
     }
 
     private fun existingScoreSet() =
@@ -73,87 +81,60 @@ data class Player(
 
     }
 
-    fun <T> Iterable<T>.elseUse(alternate: () -> Iterable<T>): Sequence<T> {
-        var saw = false
-        return buildSequence {
-            forEach {
-                saw = true
-                yield(it)
-            }
-            if (!saw) {
-                yieldAll(alternate())
-            }
-        }
-    }
-
-    fun <T> Sequence<T>.elseUse(alternate: () -> Iterable<T>): Sequence<T> {
-        var saw = false
-        return buildSequence {
-            forEach {
-                saw = true
-                yield(it)
-            }
-            if (!saw) {
-                yieldAll(alternate())
-            }
-        }
-    }
-
     fun addOneSentence(): SentenceRank {
         val sentences = TranslatedSentences().sentences
-        val keySentence =
-                when (studying.size % 5) {
-                    0 ->
-                        (0 until sentences.size)
-                    else ->
-                        sentencesOfLowestLevels(
-                                LadderKind.WANIKANI_VOCAB_LADDER,
-                                LadderKind.JLPT_VOCAB_LADDER).flatten()
-
-                }
-
+        val keySentence = (0 until sentences.size)
+//                when (studying.size % 20) {
+//                    1 -> sentencesOfLowestLevels(
+//                            LadderKind.WANIKANI_VOCAB_LADDER,
+//                            LadderKind.JLPT_VOCAB_LADDER).flatten()
+//                    10 -> sentencesOfLowestLevels(
+//                            LadderKind.TOKEN_FREQUENCY_LADDER).first()
+//                    else -> (0 until sentences.size)
+//                }
 
         // We want to find sentences that will increase the total number of
         // scores by the smallest positive value. This represents the least
         // cognitive burden to the learner.
+        val coordinateIndex = ScoreCoordinateIndex()
         var leastBurdenSeen = Int.MAX_VALUE
-        val (marginalBurden, sentenceIndex, scoreCoordinates) = keySentence
-                .filter { !studying.contains(it) }
+        val (marginalBurden, sentenceIndex) = keySentence
                 .mapNotNull { sentence ->
                     val cognitiveBurden = burdenOf(sentence)
-                    if (cognitiveBurden > leastBurdenSeen) {
+                    if (cognitiveBurden == 0 || cognitiveBurden > leastBurdenSeen) {
+                        null
+                    } else if (studying.contains(sentence)) {
                         null
                     } else {
-                        val coordinateIndex = ScoreCoordinateIndex()
                         val allReasons = coordinateIndex.sentences[sentence]
-                        val marginalReasons = allReasons minus coordinates
-                        if (!marginalReasons.isEmpty()) {
-                            if (cognitiveBurden != 0 && cognitiveBurden < leastBurdenSeen) {
-                                leastBurdenSeen = cognitiveBurden
+                        if (cognitiveBurden < leastBurdenSeen) {
+                            var noDifference = allReasons.doWhile { reason ->
+                                coordinates.contains(reason)
                             }
-                            if (cognitiveBurden == leastBurdenSeen) {
-                                Triple(cognitiveBurden, sentence, marginalReasons)
-                            } else {
+                            if (noDifference) {
                                 null
+                            } else {
+                                leastBurdenSeen = cognitiveBurden
+                                Pair(cognitiveBurden, sentence)
                             }
                         } else {
-                            null
+                            Pair(cognitiveBurden, sentence)
                         }
                     }
                 }
                 .filter { it.first > 0 }
                 .asIterable()
                 .takeMinBy { it.first } // Take the least burden
-                .takeMinBy { it.third.size } // Take by fewest coordinates
                 .takeMinBy { sentences[it.second]!!.japanese.length } // Take by length
                 .takeMaxBy { it.second } // Take the last sentence
                 .single()
         val translatedSentence = sentences[sentenceIndex]!!
+        val marginalCoordinates = coordinateIndex.sentences[sentenceIndex] minus coordinates
         addSentence(translatedSentence.japanese)
         return SentenceRank(
                 rank = sentencesStudying.size,
                 sentenceIndex = sentenceIndex,
-                marginalScoreCoordinates = scoreCoordinates,
+                marginalScoreCoordinates = marginalCoordinates,
                 marginalBurden = marginalBurden)
     }
 
@@ -172,60 +153,45 @@ data class Player(
                     level == lowestLevel && ladders.contains(ladder)
                 }
                 .sortedBy { (ladderLevel, _) -> ladderLevel.first }
-                .map { (_, list) ->
-                    list }
+                .map { (ladderLevel, list) ->
+                    val (ladder, level) = ladderLevel
+                    list.filter { (key, sentences) ->
+                        val scoreCoordinate = ScoreCoordinate(ladder, level, key)
+                        !keyScores.containsKey(scoreCoordinate)
+
+                    }
+                }
                 .flatten()
-                .map { list -> list.second}
+                .map { list -> list.second }
     }
 
     /**
      * Reconstruct scores from recorded sentence scores.
      */
     private fun reconstructScores() {
-        keyScores.clear()
-        studying.clear()
-        coordinates.clear()
-
-        // Reconstruct keyScores from sentence scores
-        val sentenceScoreMap = mutableMapOf<Int, Score>()
-        val sentences = TranslatedSentences()
-        for ((japanese, sentenceScore) in sentencesStudying) {
-            val index = sentences.sentenceToIndex(japanese)!!
-            studying += index
-            sentenceScoreMap[index] = sentenceScore
-        }
-        val coordinateIndex = ScoreCoordinateIndex()
-        studying.forEachElement { sentence ->
-            val sentenceScore = sentenceScoreMap[sentence]!!
-            val scoreCoordinates = coordinateIndex.sentences[sentence]
-            coordinates += scoreCoordinates
-            scoreCoordinates.forEachElement { scoreCoordinateIndex ->
-                val scoreCoordinate = coordinateIndex.coordinates[scoreCoordinateIndex]
-                val keyScore = keyScores.getsert(scoreCoordinate) { Score() }
-                keyScore.addFrom(sentenceScore)
-            }
+        sentencesStudying.forEach { (sentence, score) ->
+            addSentence(sentence, score)
         }
     }
 
     companion object {
-        private val cognitiveBurden = mutableMapOf<Int, Int>()
-        fun burdenOf(sentence: Int): Int {
-            return cognitiveBurden.getsert(sentence) {
-                val counts = mutableMapOf<String, Int>()
-                val costs = mutableMapOf<String, Int>()
-                val coordinateIndex = ScoreCoordinateIndex()
-                val allReasons = coordinateIndex.sentences[sentence]
-                allReasons.forEachElement { reason ->
-                    val (ladder, level, key) = coordinateIndex.coordinates[reason]
-                    val count = counts.getsert(key) { 0 }
-                    val cost = costs.getsert(key) { 0 }
-                    counts[key] = count + 1
-                    costs[key] = cost + (level + 1) * (level + 1) * ladder.levelsPerMezzo
-                }
-                counts.keys.sumBy { key ->
-                    costs[key]!! / counts[key]!!
-                }
+        private val cognitiveBurden = Array(TranslatedSentences().sentences.size) { sentence ->
+            val counts = mutableMapOf<String, Int>()
+            val costs = mutableMapOf<String, Int>()
+            val coordinateIndex = ScoreCoordinateIndex()
+            val allReasons = coordinateIndex.sentences[sentence]
+            allReasons.forEachElement { reason ->
+                val (ladder, level, key) = coordinateIndex.coordinates[reason]
+                val count = counts.getsert(key) { 0 }
+                val cost = costs.getsert(key) { 0 }
+                counts[key] = count + 1
+                costs[key] = cost + (level + 1) * (level + 1) * ladder.levelsPerMezzo
+            }
+            counts.keys.sumBy { key ->
+                costs[key]!! / counts[key]!!
             }
         }
+
+        fun burdenOf(sentence: Int) = cognitiveBurden[sentence]
     }
 }

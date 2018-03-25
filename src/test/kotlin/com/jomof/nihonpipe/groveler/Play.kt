@@ -5,6 +5,7 @@ import com.jomof.intset.intSetOf
 import com.jomof.nihonpipe.datafiles.*
 import com.jomof.nihonpipe.groveler.schema.particleSkeletonForm
 import com.jomof.nihonpipe.play.*
+import com.jomof.nihonpipe.sampleSentencesTsv
 import org.junit.Test
 
 class Play {
@@ -94,10 +95,9 @@ class Play {
     @Test
     fun addNextSentence() {
         val player = Player(mutableMapOf())
-
-        var highestBurden = 0
+        sampleSentencesTsv.delete()
         (0..5000).forEach {
-            if ((it) % 50 == 0) {
+            if ((it) % 50 == 51) {
                 val incomplete =
                         player.incompleteLadderLevelKeys()
                 val report = incomplete
@@ -114,10 +114,7 @@ class Play {
             }
             val sentence = player.addOneSentence()
             println(sentence.toDisplayString())
-//            if (sentence.marginalBurden > highestBurden) {
-//                highestBurden = sentence.marginalBurden
-//                println("^-----New highest")
-//            }
+            sampleSentencesTsv.appendText("${sentence.toDisplayString()}\r\n")
         }
         val incomplete =
                 player.incompleteLadderLevelKeys()
