@@ -8,7 +8,8 @@ data class Score(
         private var incorrect: Int = 0,
         private var level: Int = 0,
         private var lastCorrect: Long = 0L,
-        private var lastAttempt: Long = 0L) {
+        private var lastAttempt: Long = 0L,
+        private var unlocked: Long = 0L) {
 
     fun addFrom(score: Score) {
         correct += score.correct
