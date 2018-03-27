@@ -31,7 +31,7 @@ class Play {
     @Test
     fun simplePlayer() {
         (0..1000).forEach {
-            Player(sentencesStudying = mutableMapOf(
+            Player(sentenceScores = mutableMapOf(
                     "入口はどこですか。" to Score(100, 0),
                     "私の日本語教師の犬には名刺があります。" to Score(50, 50)))
         }
@@ -40,7 +40,7 @@ class Play {
     @Test
     fun reportMissingLevelKeys() {
         (0..0).forEach {
-            val player = Player(sentencesStudying = mutableMapOf(
+            val player = Player(sentenceScores = mutableMapOf(
                     "入口はどこですか。" to Score(100, 0),
                     "私の日本語教師の犬には名刺があります。" to Score(60, 50),
                     "日本語が分かりましたか。" to Score(75, 50),
@@ -98,17 +98,17 @@ class Play {
         val index2 = TranslatedSentences().sentenceToIndex(target2)
         val reasons1 = coordinateIndex.getCoordinatesFromSentence(index1).toSet()
         val reasons2 = coordinateIndex.getCoordinatesFromSentence(index2).toSet()
-        val player = Player(sentencesStudying = mutableMapOf())
-        assertThat(player.coordinates.size).isEqualTo(0)
+        val player = Player(sentenceScores = mutableMapOf())
+        assertThat(player.keyScoresCovered.size).isEqualTo(0)
         player.addSentence(target1)
-        assertThat(player.coordinates).isEqualTo(reasons1)
+        assertThat(player.keyScoresCovered).isEqualTo(reasons1)
         assertThat(coordinateIndex.getCoordinatesFromSentence(index1)).isEqualTo(reasons1)
         assertThat(coordinateIndex.getCoordinatesFromSentence(index2)).isEqualTo(reasons2)
         player.addSentence(target2)
-        assertThat(player.coordinates.toSet()).isNotEqualTo(reasons1)
-        assertThat(player.coordinates.toSet()).isNotEqualTo(reasons2)
+        assertThat(player.keyScoresCovered.toSet()).isNotEqualTo(reasons1)
+        assertThat(player.keyScoresCovered.toSet()).isNotEqualTo(reasons2)
         val combined = reasons1 union reasons2
-        assertThat(player.coordinates).isEqualTo(combined)
+        assertThat(player.keyScoresCovered).isEqualTo(combined)
     }
 
     private val seedSentences = listOf(
@@ -130,7 +130,7 @@ class Play {
     fun playTheGame() {
         val player = Player(
                 seedSentences = seedSentences,
-                sentencesStudying = mutableMapOf())
+                sentenceScores = mutableMapOf())
         val currentTime = GregorianCalendar(2020, 1, 1).timeInMillis
         for (i in 0 until 100) {
             player.requestNextStudyAction(currentTime)
@@ -142,7 +142,7 @@ class Play {
 
         val player = Player(
                 seedSentences = seedSentences,
-                sentencesStudying = mutableMapOf())
+                sentenceScores = mutableMapOf())
         sampleSentencesTsv.delete()
         (0..5000).forEach {
             if ((it) % 50 == 49) {

@@ -10,28 +10,33 @@ import com.jomof.nihonpipe.datafiles.TranslatedSentences
 
 data class Player(
         private val seedSentences: List<String> = listOf(),
-        private val sentencesStudying: MutableMap<String, Score>) {
+        private val sentenceScores: MutableMap<String, Score>) {
     private val keyScores = mutableMapOf<ScoreCoordinate, Score>()
-    private val studying = intSetOf()
-    val coordinates = intSetOf()
+    private val sentencesStudying = intSetOf()
     private val sentencesNotStudying = allSentences.copy()
+    val keyScoresCovered = intSetOf()
 
     init {
         reconstructScores()
+
+        // Check for duplicates on seed sentences
         seedSentences
                 .groupBy { it }
                 .filter { it.value.size > 1 }
                 .onEach { throw RuntimeException(it.key) }
     }
 
+    /**
+     * Add one sentence to the current user state.
+     */
     fun addSentence(sentence: String, score: Score = Score()) {
-        sentencesStudying[sentence] = score
+        sentenceScores[sentence] = score
         val sentenceIndex = TranslatedSentences().sentenceToIndex(sentence)
-        studying += sentenceIndex
+        sentencesStudying += sentenceIndex
         sentencesNotStudying -= sentenceIndex
         val coordinateIndex = ScoreCoordinateIndex()
         val scoreCoordinates = coordinateIndex.getCoordinatesFromSentence(sentenceIndex)
-        coordinates += scoreCoordinates
+        keyScoresCovered += scoreCoordinates
         scoreCoordinates.forEachElement { scoreCoordinateIndex ->
             val scoreCoordinate = coordinateIndex.getCoordinateFromCoordinateIndex(scoreCoordinateIndex)
             val keyScore = keyScores.getsert(scoreCoordinate) { Score() }
@@ -80,7 +85,7 @@ data class Player(
             var notContained = 0
             sentenceCoordinates.forEach { sentence ->
                 ++total
-                if (coordinates.contains(sentence)) {
+                if (keyScoresCovered.contains(sentence)) {
                     ++contained
                 } else {
                     ++notContained
@@ -107,26 +112,26 @@ data class Player(
     }
 
     fun addOneSentence(): SentenceRank {
-        val seeding = seedSentences.size > studying.size
+        val seeding = seedSentences.size > sentencesStudying.size
         val scoreCoordinateIndex = ScoreCoordinateIndex()
         val sentences = TranslatedSentences().sentences
         if (!seeding) {
             val transitions = LeastBurdenSentenceTransitions()
             val adjacents = intSetOf()
-            adjacents += studying.map { sentence ->
+            adjacents += sentencesStudying.map { sentence ->
                 transitions.getNextSentences(sentence).first
-            }.flatten().filter { !studying.contains(it) }
+            }.flatten().filter { !sentencesStudying.contains(it) }
             if (adjacents.size > 20) { // If too few then weird sentences
                 val nextByAdjacent = getNextSentence(adjacents)
                 if (nextByAdjacent != null) {
-                    val (from, deltaCoordinates) = studying.filter { sentence ->
+                    val (from, deltaCoordinates) = sentencesStudying.filter { sentence ->
                         transitions.getNextSentences(sentence)
                                 .first
                                 .contains(nextByAdjacent)
                     }.mapNotNull { from ->
                         val fromCoordinates = scoreCoordinateIndex.getCoordinatesFromSentence(from)
                         val toCoordinates = scoreCoordinateIndex.getCoordinatesFromSentence(nextByAdjacent)
-                        val delta = (toCoordinates minus fromCoordinates) minus coordinates
+                        val delta = (toCoordinates minus fromCoordinates) minus keyScoresCovered
                         if (delta.isEmpty()) {
                             null
                         } else {
@@ -140,7 +145,7 @@ data class Player(
                     }.sum()
                     addSentence(sentences[nextByAdjacent]!!.japanese)
                     return SentenceRank(
-                            rank = studying.size,
+                            rank = sentencesStudying.size,
                             sourceSentence = from,
                             marginalScoreCoordinates = deltaCoordinates,
                             sentenceIndex = nextByAdjacent,
@@ -153,7 +158,7 @@ data class Player(
             val result = intSetOf()
             result += seedSentences
                     .map { TranslatedSentences().sentenceToIndex(it) }
-                    .filter { !studying.contains(it) }
+                    .filter { !sentencesStudying.contains(it) }
             result
         } else {
             sentencesNotStudying
@@ -162,7 +167,7 @@ data class Player(
         var to = getNextSentence(sentencesToConsider) ?: getNextSentence(sentencesToConsider)!!
 
         val toCoordinates = scoreCoordinateIndex.getCoordinatesFromSentence(to)
-        val marginalCoordinates = toCoordinates minus coordinates
+        val marginalCoordinates = toCoordinates minus keyScoresCovered
         val burden = marginalCoordinates.map { it ->
             val coordinate = scoreCoordinateIndex.getCoordinateFromCoordinateIndex(it)
             val level = coordinate.level + 1
@@ -170,7 +175,7 @@ data class Player(
         }.sum()
         addSentence(sentences[to]!!.japanese)
         return SentenceRank(
-                rank = studying.size,
+                rank = sentencesStudying.size,
                 sourceSentence = null,
                 marginalScoreCoordinates = marginalCoordinates,
                 sentenceIndex = to,
@@ -179,7 +184,7 @@ data class Player(
     }
 
     private fun apprenticeLevelSentences(): List<String> {
-        return sentencesStudying.entries
+        return sentenceScores.entries
                 .filter { it ->
                     it.value.mezzo() == MezzoScore.APPRENTICE
                 }
@@ -199,7 +204,7 @@ data class Player(
      * Reconstruct scores from recorded sentence scores.
      */
     private fun reconstructScores() {
-        sentencesStudying.forEach { (sentence, score) ->
+        sentenceScores.forEach { (sentence, score) ->
             addSentence(sentence, score)
         }
     }
