@@ -21,13 +21,13 @@ class KuromojiIpadicCache private constructor(
     }
 
     fun reading(japanese: String): String {
-        val tokens = tokenize(japanese).tokens
-        return tokens.joinToString("") { token -> token.reading }
+        val tokens = tokenize(japanese)
+        return tokens.reading()
     }
 
     fun pronunciation(japanese: String): String {
-        val tokens = tokenize(japanese).tokens
-        return tokens.joinToString("") { token -> token.pronunciation }
+        val tokens = tokenize(japanese)
+        return tokens.pronunciation()
     }
 
     private fun tokenize(japanese: String): KuromojiIpadicTokenization {

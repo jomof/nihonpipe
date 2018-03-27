@@ -124,6 +124,7 @@ class IntSetTest {
     @Test
     fun maxDepthAllOnesInterleaved() {
         val set = intSetOf()
+        val coset = mutableSetOf<Int>()
         val max = (128 * 128 - 1)
         for ((count, i) in (0..max).withIndex()) {
             val value = if (i % 2 == 0) {
@@ -132,9 +133,13 @@ class IntSetTest {
                 i - 1
             }
             assertThat(set).named("iteration=$i").doesNotContain(value)
+            coset += value
             set += value
+            assertThat(set == coset).isTrue()
             assertThat(set.size).isEqualTo(count + 1)
-            assertThat(set.maxDepth()).isLessThan(3)
+            assertThat(set.maxDepth())
+                    .named("iteration $i")
+                    .isLessThan(4)
         }
         assertThat(set.maxDepth()).isEqualTo(1)
     }
@@ -441,8 +446,23 @@ class IntSetTest {
                 all += intSet1
                 all += intSet2
                 assertThat(ktSetUnion).isEqualTo(all)
+
+                // Subtract elements
+                val intSet1S = intSetOf(0..255)
+                val ktSet1S = mutableSetOf<Int>()
+                ktSet1S.addAll(0..255)
+                for (element in permutation2) {
+                    intSet1S -= element
+                    ktSet1S -= element
+                    assertThat(intSet1S == ktSet1S).isTrue()
+                }
             }
         }
+    }
+
+    @Test
+    fun testToString() {
+        assertThat(intSetOf().toString()).isEqualTo("IntSet()")
     }
 
     @Test
@@ -467,11 +487,11 @@ class IntSetTest {
     }
 
     @Test
-    fun repro2() {
+    fun reproLongPageNodeRotation() {
         val left = PairNode(LongPageNode(7, arrayOf(1L, 2L, 3L)), AllSetNode(PageRange(11,11)))
         val right = LongPageNode(12, arrayOf(4L))
         val pair = createPairNode(left, right)
-        assertThat(pair.maxDepth()).isEqualTo(2)
+        assertThat(pair.maxDepth()).isEqualTo(3)
     }
 
     @Test

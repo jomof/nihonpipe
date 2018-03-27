@@ -13,8 +13,9 @@ class TranslatedSentences {
     val sentences: Map<Int, TranslatedSentence>
         get() = TranslatedSentences.sentences
 
-    fun sentenceToIndex(japanese: String) =
-            TranslatedSentences.japaneseToIndex[japanese]
+    fun sentenceToIndex(japanese: String): Int {
+        return TranslatedSentences.japaneseToIndex[japanese] ?: throw RuntimeException("'$japanese'")
+    }
 
     companion object {
         private val db = MVStore.Builder()
@@ -31,10 +32,21 @@ class TranslatedSentences {
         private val nextIndex = db.openMap<String, Int>(
                 "NextIndex")!!
 
+        private val seen = mutableMapOf<String, TranslatedSentence>()
+
         private fun addSentence(japanese: String, english: String) {
-            if (japaneseToIndex.containsKey(japanese)) {
+            val tokenized = KuromojiIpadicCache.tokenize(japanese)
+            val normalized = tokenized.normalized()
+
+            if (japaneseToIndex.containsKey(normalized)) {
                 return
             }
+            val token = tokenized.reading() + "---" + tokenized.pronunciation()
+            val lookup = seen[token]
+            if (lookup != null) {
+                return
+            }
+            seen[token] = TranslatedSentence(japanese, english)
             val next = nextIndex.getsert("index") { 0 }
             japaneseToIndex[japanese] = next
             indexToTranslated[next] = TranslatedSentence(japanese, english)
@@ -47,9 +59,8 @@ class TranslatedSentences {
             if (indexToTranslated.isEmpty()) {
                 translateTanakaCorpus()
                 residueSentences()
+                gapFillingSentences()
             }
-            // Gap fillers are small and commonly edited
-            gapFillingSentences()
             db.commit()
         }
 

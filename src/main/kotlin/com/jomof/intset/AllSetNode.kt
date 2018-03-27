@@ -11,7 +11,18 @@ class AllSetNode(
             update: (Node) -> Unit) {
         val new = createPageNode(startPage, arrayOf(elements))
         if (startPage in pageRange) {
-            update(new)
+            var node = new
+            if (pageRange.first <= startPage - 1) {
+                val leftRange = PageRange(pageRange.first, startPage - 1)
+                val leftAllSet = AllSetNode(leftRange)
+                node = createPairNode(leftAllSet, node)
+            }
+            if (startPage + 1 <= pageRange.last) {
+                val rightRange = PageRange(startPage + 1, pageRange.last)
+                val rightAllSet = AllSetNode(rightRange)
+                node = createPairNode(node, rightAllSet)
+            }
+            update(node)
         } else {
             update(createPairNode(this, new))
         }

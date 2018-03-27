@@ -1,12 +1,20 @@
 package com.jomof.intset
 
-fun createPageNode(startPage: Int, elements: Array<Long>): Node {
+fun createPageNode(
+        startPage: Int,
+        elements: Array<Long>,
+        endPage: Int? = null): Node {
     var bits = elements.sumBy { java.lang.Long.bitCount(it) }
-    return when (bits) {
+    var result = when (bits) {
         0 -> EmptyNode.instance
-        elements.size * 64 -> AllSetNode(PageRange(startPage, startPage))
-        else -> LongPageNode(startPage, elements)
+        elements.size * 64 -> AllSetNode(
+                PageRange(startPage, startPage + elements.size - 1))
+        else -> LongPageNode(startPage, elements, endPage)
     }
+    if (result !is EmptyNode) {
+        assert(result.pageRange.count == elements.size)
+    }
+    return result
 }
 
 fun createPairNode(first: Node, second: Node): Node {
@@ -26,10 +34,18 @@ fun createPairNode(first: Node, second: Node): Node {
             is LongPageNode -> when {
                 right.full() -> return AllSetNode(left.pageRange union right.pageRange)
             }
+            is PairNode -> when (right.left) {
+                is AllSetNode -> when {
+                    left adjacent right.left -> return createPairNode(
+                            AllSetNode(left.pageRange union right.left.pageRange),
+                            right.right)
+                }
+            }
         }
         is PairNode -> when {
             left.right adjacent right -> return when {
-                left.right is AllSetNode -> createPairNode(
+                left.right is AllSetNode && right is AllSetNode ->
+                    createPairNode(
                         left.left,
                         AllSetNode(left.right.pageRange union right.pageRange))
                 else ->

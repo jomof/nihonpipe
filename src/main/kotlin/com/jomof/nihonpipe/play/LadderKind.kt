@@ -1,18 +1,20 @@
 package com.jomof.nihonpipe.play
 
 import com.jomof.intset.IntSet
-import com.jomof.intset.forEachElement
-import com.jomof.nihonpipe.datafiles.*
+import com.jomof.nihonpipe.datafiles.GrammarSummaryLadder
+import com.jomof.nihonpipe.datafiles.LevelProvider
+import com.jomof.nihonpipe.datafiles.SentenceSkeletonLadder
+import com.jomof.nihonpipe.datafiles.TokenFrequencyLadder
 import com.jomof.nihonpipe.schema.KeySentences
 
 enum class LadderKind(
         val levelProvider: LevelProvider,
         val levelsPerMezzo: Int) {
-    TOKEN_FREQUENCY_LADDER(TokenFrequencyLadder(), 40),
-    WANIKANI_VOCAB_LADDER(WanikaniVocabLadder(), 5),
-    SENTENCE_SKELETON_LADDER(SentenceSkeletonLadder(), 40),
-    GRAMMAR_SUMMARY_LADDER(GrammarSummaryLadder(), 40),
-    JLPT_VOCAB_LADDER(JlptVocabLadder(), 5),
+    TOKEN_FREQUENCY_LADDER(TokenFrequencyLadder(), 5),
+    //WANIKANI_VOCAB_LADDER(WanikaniVocabLadder(), 5),
+    SENTENCE_SKELETON_LADDER(SentenceSkeletonLadder(), 1000),
+    GRAMMAR_SUMMARY_LADDER(GrammarSummaryLadder(), 1000),
+    //JLPT_VOCAB_LADDER(JlptVocabLadder(), 5),
     //SENTENCE_LENGTH_LADDER(SentenceLengthLadder(), 40),
     //SENTENCE_FREQUENCY_LADDER(SentenceFrequencyLadder(), 100)
     ;
@@ -35,9 +37,9 @@ enum class LadderKind(
 
         fun forEachSentenceCoordinate(sentence: Int, action: (ScoreCoordinate) -> Unit) {
             val index = ScoreCoordinateIndex()
-            val scoreCoordinateIndex = index.sentences[sentence]
-            scoreCoordinateIndex.forEachElement { scoreCoordinateIndex ->
-                action(index.coordinates[scoreCoordinateIndex])
+            val scoreCoordinateIndex = index.getCoordinatesFromSentence(sentence)
+            scoreCoordinateIndex.forEach { scoreCoordinateIndex ->
+                action(index.getCoordinateFromCoordinateIndex(scoreCoordinateIndex))
             }
         }
 

@@ -6,10 +6,31 @@ import java.io.Serializable
 data class KuromojiIpadicTokenization(
         val tokens: List<KuromojiIpadicToken>) : Indexed, Serializable {
 
-    /**
-     * Provides katakana reading for this sentence.
-     */
-    fun reading() = tokens.joinToString("") { it.reading }
+    fun reading(): String {
+        val sb = StringBuilder()
+        for (token in tokens) {
+            when (token.reading) {
+                "*" ->
+                    sb.append(token.surface)
+                else -> sb.append(token.reading)
+            }
+        }
+        return sb.toString()
+    }
+
+    fun pronunciation(): String {
+        val sb = StringBuilder()
+        for (token in tokens) {
+            when (token.pronunciation) {
+                "*" ->
+                    sb.append(token.surface)
+                else -> sb.append(token.pronunciation)
+            }
+        }
+        return sb.toString()
+    }
+
+    fun normalized() = tokens.joinToString(" ") { it.surface }
 
     companion object {
         private const val serialVersionUID = -7094035836985017858L

@@ -3,8 +3,6 @@ package com.jomof.nihonpipe.datafiles
 import com.jomof.intset.IntSet
 import com.jomof.intset.intSetOf
 import com.jomof.nihonpipe.grammarSummaryLadderBin
-import com.jomof.nihonpipe.groveler.schema.KuromojiIpadicTokenization
-import com.jomof.nihonpipe.groveler.schema.grammarSummaryForm
 import com.jomof.nihonpipe.schema.KeySentences
 import org.h2.mvstore.MVMap
 import org.h2.mvstore.MVStore
@@ -13,8 +11,6 @@ class GrammarSummaryLadder : LevelProvider {
     override fun getKeySentences(level: Int) = instance.first[level]!!
     override fun getLevelSentences(level: Int) = instance.second[level]!!
     override val size: Int get() = instance.first.size
-    fun keysOf(tokenization: KuromojiIpadicTokenization) =
-            tokenization.grammarSummaryForm()
 
     override fun getLevelSizes(): List<Int> {
         return instance

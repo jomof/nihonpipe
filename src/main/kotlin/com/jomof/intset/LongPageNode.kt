@@ -5,10 +5,16 @@ import java.io.ObjectOutput
 
 class LongPageNode(
         startPage: Int,
-        var elements: Array<Long>) : Node {
+        var elements: Array<Long>,
+        endPage: Int? = null) : Node {
     init {
-        assert(!elements.all { it == -1L })
-        assert(!elements.all { it == 0L })
+//        assert(!elements.all { it == -1L })
+//        assert(!elements.all { it == 0L })
+//        assert(elements.map(
+//                java.lang.Long::bitCount).sum() < elements.size * 64)
+//        if (endPage != null) {
+//            assert(endPage - startPage + 1 == elements.size)
+//        }
     }
     override val code: NodeCode
         get() = if (elements.size == 1) {
@@ -44,10 +50,41 @@ class LongPageNode(
         val elements = elements[index]
         val bit = bitOf(offset)
         val prior = (elements and bit) != 0L
-        this.elements[index] = elements or bit
-        when (size) {
-            0 -> update(EmptyNode.instance)
-            64 * pageRange.count -> update(AllSetNode(pageRange))
+        val combined = elements or bit
+        when (java.lang.Long.bitCount(combined)) {
+            64 -> {
+                var node: Node = AllSetNode(PageRange(page, page))
+                val leftSize = page - pageRange.first
+                val rightSize = pageRange.last - page
+                val rightElementStart = page - pageRange.first + 1
+                assert(leftSize >= 0)
+                assert(rightSize >= 0)
+                assert(leftSize + rightSize + 1 == pageRange.count)
+                assert(leftSize + rightSize + 1 == this.elements.size)
+                if (leftSize > 0) {
+                    val array = Array(leftSize) { index ->
+                        this.elements[index]
+                    }
+                    val left = createPageNode(
+                            pageRange.first,
+                            array,
+                            page - 1)
+                    node = createPairNode(left, node)
+                }
+                if (rightSize > 0) {
+                    val array = Array(rightSize) { index ->
+                        this.elements[rightElementStart + index]
+                    }
+                    val right = createPageNode(
+                            page + 1,
+                            array,
+                            pageRange.last)
+                    node = createPairNode(node, right)
+                }
+                assert(node.pageRange.count == pageRange.count)
+                update(node)
+            }
+            else -> this.elements[index] = combined
         }
         return prior
     }
@@ -91,7 +128,7 @@ class LongPageNode(
     companion object {
 
         fun of(page: Int, offset: Int) =
-                LongPageNode(page, arrayOf(bitOf(offset)))
+                createPageNode(page, arrayOf(bitOf(offset)), page)
 
         fun of(code: NodeCode, i: ObjectInput): LongPageNode {
             val page = i.readInt()

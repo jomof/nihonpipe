@@ -69,3 +69,13 @@ A: 二月には雪が多い。	We have a lot of snow in February.
 A: 祖母は大阪に住んでいる。	My grandmother lives on Osaka.
 A: 私たちは昨年、世界一周の旅に出かけた。	Last year we went on a trip around the world.
 A: 私たちは昨年旅に出かけた。	Went went on a trip last year.
+A: ありがとう。	Thanks.
+A: はじめまして。	Nice to meet you.
+A: 寒いですね？	It's cold, isn't it?
+A: ただいま！	I'm back!
+A: おやすみなさい。	Good night.
+A: 東京駅はどこですか？	Where is Tokyo Station?
+A: コンビニはどこですか？	Where is a convenience store?
+A: 何時ですか？	What time is it?
+A: これは何ですか？	What is this?
+A: それはいくらですか？	How much does that cost?

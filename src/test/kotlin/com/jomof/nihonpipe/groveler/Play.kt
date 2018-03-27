@@ -9,11 +9,28 @@ import com.jomof.nihonpipe.sampleSentencesTsv
 import org.junit.Test
 
 class Play {
+    @Test
+    fun prepopulate() {
+        println("populate translated sentences")
+        TranslatedSentences()
+        for (ladderKind in LadderKind.values()) {
+            println("$ladderKind")
+            ladderKind.levelProvider.size
+        }
+        println("score coordinate index")
+        ScoreCoordinateIndex().getCoordinatesFromSentence(0)
+        println("least burden transitions")
+        (0 until TranslatedSentences().sentences.size).map {
+            if (it % 10 == 0) println("sentence $it")
+            LeastBurdenSentenceTransitions().getNextSentences(it)
+        }
+
+    }
 
     @Test
     fun simplePlayer() {
         (0..1000).forEach {
-            Player(mutableMapOf(
+            Player(sentencesStudying = mutableMapOf(
                     "入口はどこですか。" to Score(100, 0),
                     "私の日本語教師の犬には名刺があります。" to Score(50, 50)))
         }
@@ -21,7 +38,7 @@ class Play {
 
     @Test
     fun reportMezzoLevels() {
-        val player = Player(mutableMapOf(
+        val player = Player(sentencesStudying = mutableMapOf(
                 "入口はどこですか。" to Score(100, 0),
                 "私の日本語教師の犬には名刺があります。" to Score(60, 50),
                 "日本語が分かりましたか。" to Score(75, 50)))
@@ -31,7 +48,7 @@ class Play {
     @Test
     fun reportMissingLevelKeys() {
         (0..0).forEach {
-            val player = Player(mutableMapOf(
+            val player = Player(sentencesStudying = mutableMapOf(
                     "入口はどこですか。" to Score(100, 0),
                     "私の日本語教師の犬には名刺があります。" to Score(60, 50),
                     "日本語が分かりましたか。" to Score(75, 50),
@@ -63,7 +80,7 @@ class Play {
         val skeletonByGrammar = sentenceSkeletonLadder intersect grammarSummaryLadder
         val wanikaniByJlpt = wanikaniVocabLadder intersect jlptVocabLadder
 
-        val total = skeletonByGrammar intersect  wanikaniByJlpt
+        val total = skeletonByGrammar intersect wanikaniByJlpt
         for (sentence in total) {
             val translated = TranslatedSentences().sentences[sentence]
             println("$sentence $translated")
@@ -71,30 +88,54 @@ class Play {
     }
 
     @Test
+    fun repro2() {
+        // 111478
+        val text = "トイレ は どこ です か 。"
+        val index = TranslatedSentences().sentenceToIndex(text)
+        val grammarProvider = LadderKind.GRAMMAR_SUMMARY_LADDER.levelProvider
+        //grammarProvider.getKeySentences()
+        println(index)
+    }
+
+    @Test
     fun repro() {
         val coordinateIndex = ScoreCoordinateIndex()
         val target1 = "頭 の 毛 は 灰色 だっ た 。"
-        val target2 = "私 は 君 の 判断 を 尊重 する 。"
-        val index1 = TranslatedSentences().sentenceToIndex(target1)!!
-        val index2 = TranslatedSentences().sentenceToIndex(target2)!!
-        val reasons1 = coordinateIndex.sentences[index1]
-        val reasons2 = coordinateIndex.sentences[index2]
-        val player = Player(mutableMapOf())
+        val target2 = "トイレ は どこ です か 。"
+        val index1 = TranslatedSentences().sentenceToIndex(target1)
+        val index2 = TranslatedSentences().sentenceToIndex(target2)
+        val reasons1 = coordinateIndex.getCoordinatesFromSentence(index1).toSet()
+        val reasons2 = coordinateIndex.getCoordinatesFromSentence(index2).toSet()
+        val player = Player(sentencesStudying = mutableMapOf())
         assertThat(player.coordinates.size).isEqualTo(0)
         player.addSentence(target1)
         assertThat(player.coordinates).isEqualTo(reasons1)
-        assertThat(coordinateIndex.sentences[index1]).isEqualTo(reasons1)
-        assertThat(coordinateIndex.sentences[index2]).isEqualTo(reasons2)
+        assertThat(coordinateIndex.getCoordinatesFromSentence(index1)).isEqualTo(reasons1)
+        assertThat(coordinateIndex.getCoordinatesFromSentence(index2)).isEqualTo(reasons2)
         player.addSentence(target2)
-        assertThat(player.coordinates).isNotEqualTo(reasons1)
-        assertThat(player.coordinates).isNotEqualTo(reasons2)
+        assertThat(player.coordinates.toSet()).isNotEqualTo(reasons1)
+        assertThat(player.coordinates.toSet()).isNotEqualTo(reasons2)
         val combined = reasons1 union reasons2
         assertThat(player.coordinates).isEqualTo(combined)
     }
 
     @Test
     fun addNextSentence() {
-        val player = Player(mutableMapOf())
+        val player = Player(
+                seedSentences = listOf(
+                        "トイレ は どこ です か 。",
+                        "寒いですね？",
+                        "ただいま！",
+                        "おやすみなさい。",
+                        "コンビニはどこですか？",
+                        "乾杯！",
+                        "何時ですか？",
+                        "これは何ですか？",
+                        "それはいくらですか？",
+                        "東京駅はどこですか？",
+                        "水 を ください 。",
+                        "ありがとう。"),
+                sentencesStudying = mutableMapOf())
         sampleSentencesTsv.delete()
         (0..5000).forEach {
             if ((it) % 50 == 51) {
@@ -157,13 +198,13 @@ class Play {
         //val target = "ジム は 肩幅 が 広い 。"
         //val target = "君 は 外来 思想 に 偏見 を 抱い て いる よう だ 。"
         //val target = "頭 の 毛 は 灰色 だっ た 。"
-        val target = "私 は 君 の 判断 を 尊重 する 。"
+        val target = "ただいま！"
         //val target = "私と一緒に外に来て。"
         //val target = "これ は 本 です 。"
         //val target = "お母さん は どこ 。"
         //val target = "ここ は 今 乾期 です 。"
         //val target = "バラ は 今 満開 です 。"
-        val index = TranslatedSentences().sentenceToIndex(target)!!
+        val index = TranslatedSentences().sentenceToIndex(target)
         val found = TranslatedSentences().sentences[index]
 
         println("$found")
@@ -198,25 +239,49 @@ class Play {
             locateInLevel(ladderKind)
         }
 
-        val (sentences, burden) =  LeastBurdenSentenceTransitions().getNextSentences(index)
+        var scoreCoordinate = ScoreCoordinateIndex()
+        var coordinates = scoreCoordinate.getCoordinatesFromSentence(index)
+        for (coordinateIndex in coordinates) {
+            val coordinate = scoreCoordinate.getCoordinateFromCoordinateIndex(coordinateIndex)
+            println("$coordinate")
+        }
+
+        val (sentences, burden) = LeastBurdenSentenceTransitions().getNextSentences(index)
         println("The most similar sentences have burden $burden -> ")
+        var count = 0
         for (ix in sentences) {
             println("  $ix : ${TranslatedSentences().sentences[ix]}")
+            if (count++ > 20) break
         }
+    }
+
+    @Test
+    fun testSomeBurdens() {
+        val sentence = "はじめまして。"
+        val sentences = TranslatedSentences()
+        val coordinateIndex = ScoreCoordinateIndex()
+        val index = sentences.sentenceToIndex(sentence)
+        val back = sentences.sentences[index]!!
+        assertThat(back.japanese).isEqualTo(sentence)
+        val coordinatesOfSentence = coordinateIndex
+                .getCoordinatesFromSentence(index)
+        assertThat(coordinatesOfSentence).hasSize(8)
+
+        val burden = Player.calculateBurden(index)
     }
 
     @Test
     fun leastBurdenConnections() {
         val leastBurdenTransitions = LeastBurdenSentenceTransitions()
         val translated = TranslatedSentences().sentences
-        val index = ScoreCoordinateIndex()
-        for ((ixFrom, _) in index.sentences.withIndex()) {
+        for (ixFrom in 0 until translated.size) {
             val (sentences, burden) = leastBurdenTransitions.getNextSentences(ixFrom)
 
-            println("${translated[ixFrom]} with burden $burden -> ")
+            println("$burden : ${translated[ixFrom]} -> ")
             for (ix in sentences) {
                 println("  ${translated[ix]}")
             }
+            break
         }
     }
 }

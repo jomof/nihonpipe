@@ -80,20 +80,6 @@ class JlptVocabLadder : LevelProvider {
                         }
                         levels[level] = accumulatedLevels
                     }
-
-            val unmappedSentences = intSetOf()
-            (0 until TranslatedSentences().sentences.size).forEach {
-                if (!allSentences.contains(it)) {
-                    unmappedSentences += it
-                }
-            }
-            if (unmappedSentences.size > 0) {
-                // Put the rest of the sentences in a final level
-                val catchAllLevel = levels.size
-                levels[catchAllLevel] = unmappedSentences
-                keySentences[catchAllLevel] = listOf(
-                        KeySentences("everything-but-wanikani", unmappedSentences))
-            }
             keySentences.store.commit()
         }
 

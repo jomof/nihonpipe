@@ -4,6 +4,7 @@ import kotlin.math.max
 
 infix fun Node.adjacent(other : Node) =
         this.pageRange.last == other.pageRange.first - 1
+
 fun Node.full() : Boolean {
     return when (this) {
         is EmptyNode -> false
@@ -80,6 +81,25 @@ fun Node.serializationSize(): Int {
                     4 + // first page
                     4 + // array size
                     this.pageRange.count * 8 // elements
+        else -> throw RuntimeException()
+    }
+}
+
+fun Node.getPage(page: Int): Long {
+    return when (this) {
+        is EmptyNode -> 0L
+        is AllSetNode -> -1L
+        is PairNode -> {
+            return when (page) {
+                in left.pageRange -> left.getPage(page)
+                in right.pageRange -> right.getPage(page)
+                else -> 0L
+            }
+        }
+        is LongPageNode -> {
+            assert(page in pageRange)
+            return elements[page - pageRange.first]
+        }
         else -> throw RuntimeException()
     }
 }
