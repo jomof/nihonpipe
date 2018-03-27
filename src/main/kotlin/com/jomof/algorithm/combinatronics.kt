@@ -14,7 +14,7 @@ fun <T> List<T>.permutations(): List<List<T>> {
     return perms
 }
 
-inline fun <A> Array<A>.combinations() =
+fun <A> Array<A>.combinations() =
         (0 until (1L shl size))
                 .asSequence()
                 .map {

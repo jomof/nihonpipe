@@ -63,8 +63,8 @@ class TokenFrequencyLadder : LevelProvider {
                         table[level] = keys
                                 .map { (vocab, sentences) -> KeySentences(vocab.surface, sentences) }
                         val accumulatedLevels = intSetOf()
-                        for ((_, sentences) in keys) {
-                            accumulatedLevels += sentences
+                        for ((_, sentencesBits) in keys) {
+                            accumulatedLevels += sentencesBits
                         }
                         levels[level] = accumulatedLevels
                     }

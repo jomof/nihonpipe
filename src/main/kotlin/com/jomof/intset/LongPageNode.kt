@@ -12,9 +12,9 @@ class LongPageNode(
 //        assert(!elements.all { it == 0L })
 //        assert(elements.map(
 //                java.lang.Long::bitCount).sum() < elements.size * 64)
-//        if (endPage != null) {
-//            assert(endPage - startPage + 1 == elements.size)
-//        }
+        if (endPage != null) {
+            assert(endPage - startPage + 1 == elements.size)
+        }
     }
     override val code: NodeCode
         get() = if (elements.size == 1) {
@@ -62,8 +62,8 @@ class LongPageNode(
                 assert(leftSize + rightSize + 1 == pageRange.count)
                 assert(leftSize + rightSize + 1 == this.elements.size)
                 if (leftSize > 0) {
-                    val array = Array(leftSize) { index ->
-                        this.elements[index]
+                    val array = Array(leftSize) { pageNumber ->
+                        this.elements[pageNumber]
                     }
                     val left = createPageNode(
                             pageRange.first,
@@ -72,8 +72,8 @@ class LongPageNode(
                     node = createPairNode(left, node)
                 }
                 if (rightSize > 0) {
-                    val array = Array(rightSize) { index ->
-                        this.elements[rightElementStart + index]
+                    val array = Array(rightSize) { pageNumber ->
+                        this.elements[rightElementStart + pageNumber]
                     }
                     val right = createPageNode(
                             page + 1,

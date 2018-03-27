@@ -8,6 +8,7 @@ import com.jomof.nihonpipe.play.*
 import com.jomof.nihonpipe.sampleSentencesTsv
 import org.junit.Test
 import java.util.*
+import kotlin.math.min
 
 class Play {
     @Test
@@ -21,7 +22,7 @@ class Play {
         println("score coordinate index")
         ScoreCoordinateIndex().getCoordinatesFromSentence(0)
         println("least burden transitions")
-        (0 until TranslatedSentences().sentences.size).map {
+        (0 until min(20, TranslatedSentences().sentences.size)).map {
             if (it % 10 == 0) println("sentence $it")
             LeastBurdenSentenceTransitions().getNextSentences(it)
         }
@@ -45,7 +46,7 @@ class Play {
                     "私の日本語教師の犬には名刺があります。" to Score(60, 50),
                     "日本語が分かりましたか。" to Score(75, 50),
                     "ばい菌だらけだ！" to Score(7, 0),
-                    "今こそ一気に取引をまとめるときだ。" to Score(12, 2),
+                    //"今こそ一気に取引をまとめるときだ。" to Score(12, 2),
                     "新聞を一つ下さい。" to Score(22, 2),
                     "入口はどこですか。" to Score(32, 9),
                     "りんごを七つ下さい。" to Score(64, 9)))
@@ -59,23 +60,6 @@ class Play {
                                 "${ladder.first.levelProvider.size} = $keys"
                     }
             println(report)
-        }
-    }
-
-    @Test
-    fun bestSeedSentence() {
-        val sentenceSkeletonLadder = SentenceSkeletonLadder().getLevelSentences(0)
-        val grammarSummaryLadder = GrammarSummaryLadder().getLevelSentences(0)
-        val wanikaniVocabLadder = WanikaniVocabLadder().getLevelSentences(0)
-        val jlptVocabLadder = JlptVocabLadder().getLevelSentences(0)
-
-        val skeletonByGrammar = sentenceSkeletonLadder intersect grammarSummaryLadder
-        val wanikaniByJlpt = wanikaniVocabLadder intersect jlptVocabLadder
-
-        val total = skeletonByGrammar intersect wanikaniByJlpt
-        for (sentence in total) {
-            val translated = TranslatedSentences().sentences[sentence]
-            println("$sentence $translated")
         }
     }
 
@@ -117,7 +101,7 @@ class Play {
             "ただいま！",
             "おやすみなさい。",
             "コンビニはどこですか？",
-            "乾杯！",
+           // "乾杯！",
             "何時ですか？",
             "これは何ですか？",
             "それはいくらですか？",
@@ -144,7 +128,7 @@ class Play {
                 seedSentences = seedSentences,
                 sentenceScores = mutableMapOf())
         sampleSentencesTsv.delete()
-        (0..5000).forEach {
+        (0..20).forEach {
             if ((it) % 50 == 49) {
                 val incomplete =
                         player.incompleteLadderLevelKeys()
@@ -272,9 +256,9 @@ class Play {
         assertThat(back.japanese).isEqualTo(sentence)
         val coordinatesOfSentence = coordinateIndex
                 .getCoordinatesFromSentence(index)
-        assertThat(coordinatesOfSentence).hasSize(8)
+        assertThat(coordinatesOfSentence).hasSize(4)
 
-        val burden = Player.calculateBurden(index)
+        val burden = absoluteBurdenOfSentence(index)
     }
 
     @Test

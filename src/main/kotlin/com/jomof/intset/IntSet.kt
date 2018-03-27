@@ -185,7 +185,7 @@ class IntSet(
         var equal = true
         (this.pages() coiterate other.pages())
                 .filter { equal }
-                .forEach { (page, left, right) ->
+                .forEach { (_, left, right) ->
                     equal = equal && (left == right)
                 }
         return equal

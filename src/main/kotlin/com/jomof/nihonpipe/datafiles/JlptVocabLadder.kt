@@ -55,7 +55,7 @@ class JlptVocabLadder : LevelProvider {
                             .sortedBy { it.first }
             val levelsPerJlptLevel = 60 / (groupsOfJlptLevel.size)
             groupsOfJlptLevel
-                    .map { (jlpt, group) ->
+                    .map { (_, group) ->
                         group
                                 .chunked(1 + group.size / levelsPerJlptLevel)
                                 .map { levelElements ->
@@ -66,8 +66,8 @@ class JlptVocabLadder : LevelProvider {
                                 }
                     }
                     .flatten()
-                    .mapIndexed { level, keySentences ->
-                        Pair(level, keySentences)
+                    .mapIndexed { level, sentences ->
+                        Pair(level, sentences)
                     }
                     .onEach { (level, list) ->
                         keySentences[level] = list

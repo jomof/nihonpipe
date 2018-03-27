@@ -32,14 +32,10 @@ class ScoreCoordinateIndex {
         private val coordinateList = mutableMapOf<Int, ScoreCoordinate>()
         private val sentenceToScoreCoordinate = arrayOfNulls<IntSet?>(
                 TranslatedSentences().sentences.size)
-        private var populating = false
         fun populate() {
-            assert(!populating)
             if (coordinateMap.isNotEmpty()) {
                 return
             }
-            println("populating")
-            populating = true
             var coordinateIndex = 0
             for (ladderKind in LadderKind.values()) {
                 for (level in 0 until ladderKind.levelProvider.size) {
@@ -62,8 +58,6 @@ class ScoreCoordinateIndex {
                     }
                 }
             }
-            println("done populating")
-            populating = false
         }
     }
 }

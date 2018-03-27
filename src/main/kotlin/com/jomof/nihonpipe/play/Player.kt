@@ -83,9 +83,9 @@ data class Player(
             var total = 0
             var contained = 0
             var notContained = 0
-            sentenceCoordinates.forEach { sentence ->
+            sentenceCoordinates.forEach { sentenceIndex ->
                 ++total
-                if (keyScoresCovered.contains(sentence)) {
+                if (keyScoresCovered.contains(sentenceIndex)) {
                     ++contained
                 } else {
                     ++notContained
@@ -95,7 +95,7 @@ data class Player(
             if (total == contained || notContained == 0) {
                 null
             } else {
-                val burden = burdenOf(sentence)
+                val burden = absoluteBurdenOfSentence(sentence)
                 if (burden < leastBurdenSeen) {
                     leastBurdenSeen = burden
                     result.clear()
@@ -212,34 +212,5 @@ data class Player(
     companion object {
         const val maintenanceApprenticeLevelSentences = 10
         val allSentences = intSetOf(0 until TranslatedSentences().sentences.size)
-        private val cognitiveBurdenMap = mutableMapOf<Int, Int>()
-        fun calculateBurden(sentence: Int): Int {
-            val counts = mutableMapOf<String, Int>()
-            val costs = mutableMapOf<String, Int>()
-            val coordinateIndex = ScoreCoordinateIndex()
-            val allReasons = coordinateIndex.getCoordinatesFromSentence(sentence)
-            val reasonList = mutableListOf<ScoreCoordinate>()
-            allReasons.forEachElement { reason ->
-                reasonList += coordinateIndex
-                        .getCoordinateFromCoordinateIndex(reason)
-            }
-            val grouped = reasonList.groupBy { it.ladderKind }
-            assert(grouped.size == LadderKind.values().size) {
-                "Each ladder should be represented"
-            }
-            reasonList.forEach { (ladder, level, key) ->
-                val count = counts.getsert(key) { 0 }
-                val cost = costs.getsert(key) { 0 }
-                counts[key] = count + 1
-                costs[key] = cost + (level + 1) * (level + 1) * ladder.levelsPerMezzo
-            }
-            return counts.keys.sumBy { key ->
-                costs[key]!! / counts[key]!!
-            }
-        }
-
-        fun burdenOf(sentence: Int) = cognitiveBurdenMap.getsert(sentence) {
-            calculateBurden(sentence)
-        }
     }
 }
