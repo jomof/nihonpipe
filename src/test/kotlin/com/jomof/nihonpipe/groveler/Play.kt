@@ -7,6 +7,7 @@ import com.jomof.nihonpipe.groveler.schema.particleSkeletonForm
 import com.jomof.nihonpipe.play.*
 import com.jomof.nihonpipe.sampleSentencesTsv
 import org.junit.Test
+import java.util.*
 
 class Play {
     @Test
@@ -34,15 +35,6 @@ class Play {
                     "入口はどこですか。" to Score(100, 0),
                     "私の日本語教師の犬には名刺があります。" to Score(50, 50)))
         }
-    }
-
-    @Test
-    fun reportMezzoLevels() {
-        val player = Player(sentencesStudying = mutableMapOf(
-                "入口はどこですか。" to Score(100, 0),
-                "私の日本語教師の犬には名刺があります。" to Score(60, 50),
-                "日本語が分かりましたか。" to Score(75, 50)))
-        player.reportMezzoLevels()
     }
 
     @Test
@@ -119,26 +111,41 @@ class Play {
         assertThat(player.coordinates).isEqualTo(combined)
     }
 
+    private val seedSentences = listOf(
+            "トイレ は どこ です か 。",
+            "寒いですね？",
+            "ただいま！",
+            "おやすみなさい。",
+            "コンビニはどこですか？",
+            "乾杯！",
+            "何時ですか？",
+            "これは何ですか？",
+            "それはいくらですか？",
+            "東京駅はどこですか？",
+            "水 を ください 。",
+            "ありがとう。",
+            "彼 は 眠り込ん だ 。")
+
+    @Test
+    fun playTheGame() {
+        val player = Player(
+                seedSentences = seedSentences,
+                sentencesStudying = mutableMapOf())
+        val currentTime = GregorianCalendar(2020, 1, 1).timeInMillis
+        for (i in 0 until 100) {
+            player.requestNextStudyAction(currentTime)
+        }
+    }
+
     @Test
     fun addNextSentence() {
+
         val player = Player(
-                seedSentences = listOf(
-                        "トイレ は どこ です か 。",
-                        "寒いですね？",
-                        "ただいま！",
-                        "おやすみなさい。",
-                        "コンビニはどこですか？",
-                        "乾杯！",
-                        "何時ですか？",
-                        "これは何ですか？",
-                        "それはいくらですか？",
-                        "東京駅はどこですか？",
-                        "水 を ください 。",
-                        "ありがとう。"),
+                seedSentences = seedSentences,
                 sentencesStudying = mutableMapOf())
         sampleSentencesTsv.delete()
         (0..5000).forEach {
-            if ((it) % 50 == 51) {
+            if ((it) % 50 == 49) {
                 val incomplete =
                         player.incompleteLadderLevelKeys()
                 val report = incomplete

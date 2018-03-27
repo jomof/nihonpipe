@@ -16,7 +16,6 @@ data class Player(
     val coordinates = intSetOf()
     private val sentencesNotStudying = allSentences.copy()
 
-
     init {
         reconstructScores()
         seedSentences
@@ -68,22 +67,6 @@ data class Player(
             }
         }
         return missing
-    }
-
-    fun reportMezzoLevels() {
-        keyScores
-                .entries
-                .map { (coordinate, score) ->
-                    Pair(coordinate, coordinate.toMezzoLevel(score.value()))
-                }
-                .groupBy { (coordinate, mezzo) ->
-                    Pair(coordinate.ladderKind, mezzo)
-                }
-                .toList()
-                .sortedBy { it.first.toString() }
-                .map { (key, group) ->
-                    println("$key - ${group.size}")
-                }
     }
 
     private fun getNextSentence(keySentences: IntSet): Int? {
@@ -195,31 +178,21 @@ data class Player(
         )
     }
 
-
-    private fun sentencesOfLowestLevels(vararg ladders: LadderKind): List<IntSet> {
-        val incompleteLevels = incompleteLadderLevelKeys()
-
-        val ladderToLevel = incompleteLevels.keys
-                .filter { (ladder, _) -> ladders.contains(ladder) }
-                .toMap()
-        val lowestLevel = ladderToLevel.values.min()!!
-        return incompleteLevels
-                .entries
-                .filter { (ladderLevel, _) ->
-                    val (ladder, level) = ladderLevel
-                    level == lowestLevel && ladders.contains(ladder)
+    private fun apprenticeLevelSentences(): List<String> {
+        return sentencesStudying.entries
+                .filter { it ->
+                    it.value.mezzo() == MezzoScore.APPRENTICE
                 }
-                .sortedBy { (ladderLevel, _) -> ladderLevel.first }
-                .map { (ladderLevel, list) ->
-                    val (ladder, level) = ladderLevel
-                    list.filter { (key, sentences) ->
-                        val scoreCoordinate = ScoreCoordinate(ladder, level, key)
-                        !keyScores.containsKey(scoreCoordinate)
+                .map { it.key }
+    }
 
-                    }
-                }
-                .flatten()
-                .map { list -> list.second }
+    fun requestNextStudyAction(currentTime: Long): StudyAction? {
+        // Add sentences if needed to reach maintenance level.
+        while (apprenticeLevelSentences().size
+                < maintenanceApprenticeLevelSentences) {
+            addOneSentence()
+        }
+        return null
     }
 
     /**
@@ -232,6 +205,7 @@ data class Player(
     }
 
     companion object {
+        const val maintenanceApprenticeLevelSentences = 10
         val allSentences = intSetOf(0 until TranslatedSentences().sentences.size)
         private val cognitiveBurdenMap = mutableMapOf<Int, Int>()
         fun calculateBurden(sentence: Int): Int {

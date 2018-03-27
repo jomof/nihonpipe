@@ -1,0 +1,2 @@
+A: Diplomacy and war
+B: 海軍	navy

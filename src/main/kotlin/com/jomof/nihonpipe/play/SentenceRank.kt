@@ -28,15 +28,9 @@ data class SentenceRank(
         val reading = KuromojiIpadicCache.tokenize.reading(sentence.japanese)
         val pronunciation = KuromojiIpadicCache.tokenize.pronunciation(sentence.japanese)
 
-        val token = labelOf("frequency", coordinates
+        val token = labelOf("vocab", coordinates
                 .filter { it.ladderKind == LadderKind.TOKEN_FREQUENCY_LADDER }
                 .map { it.key })
-//        val wanikani = labelOf("wanikani", coordinates
-//                .filter { it.ladderKind == LadderKind.WANIKANI_VOCAB_LADDER }
-//                .map { it.key })
-//        val jlpt = labelOf("jlpt", coordinates
-//                .filter { it.ladderKind == LadderKind.JLPT_VOCAB_LADDER }
-//                .map { it.key })
         val skeleton = labelOf("pattern", coordinates
                 .filter { it.ladderKind == LadderKind.SENTENCE_SKELETON_LADDER }
                 .map { it.key })
