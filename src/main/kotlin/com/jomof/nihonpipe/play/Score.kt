@@ -25,7 +25,9 @@ data class Score(
     }
 
     fun recordCorrect(time: Long) {
-        assert(time >= timeOfNextReview())
+        assert(time >= timeOfNextReview()) {
+            "Expect time $time to be after ${timeOfNextReview()}"
+        }
         assert(time >= lastCorrect)
         assert(time >= lastAttempt)
         inReview = false

@@ -13,14 +13,14 @@ class ScoreTest {
     @Test
     fun testBurnedAt20() {
         val score = Score(correct = 19)
-        (0 until 18).onEach { score.recordCorrect(0) }
+        (0 until 18).onEach { score.recordCorrect(score.timeOfNextReview()) }
         assertThat(score.mezzo()).isEqualTo(MezzoScore.ENLIGHTENED)
     }
 
     @Test
     fun testBurnedAt21() {
         val score = Score()
-        (0 until 20).onEach { score.recordCorrect(0) }
+        (0 until 20).onEach { score.recordCorrect(score.timeOfNextReview()) }
         assertThat(score.level()).isEqualTo(21)
         assertThat(score.mezzo()).isEqualTo(MezzoScore.BURNED)
     }
@@ -28,7 +28,7 @@ class ScoreTest {
     @Test
     fun testBurnedAt100() {
         val score = Score()
-        (0 until 99).onEach { score.recordCorrect(0) }
+        (0 until 99).onEach { score.recordCorrect(score.timeOfNextReview()) }
         assertThat(score.level()).isEqualTo(100)
         assertThat(score.mezzo()).isEqualTo(MezzoScore.BURNED)
     }
@@ -48,11 +48,11 @@ class ScoreTest {
         score.recordIncorrect(0)
         assertThat(score.level()).isEqualTo(1)
         assertThat(score.mezzo()).isEqualTo(MezzoScore.APPRENTICE)
-        score.recordCorrect(0)
-        score.recordCorrect(0)
-        score.recordCorrect(0)
-        score.recordCorrect(0)
-        score.recordCorrect(0)
+        score.recordCorrect(score.timeOfNextReview())
+        score.recordCorrect(score.timeOfNextReview())
+        score.recordCorrect(score.timeOfNextReview())
+        score.recordCorrect(score.timeOfNextReview())
+        score.recordCorrect(score.timeOfNextReview())
         assertThat(score.level()).isEqualTo(6)
         assertThat(score.mezzo()).isEqualTo(MezzoScore.GURU)
     }
@@ -63,15 +63,15 @@ class ScoreTest {
         score.recordCorrect(0)
         assertThat(score.recentWinStreak()).isEqualTo(1)
         assertThat(score.recentLoseStreak()).isEqualTo(0)
-        score.recordCorrect(0)
+        score.recordCorrect(score.timeOfNextReview())
         assertThat(score.recentWinStreak()).isEqualTo(2)
         assertThat(score.recentLoseStreak()).isEqualTo(0)
-        score.recordIncorrect(0)
+        score.recordIncorrect(score.timeOfNextReview())
         assertThat(score.recentWinStreak()).isEqualTo(0)
         assertThat(score.longestWinStreak()).isEqualTo(2)
         assertThat(score.recentLoseStreak()).isEqualTo(1)
-        score.recordIncorrect(0)
-        score.recordCorrect(0)
+        score.recordIncorrect(score.timeOfNextReview())
+        score.recordCorrect(score.timeOfNextReview())
         assertThat(score.longestLoseStreak()).isEqualTo(2)
         assertThat(score.longestWinStreak()).isEqualTo(2)
     }
@@ -89,14 +89,15 @@ class ScoreTest {
         score.recordIncorrect(5400001)
         assertThat(score.level()).isEqualTo(1)
         assertThat(score.timeOfNextReview()).isEqualTo(5400001)
-        (0..29).onEach {
-            score.recordCorrect(score.timeOfNextReview())
+        (0..19).onEach { _ ->
+            val timeOfNextReview = score.timeOfNextReview()
+            score.recordCorrect(timeOfNextReview)
         }
         val timeOfNextReview = score.timeOfNextReview()
         val seconds = timeOfNextReview / 1000.0
         val minutes = seconds / 60.0
         val hours = minutes / 60.0
-        val days = hours / 60.0
+        val days = hours / 24.0
         var years = days / 365.24
         assertThat(years).isWithin(0.001).of(0.5)
     }
