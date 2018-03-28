@@ -22,11 +22,6 @@ class H2Populator {
     }
 
     @Test
-    fun tanakaCorpus() {
-        TranslatedSentences()
-    }
-
-    @Test
     fun wanikaniVsJlpt() {
         WanikaniVsJlptVocabs.vocabOf
     }
@@ -59,12 +54,6 @@ class H2Populator {
     }
 
     @Test
-    fun wanikaniLevelFilter() {
-        val sentencesOf = WanikaniLevelFilter.filterOf
-        sentencesOf(42)
-    }
-
-    @Test
     fun vocabToSentenceFilter() {
         val vocabToSentence = VocabToSentenceFilter()
         vocabToSentence["友達"]
@@ -74,12 +63,6 @@ class H2Populator {
     fun sentenceSkeletonLevels() {
         val skeletonLevels = SentenceSkeletonLadder()
         skeletonLevels.getKeySentences(5)
-    }
-
-    @Test
-    fun waniKaniVocabLevels() {
-        val levels = WanikaniVocabLadder()
-        levels.getKeySentences(42)
     }
 
     @Test

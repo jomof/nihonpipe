@@ -72,12 +72,5 @@ class JishoJlptVocabs private constructor(
                 instance = JishoJlptVocabs()
                 return instance!!
             }
-
-        fun save() {
-            if (instance != null) {
-                instance!!.db.close()
-                instance = null
-            }
-        }
     }
 }

@@ -18,10 +18,10 @@ class SentenceSkeletonFilter {
 
     init {
         if (skeletonFilter.isEmpty()) {
-            val tanaka = TranslatedSentences()
             val tokenize = KuromojiIpadicCache.tokenize
             val map = mutableMapOf<String, IntSet>()
-            for ((index, sentence) in tanaka.sentences) {
+            for (index in sentenceIndexRange()) {
+                val sentence = sentenceIndexToTranslatedSentence(index)
                 val tokenization = tokenize(sentence.japanese)
                 val skeleton = tokenization.particleSkeletonForm()
                 val filter = map[skeleton] ?: intSetOf()

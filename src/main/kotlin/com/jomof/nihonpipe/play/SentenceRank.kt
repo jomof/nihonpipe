@@ -2,7 +2,7 @@ package com.jomof.nihonpipe.play
 
 import com.jomof.intset.IntSet
 import com.jomof.nihonpipe.datafiles.KuromojiIpadicCache
-import com.jomof.nihonpipe.datafiles.TranslatedSentences
+import com.jomof.nihonpipe.datafiles.sentenceIndexToTranslatedSentence
 
 data class SentenceRank(
         val rank: Int,
@@ -20,10 +20,9 @@ data class SentenceRank(
             }
         }
 
-        val scoreCoordinateIndex = ScoreCoordinateIndex()
-        val sentence = TranslatedSentences().sentences[sentenceIndex]!!
+        val sentence = sentenceIndexToTranslatedSentence(sentenceIndex)
         val coordinates = marginalScoreCoordinates.map { index ->
-            scoreCoordinateIndex.getCoordinateFromCoordinateIndex(index)
+            scoreCoordinateFromCoordinateIndex(index)
         }
         val reading = KuromojiIpadicCache.tokenize.reading(sentence.japanese)
         val pronunciation = KuromojiIpadicCache.tokenize.pronunciation(sentence.japanese)

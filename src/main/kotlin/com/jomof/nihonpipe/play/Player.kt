@@ -6,7 +6,9 @@ import com.jomof.intset.IntSet
 import com.jomof.intset.forEachElement
 import com.jomof.intset.intSetOf
 import com.jomof.intset.minus
-import com.jomof.nihonpipe.datafiles.TranslatedSentences
+import com.jomof.nihonpipe.datafiles.japaneseToSentenceIndex
+import com.jomof.nihonpipe.datafiles.sentenceIndexRange
+import com.jomof.nihonpipe.datafiles.sentenceIndexToTranslatedSentence
 
 data class Player(
         private val seedSentences: List<String> = listOf(),
@@ -26,28 +28,23 @@ data class Player(
      */
     fun addSentence(sentence: String, score: Score = Score()) {
         sentenceScores[sentence] = score
-        val sentenceIndex = TranslatedSentences().sentenceToIndex(sentence)
+        val sentenceIndex = japaneseToSentenceIndex(sentence)
         sentencesStudying += sentenceIndex
         sentencesNotStudying -= sentenceIndex
-        val coordinateIndex = ScoreCoordinateIndex()
-        val scoreCoordinates = coordinateIndex.getCoordinatesFromSentence(sentenceIndex)
+        val scoreCoordinates = scoreCoordinatesFromSentence(sentenceIndex)
         keyScoresCovered += scoreCoordinates
         scoreCoordinates.forEachElement { scoreCoordinateIndex ->
-            val scoreCoordinate = coordinateIndex.getCoordinateFromCoordinateIndex(scoreCoordinateIndex)
+            val scoreCoordinate = scoreCoordinateFromCoordinateIndex(scoreCoordinateIndex)
             val keyScore = keyScores.getsert(scoreCoordinate) { Score() }
             keyScore.addFrom(score)
         }
     }
-
-    private fun existingScoreSet() =
-            keyScores.entries.map { it.key }.toSet()
 
     /**
      * Get the current level for each ladder along with the keys that are still
      * missing for that ladder level.
      */
     fun incompleteLadderLevelKeys(): Map<Pair<LadderKind, Int>, List<Pair<String, IntSet>>> {
-        val existingScores = existingScoreSet()
         val missing = mutableMapOf<
                 Pair<LadderKind, Int>,
                 List<Pair<String, IntSet>>>()
@@ -56,7 +53,7 @@ data class Player(
                 val incompletes = mutableListOf<Pair<String, IntSet>>()
                 ladderKind.forEachKeySentence(level) { (key, sentences) ->
                     val coordinate = ScoreCoordinate(ladderKind, level, key)
-                    if (!existingScores.contains(coordinate)) {
+                    if (!keyScores.contains(coordinate)) {
                         incompletes += Pair(key, sentences)
                     }
                 }
@@ -73,8 +70,7 @@ data class Player(
         var leastBurdenSeen = Int.MAX_VALUE
         val result = mutableListOf<Int>()
         keySentences.forEachElement { sentence ->
-            val sentenceCoordinates = ScoreCoordinateIndex()
-                    .getCoordinatesFromSentence(sentence)
+            val sentenceCoordinates = scoreCoordinatesFromSentence(sentence)
             var total = 0
             var contained = 0
             var notContained = 0
@@ -87,9 +83,7 @@ data class Player(
                 }
             }
 
-            if (total == contained || notContained == 0) {
-                null
-            } else {
+            if (total != contained && notContained != 0) {
                 val burden = absoluteBurdenOfSentence(sentence)
                 if (burden < leastBurdenSeen) {
                     leastBurdenSeen = burden
@@ -99,8 +93,8 @@ data class Player(
             }
         }
         val hopefullySingle = result
-                .takeMinBy { ScoreCoordinateIndex().getCoordinatesFromSentence(it).size }
-                .takeMinBy { TranslatedSentences().sentences[it]!!.japanese.length }
+                .takeMinBy { scoreCoordinatesFromSentence(it).size }
+                .takeMinBy { sentenceIndexToTranslatedSentence(it).japanese.length }
                 .toList()
         assert(hopefullySingle.size <= 1)
         return hopefullySingle.singleOrNull()
@@ -108,8 +102,6 @@ data class Player(
 
     fun addOneSentence(): SentenceRank {
         val seeding = seedSentences.size > sentencesStudying.size
-        val scoreCoordinateIndex = ScoreCoordinateIndex()
-        val sentences = TranslatedSentences().sentences
         if (!seeding) {
             val transitions = LeastBurdenSentenceTransitions()
             val adjacents = intSetOf()
@@ -124,8 +116,8 @@ data class Player(
                                 .first
                                 .contains(nextByAdjacent)
                     }.mapNotNull { from ->
-                        val fromCoordinates = scoreCoordinateIndex.getCoordinatesFromSentence(from)
-                        val toCoordinates = scoreCoordinateIndex.getCoordinatesFromSentence(nextByAdjacent)
+                        val fromCoordinates = scoreCoordinatesFromSentence(from)
+                        val toCoordinates = scoreCoordinatesFromSentence(nextByAdjacent)
                         val delta = (toCoordinates minus fromCoordinates) minus keyScoresCovered
                         if (delta.isEmpty()) {
                             null
@@ -134,11 +126,13 @@ data class Player(
                         }
                     }.sortedBy { it.second.size }.first()
                     val marginalBurden = deltaCoordinates.map { it ->
-                        val coordinate = scoreCoordinateIndex.getCoordinateFromCoordinateIndex(it)
+                        val coordinate = scoreCoordinateFromCoordinateIndex(it)
                         val level = coordinate.level + 1
                         level * level
                     }.sum()
-                    addSentence(sentences[nextByAdjacent]!!.japanese)
+                    addSentence(
+                            sentenceIndexToTranslatedSentence(nextByAdjacent)
+                                    .japanese)
                     return SentenceRank(
                             rank = sentencesStudying.size,
                             sourceSentence = from,
@@ -152,28 +146,27 @@ data class Player(
         val sentencesToConsider = if (seeding) {
             val result = intSetOf()
             result += seedSentences
-                    .map { TranslatedSentences().sentenceToIndex(it) }
+                    .map { japaneseToSentenceIndex(it) }
                     .filter { !sentencesStudying.contains(it) }
             result
         } else {
             sentencesNotStudying
         }
 
-        var to = getNextSentence(sentencesToConsider) ?: getNextSentence(sentencesToConsider)!!
-
-        val toCoordinates = scoreCoordinateIndex.getCoordinatesFromSentence(to)
+        val toSentence = getNextSentence(sentencesToConsider)!!
+        val toCoordinates = scoreCoordinatesFromSentence(toSentence)
         val marginalCoordinates = toCoordinates minus keyScoresCovered
         val burden = marginalCoordinates.map { it ->
-            val coordinate = scoreCoordinateIndex.getCoordinateFromCoordinateIndex(it)
+            val coordinate = scoreCoordinateFromCoordinateIndex(it)
             val level = coordinate.level + 1
             level * level
         }.sum()
-        addSentence(sentences[to]!!.japanese)
+        addSentence(sentenceIndexToTranslatedSentence(toSentence).japanese)
         return SentenceRank(
                 rank = sentencesStudying.size,
                 sourceSentence = null,
                 marginalScoreCoordinates = marginalCoordinates,
-                sentenceIndex = to,
+                sentenceIndex = toSentence,
                 marginalBurden = burden
         )
     }
@@ -187,6 +180,7 @@ data class Player(
     }
 
     fun requestNextStudyAction(currentTime: Long): StudyAction? {
+        println(currentTime)
         // Add sentences if needed to reach maintenance level.
         while (apprenticeLevelSentences().size
                 < maintenanceApprenticeLevelSentences) {
@@ -206,6 +200,6 @@ data class Player(
 
     companion object {
         const val maintenanceApprenticeLevelSentences = 10
-        val allSentences = intSetOf(0 until TranslatedSentences().sentences.size)
+        val allSentences = intSetOf(sentenceIndexRange())
     }
 }

@@ -8,12 +8,10 @@ private val cognitiveBurdenMap = mutableMapOf<Int, Int>()
 private fun calculateBurden(sentence: Int): Int {
     val counts = mutableMapOf<String, Int>()
     val costs = mutableMapOf<String, Int>()
-    val coordinateIndex = ScoreCoordinateIndex()
-    val allReasons = coordinateIndex.getCoordinatesFromSentence(sentence)
+    val allReasons = scoreCoordinatesFromSentence(sentence)
     val reasonList = mutableListOf<ScoreCoordinate>()
     allReasons.forEachElement { reason ->
-        reasonList += coordinateIndex
-                .getCoordinateFromCoordinateIndex(reason)
+        reasonList += scoreCoordinateFromCoordinateIndex(reason)
     }
     val grouped = reasonList.groupBy { it.ladderKind }
     assert(grouped.size == LadderKind.values().size) {

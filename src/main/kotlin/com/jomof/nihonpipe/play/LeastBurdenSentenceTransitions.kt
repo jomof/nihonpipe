@@ -2,7 +2,7 @@ package com.jomof.nihonpipe.play
 
 import com.jomof.intset.IntSet
 import com.jomof.intset.intSetOf
-import com.jomof.nihonpipe.datafiles.TranslatedSentences
+import com.jomof.nihonpipe.datafiles.sentenceIndexRange
 import com.jomof.nihonpipe.sentenceTransitionsBin
 import org.h2.mvstore.MVStore
 
@@ -15,16 +15,15 @@ class LeastBurdenSentenceTransitions {
         }
         var leastBurdenSeen = Int.MAX_VALUE
         val nextSentence = mutableListOf<Int>()
-        val index = ScoreCoordinateIndex()
-        val fromCoordinates = index.getCoordinatesFromSentence(sentence)
-        for (ixTo in 0 until TranslatedSentences().sentences.size) {
+        val fromCoordinates = scoreCoordinatesFromSentence(sentence)
+        for (ixTo in sentenceIndexRange()) {
             if (sentence == ixTo) {
                 continue
             }
-            val toCoordinates = index.getCoordinatesFromSentence(ixTo)
+            val toCoordinates = scoreCoordinatesFromSentence(ixTo)
             var burden = 0
-            toCoordinates.doWhile { sentence ->
-                if (!fromCoordinates.contains(sentence)) {
+            toCoordinates.doWhile { coordinate ->
+                if (!fromCoordinates.contains(coordinate)) {
                     ++burden
                 }
                 burden <= leastBurdenSeen

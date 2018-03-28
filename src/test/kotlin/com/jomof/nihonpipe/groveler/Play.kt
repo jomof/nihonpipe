@@ -14,15 +14,14 @@ class Play {
     @Test
     fun prepopulate() {
         println("populate translated sentences")
-        TranslatedSentences()
         for (ladderKind in LadderKind.values()) {
             println("$ladderKind")
             ladderKind.levelProvider.size
         }
         println("score coordinate index")
-        ScoreCoordinateIndex().getCoordinatesFromSentence(0)
+        scoreCoordinatesFromSentence(0)
         println("least burden transitions")
-        (0 until min(20, TranslatedSentences().sentences.size)).map {
+        (0 until min(20, sentenceIndexRange().count())).map {
             if (it % 10 == 0) println("sentence $it")
             LeastBurdenSentenceTransitions().getNextSentences(it)
         }
@@ -64,30 +63,19 @@ class Play {
     }
 
     @Test
-    fun repro2() {
-        // 111478
-        val text = "トイレ は どこ です か 。"
-        val index = TranslatedSentences().sentenceToIndex(text)
-        val grammarProvider = LadderKind.GRAMMAR_SUMMARY_LADDER.levelProvider
-        //grammarProvider.getKeySentences()
-        println(index)
-    }
-
-    @Test
     fun repro() {
-        val coordinateIndex = ScoreCoordinateIndex()
         val target1 = "頭 の 毛 は 灰色 だっ た 。"
         val target2 = "トイレ は どこ です か 。"
-        val index1 = TranslatedSentences().sentenceToIndex(target1)
-        val index2 = TranslatedSentences().sentenceToIndex(target2)
-        val reasons1 = coordinateIndex.getCoordinatesFromSentence(index1).toSet()
-        val reasons2 = coordinateIndex.getCoordinatesFromSentence(index2).toSet()
+        val index1 = japaneseToSentenceIndex(target1)
+        val index2 = japaneseToSentenceIndex(target2)
+        val reasons1 = scoreCoordinatesFromSentence(index1).toSet()
+        val reasons2 = scoreCoordinatesFromSentence(index2).toSet()
         val player = Player(sentenceScores = mutableMapOf())
         assertThat(player.keyScoresCovered.size).isEqualTo(0)
         player.addSentence(target1)
         assertThat(player.keyScoresCovered).isEqualTo(reasons1)
-        assertThat(coordinateIndex.getCoordinatesFromSentence(index1)).isEqualTo(reasons1)
-        assertThat(coordinateIndex.getCoordinatesFromSentence(index2)).isEqualTo(reasons2)
+        assertThat(scoreCoordinatesFromSentence(index1)).isEqualTo(reasons1)
+        assertThat(scoreCoordinatesFromSentence(index2)).isEqualTo(reasons2)
         player.addSentence(target2)
         assertThat(player.keyScoresCovered.toSet()).isNotEqualTo(reasons1)
         assertThat(player.keyScoresCovered.toSet()).isNotEqualTo(reasons2)
@@ -162,7 +150,7 @@ class Play {
 
     @Test
     fun allSentencesAreCoveredByEachLadderLevel() {
-        val allSentenceCount = TranslatedSentences().sentences.size
+        val allSentenceCount = sentenceIndexRange().count()
         for (ladderKind in LadderKind.values()) {
             val sentences = intSetOf()
             for (level in 0 until ladderKind.levelProvider.size) {
@@ -171,7 +159,7 @@ class Play {
             if (sentences.size != allSentenceCount) {
                 (0..allSentenceCount).forEach { index ->
                     if (!sentences.contains(index)) {
-                        val sentence = TranslatedSentences().sentences[index]
+                        val sentence = sentenceIndexToTranslatedSentence(index)
                         assertThat(sentences.contains(index))
                                 .named("sentence $sentence is not covered by $ladderKind")
                                 .isTrue()
@@ -195,8 +183,8 @@ class Play {
         //val target = "お母さん は どこ 。"
         //val target = "ここ は 今 乾期 です 。"
         //val target = "バラ は 今 満開 です 。"
-        val index = TranslatedSentences().sentenceToIndex(target)
-        val found = TranslatedSentences().sentences[index]
+        val index = japaneseToSentenceIndex(target)
+        val found = sentenceIndexToTranslatedSentence(index)
 
         println("$found")
         val tokenization = KuromojiIpadicCache
@@ -211,18 +199,18 @@ class Play {
         println("There are ${skeletonSentences.size} sentences with this skeleton")
         fun locateInLevel(ladderKind: LadderKind) {
             val provider = ladderKind.levelProvider
-            var found = false
+            var foundSentence = false
             val size = provider.size
             for (level in 0 until size) {
                 val keySentences = provider.getKeySentences(level)
                 for (keySentence in keySentences) {
                     if (keySentence.sentences.contains(index)) {
                         println("$ladderKind level=$level of ${provider.size} key=${keySentence.key}")
-                        found = true
+                        foundSentence = true
                     }
                 }
             }
-            if (!found) {
+            if (!foundSentence) {
                 println("NOT FOUND in $ladderKind")
             }
         }
@@ -230,47 +218,41 @@ class Play {
             locateInLevel(ladderKind)
         }
 
-        var scoreCoordinate = ScoreCoordinateIndex()
-        var coordinates = scoreCoordinate.getCoordinatesFromSentence(index)
+        val coordinates = scoreCoordinatesFromSentence(index)
         for (coordinateIndex in coordinates) {
-            val coordinate = scoreCoordinate.getCoordinateFromCoordinateIndex(coordinateIndex)
+            val coordinate = scoreCoordinateFromCoordinateIndex(
+                    coordinateIndex)
             println("$coordinate")
         }
 
         val (sentences, burden) = LeastBurdenSentenceTransitions().getNextSentences(index)
         println("The most similar sentences have burden $burden -> ")
-        var count = 0
-        for (ix in sentences) {
-            println("  $ix : ${TranslatedSentences().sentences[ix]}")
-            if (count++ > 20) break
+        for ((count, ix) in sentences.withIndex()) {
+            println("  $ix : ${sentenceIndexToTranslatedSentence(ix)}")
+            if (count > 20) break
         }
     }
 
     @Test
     fun testSomeBurdens() {
         val sentence = "はじめまして。"
-        val sentences = TranslatedSentences()
-        val coordinateIndex = ScoreCoordinateIndex()
-        val index = sentences.sentenceToIndex(sentence)
-        val back = sentences.sentences[index]!!
+        val index = japaneseToSentenceIndex(sentence)
+        val back = sentenceIndexToTranslatedSentence(index)
         assertThat(back.japanese).isEqualTo(sentence)
-        val coordinatesOfSentence = coordinateIndex
-                .getCoordinatesFromSentence(index)
+        val coordinatesOfSentence = scoreCoordinatesFromSentence(index)
         assertThat(coordinatesOfSentence).hasSize(4)
-
-        val burden = absoluteBurdenOfSentence(index)
+        absoluteBurdenOfSentence(index)
     }
 
     @Test
     fun leastBurdenConnections() {
         val leastBurdenTransitions = LeastBurdenSentenceTransitions()
-        val translated = TranslatedSentences().sentences
-        for (ixFrom in 0 until translated.size) {
+        for (ixFrom in sentenceIndexRange()) {
             val (sentences, burden) = leastBurdenTransitions.getNextSentences(ixFrom)
 
-            println("$burden : ${translated[ixFrom]} -> ")
+            println("$burden : ${sentenceIndexToTranslatedSentence(ixFrom)} -> ")
             for (ix in sentences) {
-                println("  ${translated[ix]}")
+                println("  ${sentenceIndexToTranslatedSentence(ix)}")
             }
             break
         }
