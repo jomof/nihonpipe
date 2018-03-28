@@ -75,4 +75,29 @@ class ScoreTest {
         assertThat(score.longestLoseStreak()).isEqualTo(2)
         assertThat(score.longestWinStreak()).isEqualTo(2)
     }
+
+    @Test
+    fun nextReviewForContinuousWins() {
+        val score = Score()
+        assertThat(score.timeOfNextReview()).isEqualTo(0)
+        score.recordCorrect(1)
+        assertThat(score.level()).isEqualTo(2)
+        assertThat(score.timeOfNextReview()).isEqualTo(5400001)
+        score.recordIncorrect(5400001)
+        assertThat(score.level()).isEqualTo(1)
+        assertThat(score.timeOfNextReview()).isEqualTo(5400001)
+        score.recordIncorrect(5400001)
+        assertThat(score.level()).isEqualTo(1)
+        assertThat(score.timeOfNextReview()).isEqualTo(5400001)
+        (0..29).onEach {
+            score.recordCorrect(score.timeOfNextReview())
+        }
+        val timeOfNextReview = score.timeOfNextReview()
+        val seconds = timeOfNextReview / 1000.0
+        val minutes = seconds / 60.0
+        val hours = minutes / 60.0
+        val days = hours / 60.0
+        var years = days / 365.24
+        assertThat(years).isWithin(0.001).of(0.5)
+    }
 }

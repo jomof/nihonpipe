@@ -25,3 +25,10 @@ fun hoursUntilSrsLevel(level: Int): Double {
     val p0 = constant
     return p2 + p1 + p0
 }
+
+fun millisUntilNextSrsLevel(level: Int): Long {
+    val hours = hoursUntilNextSrsLevel(level)
+    val minutes = hours * 60.0
+    val seconds = minutes * 60.0
+    return (seconds * 1000.0).toLong()
+}

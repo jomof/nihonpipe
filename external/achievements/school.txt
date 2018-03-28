@@ -2,3 +2,4 @@ A: Around school
 B: 学校	school
 B: 小学生	elementary school student
 B: 私大	private college
+B: 留学	study abroad
