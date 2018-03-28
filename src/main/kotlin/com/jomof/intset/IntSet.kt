@@ -1,71 +1,51 @@
 package com.jomof.intset
 
-import java.io.*
+import java.io.Externalizable
+import java.io.ObjectInput
+import java.io.ObjectOutput
 
-class IntSet(
+open class IntSet(
         internal var top: Node = EmptyNode.instance)
     : MutableSet<Int>, Externalizable {
+    private var range = (0..Int.MAX_VALUE)
     private var readonly = false
     override val size: Int get() = top.size
 
     override fun readExternal(i: ObjectInput) {
         assert(!readonly)
+        val byte = i.readByte()
+        when (byte) {
+            1.toByte() -> {
+                val first = i.readInt()
+                val last = i.readInt()
+                range = first..last
+            }
+        }
         top = readNode(i)
     }
 
-    fun check(): IntSet {
-        fun serialize(set: IntSet): ByteArray {
-            val bos = ByteArrayOutputStream()
-            val out: ObjectOutput?
-            val bytes: ByteArray
-            try {
-                out = ObjectOutputStream(bos)
-                out.writeObject(set)
-                out.flush()
-                bytes = bos.toByteArray()
-            } finally {
-                try {
-                    bos.close()
-                } catch (ex: IOException) {
-                    // ignore close exception
-                }
-            }
-            return bytes
-        }
-
-        fun deserialize(bytes: ByteArray): IntSet {
-            val bis = ByteArrayInputStream(bytes)
-            var i: ObjectInput? = null
-            try {
-                i = ObjectInputStream(bis)
-                return i.readObject() as IntSet
-            } finally {
-                try {
-                    if (i != null) {
-                        i.close()
-                    }
-                } catch (ex: IOException) {
-                }
-            }
-        }
-
-        val reserialized = deserialize(serialize(this))
-        assert(this == reserialized) {
-            deserialize(serialize(this))
-            "booo"
-        }
-        return reserialized
-    }
-
     override fun writeExternal(out: ObjectOutput) {
+        if (range == (0..Int.MAX_VALUE)) {
+            out.writeByte(0)
+        } else {
+            out.writeByte(1)
+            out.writeInt(range.first)
+            out.writeInt(range.last)
+        }
         top.writeExternal(out)
     }
 
     override fun add(element: Int): Boolean {
         assert(!readonly)
+        assert(element in range)
         return top.add(pageOf(element), offsetOf(element)) {
             top = it
         }
+    }
+
+    fun withRangeLimit(range: IntRange): IntSet {
+        this.range = range
+        return this
     }
 
     override fun clear() {
@@ -73,14 +53,18 @@ class IntSet(
         top = EmptyNode.instance
     }
 
-    override fun contains(element: Int) = top.contains(
-            pageOf(element),
-            offsetOf(element))
+    override fun contains(element: Int): Boolean {
+        assert(element in range)
+        return top.contains(
+                pageOf(element),
+                offsetOf(element))
+    }
 
     fun pages(): Iterable<Page> = top.pages().asIterable()
 
     fun setPage(startPage: Int, elements: Long) {
         assert(!readonly)
+        assert(startPage * 64 in range)
         top.setPage(startPage, elements) { top = it }
     }
 
@@ -111,6 +95,7 @@ class IntSet(
         if (elements is IntSet) {
             (pages() coiterate elements.pages())
                     .forEach { (page, left, right) ->
+                        assert(page * 64 in range)
                         if (right != 0L && right != left) {
                             setPage(page, left or right)
                         }
@@ -124,6 +109,7 @@ class IntSet(
     override fun iterator() = IntSetMutableIterator(this)
     override fun remove(element: Int): Boolean {
         assert(!readonly)
+        assert(element in range)
         val pageOf = pageOf(element)
         val offsetOf = offsetOf(element)
         val bitOf = bitOf(offsetOf)
@@ -144,6 +130,7 @@ class IntSet(
                         val negated = -1L xor right
                         val combined = left and negated
                         if (combined != left) {
+                            assert(page * 64 in range)
                             setPage(page, combined)
                         }
                     }

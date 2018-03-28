@@ -1,2 +1,6 @@
 A: Diplomacy and war
 B: 海軍	navy
+B: 水兵	navy soldier
+B: 軍人	soldier
+B: 毒	poison
+B: 兵員	military strength

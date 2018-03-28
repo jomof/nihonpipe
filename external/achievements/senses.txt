@@ -1,4 +1,5 @@
 A: Senses
+B: 感覚	senses
 B: 味	taste
 B: 味わう	to taste
 B: 嗅	smell

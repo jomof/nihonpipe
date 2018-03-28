@@ -341,7 +341,7 @@ class IntSetTest {
         assertThat(set.contains(132)).isTrue()
         assertThat(set.contains(133)).isFalse()
         val bytes = serialize(set)
-        assertThat(bytes.size).isEqualTo(60)
+        assertThat(bytes.size).isEqualTo(61)
         val set2 = deserialize(bytes)
         soak(set2)
         assertThat(set2.contains(131)).isFalse()
@@ -355,7 +355,7 @@ class IntSetTest {
         set += 0..63
         soak(set)
         val bytes = serialize(set)
-        assertThat(bytes.size).isEqualTo(52)
+        assertThat(bytes.size).isEqualTo(53)
         val set2 = deserialize(bytes)
         assertThat(set2.contains(63)).isTrue()
         assertThat(set2.contains(64)).isFalse()
@@ -374,7 +374,7 @@ class IntSetTest {
         assertThat(set.pages().count()).isEqualTo(0)
         soak(set)
         val bytes = serialize(set)
-        assertThat(bytes.size).isEqualTo(48)
+        assertThat(bytes.size).isEqualTo(49)
         val set2 = deserialize(bytes)
         soak(set2)
         assertThat(set2.contains(63)).isFalse()
@@ -421,13 +421,13 @@ class IntSetTest {
     fun setPermutations() {
         val values = listOf(1, 63, 64, 127, 128, 255)
         for (permutation1 in values.permutations()) {
-            val intSet1 = intSetOf(permutation1)
+            val intSet1 = intSetOf(permutation1).withRangeLimit(1..255)
             val ktSet1 = mutableSetOf<Int>()
             ktSet1.addAll(permutation1)
             assertThat(intSet1 == ktSet1).isTrue()
             assertThat(ktSet1 == intSet1).isTrue()
             for (permutation2 in values.permutations()) {
-                val intSet2 = intSetOf(permutation2)
+                val intSet2 = intSetOf(permutation2).withRangeLimit(1..255)
                 val ktSet2 = mutableSetOf<Int>()
                 ktSet2.addAll(permutation1)
                 assertThat(intSet2 == ktSet2).isTrue()

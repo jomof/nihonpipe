@@ -18,12 +18,7 @@ data class Player(
 
     init {
         reconstructScores()
-
-        // Check for duplicates on seed sentences
-        seedSentences
-                .groupBy { it }
-                .filter { it.value.size > 1 }
-                .onEach { throw RuntimeException(it.key) }
+        assert(seedSentences == seedSentences.distinct())
     }
 
     /**
