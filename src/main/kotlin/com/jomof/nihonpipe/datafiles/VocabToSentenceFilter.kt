@@ -17,11 +17,10 @@ class VocabToSentenceFilter {
                 .openMap<String, IntSet>("VocabToSentenceFilter")
 
         private fun populate(table: MVMap<String, IntSet>) {
-            val tokenize = KuromojiIpadicCache.tokenize
             val map = mutableMapOf<String, IntSet>()
             for (index in sentenceIndexRange()) {
                 val sentence = sentenceIndexToTranslatedSentence(index)
-                val tokenization = tokenize(sentence.japanese)
+                val tokenization = tokenizeJapaneseSentence(sentence.japanese)
                 for (token in tokenization.tokens) {
                     val filter = map[token.baseForm] ?: intSetOf()
                     filter += index

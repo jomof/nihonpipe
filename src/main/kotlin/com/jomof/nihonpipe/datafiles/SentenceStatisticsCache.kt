@@ -27,7 +27,7 @@ class SentenceStatisticsCache private constructor(
         val jishoJlptVocabs = JishoJlptVocabs.vocabOf
         val optimizedKoreVocabs = OptimizedKoreVocabs.vocabOf
         val kuromojiIpadicTokenization =
-                KuromojiIpadicCache.tokenize(cleaned)
+                tokenizeJapaneseSentence(cleaned)
         var waniKaniLevel = Statistics()
         var jishoJlpt = Statistics()
         var optCore = Statistics()
@@ -94,7 +94,6 @@ class SentenceStatisticsCache private constructor(
 
         fun save() {
             if (instance != null) {
-                KuromojiIpadicCache.save()
                 instance!!.db.close()
                 instance = null
             }

@@ -37,10 +37,9 @@ class H2Populator {
 
     @Test
     fun tokenization() {
-        val tokenize = KuromojiIpadicCache.tokenize
-        val tokenization = tokenize("ええ誕生日に友達のクラークさんにもらいました")
+        val tokenization = tokenizeJapaneseSentence(
+                "ええ誕生日に友達のクラークさんにもらいました")
         assertThat(tokenization.tokens).hasSize(13)
-        KuromojiIpadicCache.save()
     }
 
     @Test
@@ -67,10 +66,9 @@ class H2Populator {
 
     @Test
     fun brother() {
-        val tokenize = KuromojiIpadicCache.tokenize
-        val tokenization = tokenize("お兄さんの身長はいくつですか")
+        val tokenization = tokenizeJapaneseSentence(
+                "お兄さんの身長はいくつですか")
         assertThat(tokenization.tokens).hasSize(8)
-        KuromojiIpadicCache.save()
     }
 
     @Test
@@ -81,10 +79,9 @@ class H2Populator {
 
     @Test
     fun oneigaishimas() {
-        val tokenize = KuromojiIpadicCache.tokenize
-        val tokenization = tokenize("フライトのリコンファームをお願いします")
+        val tokenization = tokenizeJapaneseSentence(
+                "フライトのリコンファームをお願いします")
         assertThat(tokenization.tokens).hasSize(7)
-        KuromojiIpadicCache.save()
     }
 
     @Test

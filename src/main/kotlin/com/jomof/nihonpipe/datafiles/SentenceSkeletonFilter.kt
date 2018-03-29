@@ -18,11 +18,10 @@ class SentenceSkeletonFilter {
 
     init {
         if (skeletonFilter.isEmpty()) {
-            val tokenize = KuromojiIpadicCache.tokenize
             val map = mutableMapOf<String, IntSet>()
             for (index in sentenceIndexRange()) {
                 val sentence = sentenceIndexToTranslatedSentence(index)
-                val tokenization = tokenize(sentence.japanese)
+                val tokenization = tokenizeJapaneseSentence(sentence.japanese)
                 val skeleton = tokenization.particleSkeletonForm()
                 val filter = map[skeleton] ?: intSetOf()
                 filter += index
@@ -35,7 +34,6 @@ class SentenceSkeletonFilter {
 
             db.compactRewriteFully()
             save()
-            KuromojiIpadicCache.save()
         }
     }
 

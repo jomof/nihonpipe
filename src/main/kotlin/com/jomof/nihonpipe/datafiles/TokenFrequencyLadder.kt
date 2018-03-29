@@ -45,10 +45,9 @@ class TokenFrequencyLadder : LevelProvider {
                 table: MVMap<Int, List<KeySentences>>,
                 levels: MVMap<Int, IntSet>) {
             val map = mutableMapOf<KuromojiIpadicToken, IntSet>()
-            val tokenize = KuromojiIpadicCache.tokenize
             for (index in sentenceIndexRange()) {
                 val translated = sentenceIndexToTranslatedSentence(index)
-                for (token in tokenize(translated.japanese).tokens) {
+                for (token in tokenizeJapaneseSentence(translated.japanese).tokens) {
                     val value = map.getsert(token) { intSetOf() }
                     value += index
                 }

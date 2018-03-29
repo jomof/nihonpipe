@@ -5,10 +5,13 @@ import com.jomof.intset.intSetOf
 import com.jomof.nihonpipe.datafiles.*
 import com.jomof.nihonpipe.groveler.schema.particleSkeletonForm
 import com.jomof.nihonpipe.play.*
+import com.jomof.nihonpipe.play.io.StudyActionType.NOTHING
+import com.jomof.nihonpipe.play.io.StudyActionType.SENTENCE_TEST
 import com.jomof.nihonpipe.sampleSentencesTsv
 import org.junit.Test
 import java.util.*
 import kotlin.math.min
+
 
 class Play {
     @Test
@@ -103,9 +106,49 @@ class Play {
         val player = Player(
                 seedSentences = seedSentences,
                 sentenceScores = mutableMapOf())
-        val currentTime = GregorianCalendar(2020, 1, 1).timeInMillis
-        for (i in 0 until 100) {
-            player.requestNextStudyAction(currentTime)
+        var time = GregorianCalendar(2020, 1, 1)
+        fun time(): String {
+            val year = time.get(Calendar.YEAR)
+            val month = time.get(Calendar.MONTH)
+            val day = time.get(Calendar.DAY_OF_MONTH)
+            val hour = time.get(Calendar.HOUR_OF_DAY)
+            val minute = time.get(Calendar.MINUTE)
+            return "$year-$month-$day $hour:$minute"
+        }
+
+        var questionsAnswer = 0.0
+        var daysElapsed = 0.0
+        var rand = Random(0)
+        val chanceCorrect = 0.70
+        for (i in 0 until 10000) {
+            println("${time()}")
+            val requestResponse =
+                    player.requestStudyAction(time.timeInMillis)
+            when (requestResponse.type) {
+                NOTHING -> {
+                    println("sleeping for one day. Questions per day ${questionsAnswer / daysElapsed}")
+                    time.add(Calendar.HOUR, 24)
+                    ++daysElapsed
+                }
+                SENTENCE_TEST -> {
+                    ++questionsAnswer
+                    println("question: ${requestResponse.english}")
+                    println("skeleton hint: ${requestResponse.hints.skeleton}")
+                    var answer = if (rand.nextDouble() > chanceCorrect) {
+                        "bob"
+                    } else {
+                        requestResponse.debug.pronunciation
+                    }
+                    val answerResponse = player.respondSentenceTest(
+                            sentence = requestResponse.sentence,
+                            answer = answer,
+                            currentTime = time.timeInMillis
+                    )
+                    println("$answerResponse")
+                }
+            }
+            println("Questions per day ${questionsAnswer / daysElapsed}")
+            println("Stats: ${player.requestUserStatistics()}")
         }
     }
 
@@ -187,8 +230,7 @@ class Play {
         val found = sentenceIndexToTranslatedSentence(index)
 
         println("$found")
-        val tokenization = KuromojiIpadicCache
-                .tokenize(target)
+        val tokenization = tokenizeJapaneseSentence(target)
         println("sentence index = $index")
         println("tokens = ${tokenization.tokens}")
         println("reading = ${tokenization.reading()}")

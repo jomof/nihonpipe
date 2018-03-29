@@ -65,6 +65,10 @@ data class Score(
         return lastCorrect + millisUntilNextSrsLevel(level)
     }
 
+    fun timeOfLastAttempt(): Long {
+        return lastAttempt
+    }
+
     fun mezzo(): MezzoScore {
         val ordinal = min((level() - 1) / levelsPerMezzo, MezzoScore.BURNED.ordinal)
         return MezzoScore.values()[ordinal]

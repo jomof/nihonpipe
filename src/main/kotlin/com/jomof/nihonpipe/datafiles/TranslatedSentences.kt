@@ -20,7 +20,7 @@ private val nextIndex = db.openMap<String, Int>("NextIndex")!!
 private val seen = mutableMapOf<String, TranslatedSentence>()
 
 private fun addSentence(japanese: String, english: String) {
-    val tokenized = KuromojiIpadicCache.tokenize(japanese)
+    val tokenized = tokenizeJapaneseSentence(japanese)
     val normalized = tokenized.normalized()
 
     if (japaneseToIndex.containsKey(normalized)) {

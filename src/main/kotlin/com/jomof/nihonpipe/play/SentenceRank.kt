@@ -1,7 +1,8 @@
 package com.jomof.nihonpipe.play
 
 import com.jomof.intset.IntSet
-import com.jomof.nihonpipe.datafiles.KuromojiIpadicCache
+import com.jomof.nihonpipe.datafiles.pronunciationOfJapaneseSentence
+import com.jomof.nihonpipe.datafiles.readingOfJapaneseSentence
 import com.jomof.nihonpipe.datafiles.sentenceIndexToTranslatedSentence
 
 data class SentenceRank(
@@ -24,8 +25,8 @@ data class SentenceRank(
         val coordinates = marginalScoreCoordinates.map { index ->
             scoreCoordinateFromCoordinateIndex(index)
         }
-        val reading = KuromojiIpadicCache.tokenize.reading(sentence.japanese)
-        val pronunciation = KuromojiIpadicCache.tokenize.pronunciation(sentence.japanese)
+        val reading = readingOfJapaneseSentence(sentence.japanese)
+        val pronunciation = pronunciationOfJapaneseSentence(sentence.japanese)
 
         val token = labelOf("vocab", coordinates
                 .filter { it.ladderKind == LadderKind.TOKEN_FREQUENCY_LADDER }

@@ -4,3 +4,4 @@ B: 水兵	navy soldier
 B: 軍人	soldier
 B: 毒	poison
 B: 兵員	military strength
+B: 外交	diplomacy

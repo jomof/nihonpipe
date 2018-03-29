@@ -18,11 +18,10 @@ class GrammarSummaryFilter {
 
     init {
         if (grammarSummary.isEmpty()) {
-            val tokenize = KuromojiIpadicCache.tokenize
             val map = mutableMapOf<String, IntSet>()
             for (index in sentenceIndexRange()) {
                 val sentence = sentenceIndexToTranslatedSentence(index)
-                val tokenization = tokenize(sentence.japanese)
+                val tokenization = tokenizeJapaneseSentence(sentence.japanese)
                 val summary = tokenization.grammarSummaryForm()
                 for (element in summary) {
                     val filter = map[element] ?: intSetOf()
@@ -37,7 +36,6 @@ class GrammarSummaryFilter {
 
             db.compactRewriteFully()
             save()
-            KuromojiIpadicCache.save()
         }
     }
 

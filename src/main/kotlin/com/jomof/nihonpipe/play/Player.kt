@@ -6,9 +6,8 @@ import com.jomof.intset.IntSet
 import com.jomof.intset.forEachElement
 import com.jomof.intset.intSetOf
 import com.jomof.intset.minus
-import com.jomof.nihonpipe.datafiles.japaneseToSentenceIndex
-import com.jomof.nihonpipe.datafiles.sentenceIndexRange
-import com.jomof.nihonpipe.datafiles.sentenceIndexToTranslatedSentence
+import com.jomof.nihonpipe.datafiles.*
+import com.jomof.nihonpipe.play.io.*
 
 data class Player(
         private val seedSentences: List<String> = listOf(),
@@ -179,14 +178,83 @@ data class Player(
                 .map { it.key }
     }
 
-    fun requestNextStudyAction(currentTime: Long): StudyAction? {
-        println(currentTime)
+    fun requestStudyAction(currentTime: Long): StudyActionResponse {
         // Add sentences if needed to reach maintenance level.
         while (apprenticeLevelSentences().size
                 < maintenanceApprenticeLevelSentences) {
             addOneSentence()
         }
-        return null
+        // Get the first sentence to study
+        val possibleSentence = sentenceScores
+                .entries
+                .filter { (_, score) ->
+                    var nextReview = score.timeOfNextReview()
+                    nextReview <= currentTime
+                }
+                .sortedBy { (_, score) ->
+                    score.timeOfLastAttempt()
+                }
+                .firstOrNull()
+
+        return when (possibleSentence) {
+            null -> StudyActionResponse(StudyActionType.NOTHING)
+            else -> {
+                val (japanese, score) = possibleSentence
+                val sentence = japaneseToSentenceIndex(japanese)
+                val translated = sentenceIndexToTranslatedSentence(sentence)
+                StudyActionResponse(
+                        type = StudyActionType.SENTENCE_TEST,
+                        english = translated.english,
+                        sentence = sentence,
+                        hints = StudyActionHints(
+                                skeleton = skeletonHint(japanese, score)
+                        ),
+                        debug = StudyActionDebug(
+                                japanese = japanese,
+                                reading = readingOfJapaneseSentence(japanese),
+                                pronunciation = pronunciationOfJapaneseSentence(japanese)
+                        )
+                )
+            }
+        }
+    }
+
+    fun respondSentenceTest(
+            sentence: Int,
+            answer: String,
+            currentTime: Long): RespondSentenceTestResponse {
+        val translated = sentenceIndexToTranslatedSentence(sentence)
+        val japanese = translated.japanese
+        val reading = readingOfJapaneseSentence(japanese)
+        val pronunciation = pronunciationOfJapaneseSentence(japanese)
+        val score = sentenceScores[japanese]!!
+        val wasCorrect =
+                if (answer == reading || answer == pronunciation) {
+                    score.recordCorrect(currentTime)
+                    true
+                } else {
+                    score.recordIncorrect(currentTime)
+                    false
+                }
+        return RespondSentenceTestResponse(
+                wasCorrect = wasCorrect,
+                mezzoScore = score.mezzo())
+    }
+
+    fun requestUserStatistics(): UserStatisticsResponse {
+        val sentenceScoreMap = sentenceScores
+                .values
+                .groupBy { it.mezzo() }
+                .map { (mezzo, value) -> Pair(mezzo, value.count()) }
+                .toMap()
+
+        return UserStatisticsResponse(
+                apprenticeSentences = sentenceScoreMap[MezzoScore.APPRENTICE] ?: 0,
+                guruSentences = sentenceScoreMap[MezzoScore.GURU] ?: 0,
+                masterSentences = sentenceScoreMap[MezzoScore.MASTER] ?: 0,
+                enlightenedSentences = sentenceScoreMap[MezzoScore.ENLIGHTENED] ?: 0,
+                burnedSentences = sentenceScoreMap[MezzoScore.BURNED] ?: 0
+        )
     }
 
     /**
