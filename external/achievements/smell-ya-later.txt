@@ -1,14 +1,14 @@
-A: Senses
+A: Smell ya later: vocabulary of the senses
 B: 感覚	senses
 B: 味	taste
 B: 味わう	to taste
-B: 嗅	smell
+B: 嗅覚	olfaction
+B: 匂い	odor
 B: 嗅ぐ	to smell
-B: 匂う	to be fragrant
-B: 触	touch
+B: 触ら	touched
 B: 触れる	to touch
 B: さわる	to feel
-B: 聴	hear
+B: 聴い	listen
 B: 聞く	to hear
 B: 聞こえる	to be heard
 B: 音	sound

@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/nihonpipe.iml" filepath="$PROJECT_DIR$/nihonpipe.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nihonpipe.iml" filepath="$PROJECT_DIR$/.idea/modules/nihonpipe.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/nihonpipe_main.iml" filepath="$PROJECT_DIR$/.idea/modules/nihonpipe_main.iml" group="nihonpipe" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/nihonpipe_test.iml" filepath="$PROJECT_DIR$/.idea/modules/nihonpipe_test.iml" group="nihonpipe" />
     </modules>

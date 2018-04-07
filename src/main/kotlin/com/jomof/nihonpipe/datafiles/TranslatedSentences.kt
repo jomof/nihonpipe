@@ -1,11 +1,8 @@
 package com.jomof.nihonpipe.datafiles
 
 import com.jomof.algorithm.getsert
-import com.jomof.nihonpipe.gapFillingSentencesFile
-import com.jomof.nihonpipe.jacyDataTanakaDir
+import com.jomof.nihonpipe.*
 import com.jomof.nihonpipe.schema.TranslatedSentence
-import com.jomof.nihonpipe.tanakaWWWJDICExamplesResidueFile
-import com.jomof.nihonpipe.translatedSentencesBin
 import org.h2.mvstore.MVStore
 import java.io.File
 
@@ -17,7 +14,7 @@ private val db = MVStore.Builder()
 private val indexToTranslated = db.openMap<Int, TranslatedSentence>("IndexToTranslated")!!
 private val japaneseToIndex = db.openMap<String, Int>("JapaneseToIndex")!!
 private val nextIndex = db.openMap<String, Int>("NextIndex")!!
-private val seen = mutableMapOf<String, TranslatedSentence>()
+private val seen = mutableSetOf<String>()
 
 private fun addSentence(japanese: String, english: String) {
     val tokenized = tokenizeJapaneseSentence(japanese)
@@ -27,19 +24,21 @@ private fun addSentence(japanese: String, english: String) {
         return
     }
     val token = tokenized.reading() + "---" + tokenized.pronunciation()
-    val lookup = seen[token]
-    if (lookup != null) {
+    if (seen.contains(token)) {
         return
     }
-    seen[token] = TranslatedSentence(japanese, english)
+    seen += token
     val next = nextIndex.getsert("index") { 0 }
     japaneseToIndex[japanese] = next
-    indexToTranslated[next] = TranslatedSentence(japanese, english)
+    indexToTranslated[next] = TranslatedSentence(
+            japanese = japanese,
+            english = english)
     nextIndex["index"] = next + 1
 }
 
-fun populate() {
+private fun populate() {
     if (indexToTranslated.isEmpty()) {
+        core10kSentences()
         translateTanakaCorpus()
         residueSentences()
         gapFillingSentences()
@@ -98,6 +97,17 @@ private fun translateTanakaCorpus() {
                     translateTanakaCorpus(file)
                 }
             }
+}
+
+private fun core10kSentences() {
+    val lines = core2k6k10kFile.readLines()
+    for (i in (1 until lines.size)) {
+        val line = lines[i]
+        val split = line.split("\t")
+        val english = split[8]
+        val japanese = split[9]
+        addSentence(japanese, english)
+    }
 }
 
 fun sentenceIndexRange(): IntRange {

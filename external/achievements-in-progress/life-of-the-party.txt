@@ -2,3 +2,4 @@ A: Life of the party
 B: 酒好き	alcoholic
 B: 酒飲み	drunkard
 B: ビール	beer
+B: 梅酒	plum wine

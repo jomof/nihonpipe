@@ -1,7 +1,6 @@
 package com.jomof.nihonpipe.play
 
-import com.jomof.algorithm.getsert
-import com.jomof.algorithm.takeMinBy
+import com.jomof.algorithm.*
 import com.jomof.intset.IntSet
 import com.jomof.intset.forEachElement
 import com.jomof.intset.intSetOf
@@ -11,11 +10,15 @@ import com.jomof.nihonpipe.play.io.*
 
 data class Player(
         private val seedSentences: List<String> = listOf(),
-        private val sentenceScores: MutableMap<String, Score>) {
-    private val keyScores = mutableMapOf<ScoreCoordinate, Score>()
+        private val sentenceScores: MutableMap<String, Score>,
+        private val achievementsUnlocked: MutableSet<String> = mutableSetOf()) {
+    private val keyScores = mutableMapOf<LadderCoordinate, Score>()
     private val sentencesStudying = intSetOf()
     private val sentencesNotStudying = allSentences.copy()
-    val keyScoresCovered = intSetOf()
+    val disambiguationStats = StatisticsAccumulator()
+    val postAchievementStats = StatisticsAccumulator()
+    val ladderKeysCovered = intSetOf()
+    val achievementsCovered = intSetOf()
 
     init {
         reconstructScores()
@@ -30,12 +33,17 @@ data class Player(
         val sentenceIndex = japaneseToSentenceIndex(sentence)
         sentencesStudying += sentenceIndex
         sentencesNotStudying -= sentenceIndex
-        val scoreCoordinates = scoreCoordinatesFromSentence(sentenceIndex)
-        keyScoresCovered += scoreCoordinates
+        val scoreCoordinates = ladderCoordinateIndexesOfSentence(sentenceIndex)
+        ladderKeysCovered += scoreCoordinates
         scoreCoordinates.forEachElement { scoreCoordinateIndex ->
-            val scoreCoordinate = scoreCoordinateFromCoordinateIndex(scoreCoordinateIndex)
+            val scoreCoordinate = ladderCoordinateOfLadderCoordinateIndex(scoreCoordinateIndex)
             val keyScore = keyScores.getsert(scoreCoordinate) { Score() }
             keyScore.addFrom(score)
+        }
+
+        val achievementIndexes = achievementIndexesOfSentence(sentenceIndex)
+        if (!achievementIndexes.isEmpty()) {
+            achievementsCovered += achievementIndexes
         }
     }
 
@@ -51,7 +59,7 @@ data class Player(
             for (level in 0 until ladderKind.levelProvider.size) {
                 val incompletes = mutableListOf<Pair<String, IntSet>>()
                 ladderKind.forEachKeySentence(level) { (key, sentences) ->
-                    val coordinate = ScoreCoordinate(ladderKind, level, key)
+                    val coordinate = LadderCoordinate(ladderKind, level, key)
                     if (!keyScores.contains(coordinate)) {
                         incompletes += Pair(key, sentences)
                     }
@@ -69,13 +77,13 @@ data class Player(
         var leastBurdenSeen = Int.MAX_VALUE
         val result = mutableListOf<Int>()
         keySentences.forEachElement { sentence ->
-            val sentenceCoordinates = scoreCoordinatesFromSentence(sentence)
+            val sentenceCoordinates = ladderCoordinateIndexesOfSentence(sentence)
             var total = 0
             var contained = 0
             var notContained = 0
             sentenceCoordinates.forEach { sentenceIndex ->
                 ++total
-                if (keyScoresCovered.contains(sentenceIndex)) {
+                if (ladderKeysCovered.contains(sentenceIndex)) {
                     ++contained
                 } else {
                     ++notContained
@@ -91,8 +99,27 @@ data class Player(
                 result += sentence
             }
         }
+
+        /*
+        f(sentence-index) : returns number of uncovered achievements that would be covered.
+           n = achievements covered by sentence index : Map<Int, IntSet>
+           m = achievements already covered by this player : IntSet
+           o = n - m
+         */
+        fun coversAnAchievement(sentence: Int): Int {
+            val n = achievementIndexesOfSentence(sentence)
+            val found = n.doWhile { achievementsCovered.contains(it) }
+            return if (!found) {
+                1
+            } else {
+                0
+            }
+        }
         val hopefullySingle = result
-                .takeMinBy { scoreCoordinatesFromSentence(it).size }
+                .gatherListStatistics(disambiguationStats)
+                .takeMaxBy { coversAnAchievement(it) }
+                .gatherListStatistics(postAchievementStats)
+                .takeMinBy { ladderCoordinateIndexesOfSentence(it).size }
                 .takeMinBy { sentenceIndexToTranslatedSentence(it).japanese.length }
                 .toList()
         assert(hopefullySingle.size <= 1)
@@ -115,9 +142,9 @@ data class Player(
                                 .first
                                 .contains(nextByAdjacent)
                     }.mapNotNull { from ->
-                        val fromCoordinates = scoreCoordinatesFromSentence(from)
-                        val toCoordinates = scoreCoordinatesFromSentence(nextByAdjacent)
-                        val delta = (toCoordinates minus fromCoordinates) minus keyScoresCovered
+                        val fromCoordinates = ladderCoordinateIndexesOfSentence(from)
+                        val toCoordinates = ladderCoordinateIndexesOfSentence(nextByAdjacent)
+                        val delta = (toCoordinates minus fromCoordinates) minus ladderKeysCovered
                         if (delta.isEmpty()) {
                             null
                         } else {
@@ -125,7 +152,7 @@ data class Player(
                         }
                     }.sortedBy { it.second.size }.first()
                     val marginalBurden = deltaCoordinates.map { it ->
-                        val coordinate = scoreCoordinateFromCoordinateIndex(it)
+                        val coordinate = ladderCoordinateOfLadderCoordinateIndex(it)
                         val level = coordinate.level + 1
                         level * level
                     }.sum()
@@ -153,10 +180,10 @@ data class Player(
         }
 
         val toSentence = getNextSentence(sentencesToConsider)!!
-        val toCoordinates = scoreCoordinatesFromSentence(toSentence)
-        val marginalCoordinates = toCoordinates minus keyScoresCovered
+        val toCoordinates = ladderCoordinateIndexesOfSentence(toSentence)
+        val marginalCoordinates = toCoordinates minus ladderKeysCovered
         val burden = marginalCoordinates.map { it ->
-            val coordinate = scoreCoordinateFromCoordinateIndex(it)
+            val coordinate = ladderCoordinateOfLadderCoordinateIndex(it)
             val level = coordinate.level + 1
             level * level
         }.sum()
@@ -210,7 +237,6 @@ data class Player(
                                 skeleton = skeletonHint(japanese, score)
                         ),
                         debug = StudyActionDebug(
-                                japanese = japanese,
                                 reading = readingOfJapaneseSentence(japanese),
                                 pronunciation = pronunciationOfJapaneseSentence(japanese)
                         )
@@ -228,6 +254,9 @@ data class Player(
         val reading = readingOfJapaneseSentence(japanese)
         val pronunciation = pronunciationOfJapaneseSentence(japanese)
         val score = sentenceScores[japanese]!!
+        val priorMezzo = score.mezzo()
+        val priorMasterLevelAchievementElements = achievementsCoveredAtMasterLevel()
+        val priorMasterLevelLadderKeyElements = ladderKeysCoveredAtMasterLevel()
         val wasCorrect =
                 if (answer == reading || answer == pronunciation) {
                     score.recordCorrect(currentTime)
@@ -236,9 +265,45 @@ data class Player(
                     score.recordIncorrect(currentTime)
                     false
                 }
+
+        val achievements = currentAchievements()
+        val marginalAchievements = mutableSetOf<String>()
+        marginalAchievements += achievementsUnlocked
+        marginalAchievements -= achievements
+        achievementsUnlocked += achievements
+
+        var mezzoPromotion = if (score.mezzo() > priorMezzo) {
+            score.mezzo()
+        } else {
+            null
+        }
+
+        val masterLevelAchievementElements = achievementsCoveredAtMasterLevel()
+        val marginalAchievementElementIndexes =
+                masterLevelAchievementElements minus priorMasterLevelAchievementElements
+        val marginalAchievementElements = marginalAchievementElementIndexes
+                .map { index ->
+                    AchievementElement(
+                            vocab = achievementIndexToVocab(index),
+                            flavors = achievementIndexToFlavor(index))
+                }
+
+        val masterLevelLadderKeyElements = ladderKeysCoveredAtMasterLevel()
+        val marginalLadderKeyIndexes =
+                masterLevelLadderKeyElements minus priorMasterLevelLadderKeyElements
+        val marginalLadderKeyElements = marginalLadderKeyIndexes
+                .map { index ->
+                    ladderCoordinateOfLadderCoordinateIndex(index)
+                }
         return RespondSentenceTestResponse(
                 wasCorrect = wasCorrect,
-                mezzoScore = score.mezzo())
+                japanese = normalizationOfJapaneseSentence(japanese),
+                pronunciation = pronunciation,
+                reading = reading,
+                mezzoPromotion = mezzoPromotion,
+                achievementsUnlocked = marginalAchievements,
+                achievementElementsUnlocked = marginalAchievementElements,
+                ladderKeyElementsUnlocked = marginalLadderKeyElements)
     }
 
     fun requestUserStatistics(): UserStatisticsResponse {
@@ -257,6 +322,51 @@ data class Player(
         )
     }
 
+    private fun achievementsCoveredAtMasterLevel(): IntSet {
+        val achievementsCoveredAtMasterLevel = intSetOf()
+        sentenceScores.forEach { (sentence, score) ->
+            if (score.mezzo() >= MezzoScore.MASTER) {
+                val sentenceIndex = japaneseToSentenceIndex(sentence)
+                val achievements = achievementIndexesOfSentence(sentenceIndex)
+                achievementsCoveredAtMasterLevel += achievements
+            }
+        }
+        return achievementsCoveredAtMasterLevel
+    }
+
+    private fun ladderKeysCoveredAtMasterLevel(): IntSet {
+        val ladderKeysCoveredAtMasterLevel = intSetOf()
+        sentenceScores.forEach { (sentence, score) ->
+            if (score.mezzo() >= MezzoScore.MASTER) {
+                val sentenceIndex = japaneseToSentenceIndex(sentence)
+                val achievements = ladderCoordinateIndexesOfSentence(sentenceIndex)
+                ladderKeysCoveredAtMasterLevel += achievements
+            }
+        }
+        return ladderKeysCoveredAtMasterLevel
+    }
+
+    private fun currentAchievements(): List<String> {
+        val achievementsCoveredAtMasterLevel = intSetOf()
+        sentenceScores.forEach { (sentence, score) ->
+            if (score.mezzo() >= MezzoScore.MASTER) {
+                val sentenceIndex = japaneseToSentenceIndex(sentence)
+                val achievements = achievementIndexesOfSentence(sentenceIndex)
+                achievementsCoveredAtMasterLevel += achievements
+            }
+        }
+
+        val list = mutableListOf<String>()
+        for (achievement in achievementNames()) {
+            val achievementIndexes = achievementIndexes(achievement)
+            val remainingAchievements = achievementIndexes minus achievementsCoveredAtMasterLevel
+            if (remainingAchievements.isEmpty()) {
+                list += achievement
+            }
+        }
+        return list
+    }
+
     /**
      * Reconstruct scores from recorded sentence scores.
      */
@@ -267,7 +377,7 @@ data class Player(
     }
 
     companion object {
-        const val maintenanceApprenticeLevelSentences = 10
+        const val maintenanceApprenticeLevelSentences = 30
         val allSentences = intSetOf(sentenceIndexRange())
     }
 }

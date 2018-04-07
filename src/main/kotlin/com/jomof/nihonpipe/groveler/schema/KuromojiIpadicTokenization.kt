@@ -38,23 +38,19 @@ data class KuromojiIpadicTokenization(
 }
 
 
-fun KuromojiIpadicTokenization.grammarSummaryForm(): Set<String> {
-    val set = mutableSetOf<String>()
+fun KuromojiIpadicTokenization.grammarSummaryForm(): List<String> {
+    val list = mutableListOf<String>()
     tokens.forEach { token ->
-        set += token.conjugationType
-        set += token.partOfSpeechLevel1
-        set += token.partOfSpeechLevel2
-        set += token.partOfSpeechLevel3
-        set += token.partOfSpeechLevel4
+        list += mutableListOf(
+                token.conjugationType,
+                token.partOfSpeechLevel1,
+                token.partOfSpeechLevel2,
+                token.partOfSpeechLevel3,
+                token.partOfSpeechLevel4)
+                .filter { it != "*" }
+                .joinToString(" ")
     }
-
-    set -= ""
-    set -= "*"
-    set -= "記号"
-    set -= "句点"
-    set -= "一般"
-
-    return set
+    return list
 }
 
 fun KuromojiIpadicTokenization.particleSkeletonForm(): String {
@@ -69,6 +65,7 @@ fun KuromojiIpadicTokenization.particleSkeletonForm(): String {
             token.partOfSpeechLevel1.contains("記号") -> {
                 token.surface
             }
+            token.surface == "。" -> ""
             else -> "x"
         }
     }

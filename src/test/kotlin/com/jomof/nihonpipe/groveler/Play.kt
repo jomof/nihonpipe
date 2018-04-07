@@ -5,6 +5,7 @@ import com.jomof.intset.intSetOf
 import com.jomof.nihonpipe.datafiles.*
 import com.jomof.nihonpipe.groveler.schema.particleSkeletonForm
 import com.jomof.nihonpipe.play.*
+import com.jomof.nihonpipe.play.LadderKind.*
 import com.jomof.nihonpipe.play.io.StudyActionType.NOTHING
 import com.jomof.nihonpipe.play.io.StudyActionType.SENTENCE_TEST
 import com.jomof.nihonpipe.sampleSentencesTsv
@@ -17,12 +18,12 @@ class Play {
     @Test
     fun prepopulate() {
         println("populate translated sentences")
-        for (ladderKind in LadderKind.values()) {
+        for (ladderKind in values()) {
             println("$ladderKind")
             ladderKind.levelProvider.size
         }
         println("score coordinate index")
-        scoreCoordinatesFromSentence(0)
+        ladderCoordinateIndexesOfSentence(0)
         println("least burden transitions")
         (0 until min(20, sentenceIndexRange().count())).map {
             if (it % 10 == 0) println("sentence $it")
@@ -71,19 +72,19 @@ class Play {
         val target2 = "トイレ は どこ です か 。"
         val index1 = japaneseToSentenceIndex(target1)
         val index2 = japaneseToSentenceIndex(target2)
-        val reasons1 = scoreCoordinatesFromSentence(index1).toSet()
-        val reasons2 = scoreCoordinatesFromSentence(index2).toSet()
+        val reasons1 = ladderCoordinateIndexesOfSentence(index1).toSet()
+        val reasons2 = ladderCoordinateIndexesOfSentence(index2).toSet()
         val player = Player(sentenceScores = mutableMapOf())
-        assertThat(player.keyScoresCovered.size).isEqualTo(0)
+        assertThat(player.ladderKeysCovered.size).isEqualTo(0)
         player.addSentence(target1)
-        assertThat(player.keyScoresCovered).isEqualTo(reasons1)
-        assertThat(scoreCoordinatesFromSentence(index1)).isEqualTo(reasons1)
-        assertThat(scoreCoordinatesFromSentence(index2)).isEqualTo(reasons2)
+        assertThat(player.ladderKeysCovered).isEqualTo(reasons1)
+        assertThat(ladderCoordinateIndexesOfSentence(index1)).isEqualTo(reasons1)
+        assertThat(ladderCoordinateIndexesOfSentence(index2)).isEqualTo(reasons2)
         player.addSentence(target2)
-        assertThat(player.keyScoresCovered.toSet()).isNotEqualTo(reasons1)
-        assertThat(player.keyScoresCovered.toSet()).isNotEqualTo(reasons2)
+        assertThat(player.ladderKeysCovered.toSet()).isNotEqualTo(reasons1)
+        assertThat(player.ladderKeysCovered.toSet()).isNotEqualTo(reasons2)
         val combined = reasons1 union reasons2
-        assertThat(player.keyScoresCovered).isEqualTo(combined)
+        assertThat(player.ladderKeysCovered).isEqualTo(combined)
     }
 
     private val seedSentences = listOf(
@@ -119,22 +120,24 @@ class Play {
         var questionsAnswer = 0.0
         var daysElapsed = 0.0
         var rand = Random(0)
-        val chanceCorrect = 0.70
-        for (i in 0 until 10000) {
-            println("${time()}")
+        val chanceCorrect = .80
+        var number = 1
+        val set = mutableSetOf<String>()
+        while (number < 5000) {
+            //println("${time()}")
             val requestResponse =
                     player.requestStudyAction(time.timeInMillis)
             when (requestResponse.type) {
                 NOTHING -> {
-                    println("sleeping for one day. Questions per day ${questionsAnswer / daysElapsed}")
+                    //println("sleeping for one day. Questions per day ${questionsAnswer / daysElapsed}")
                     time.add(Calendar.HOUR, 24)
                     ++daysElapsed
                 }
                 SENTENCE_TEST -> {
                     ++questionsAnswer
-                    println("question: ${requestResponse.english}")
-                    println("skeleton hint: ${requestResponse.hints.skeleton}")
-                    var answer = if (rand.nextDouble() > chanceCorrect) {
+                    //println("question: ${requestResponse.english}")
+                    //println("skeleton hint: ${requestResponse.hints.skeleton}")
+                    val answer = if (rand.nextDouble() > chanceCorrect) {
                         "bob"
                     } else {
                         requestResponse.debug.pronunciation
@@ -144,11 +147,54 @@ class Play {
                             answer = answer,
                             currentTime = time.timeInMillis
                     )
-                    println("$answerResponse")
+                    if (answerResponse.mezzoPromotion == MezzoScore.MASTER &&
+                            !set.contains(requestResponse.english)) {
+                        set += requestResponse.english
+                        val achievementsUnlocked = answerResponse.achievementsUnlocked
+                        val vocabSeen = mutableSetOf<String>()
+                        vocabSeen += "。"
+                        vocabSeen += "？"
+                        val achievementElementsUnlocked = answerResponse
+                                .achievementElementsUnlocked
+                                .map { (vocab, flavors) ->
+                                    vocabSeen += vocab
+                                    "$vocab from ${flavors.joinToString(" and ")}"
+                                }
+                        val ladderKeysUnlocked = answerResponse.ladderKeyElementsUnlocked
+                                .mapNotNull { coordinate ->
+                                    val result =
+                                            when (coordinate.ladderKind) {
+                                                TOKEN_SURFACE_FREQUENCY_LADDER, TOKEN_BASEFORM_FREQUENCY_LADDER -> {
+                                                    if (!vocabSeen.contains(coordinate.key)) {
+                                                        vocabSeen += coordinate.key
+                                                        "${coordinate.key} not from JLPT or Wanikani"
+                                                    } else {
+                                                        null
+                                                    }
+                                                }
+                                                SENTENCE_SKELETON_LADDER -> "'${coordinate.key}' sentence pattern"
+                                                GRAMMAR_SUMMARY_LADDER -> "${coordinate.key} grammar form"
+                                                else -> throw RuntimeException("")
+                                            }
+                                    result
+                                }
+                        val unlocks = (ladderKeysUnlocked + achievementsUnlocked + achievementElementsUnlocked)
+                                .joinToString()
+                        println("#$number," +
+                                "${time()}," +
+                                "${answerResponse.japanese}," +
+                                "${requestResponse.english}," +
+                                "${answerResponse.pronunciation}," +
+                                "${answerResponse.reading}," +
+                                unlocks)
+                        ++number
+
+                    }
+                    //println("$answerResponse")
                 }
             }
-            println("Questions per day ${questionsAnswer / daysElapsed}")
-            println("Stats: ${player.requestUserStatistics()}")
+            //println("Questions per day ${questionsAnswer / daysElapsed}")
+            //println("Stats: ${player.requestUserStatistics()}")
         }
     }
 
@@ -159,8 +205,9 @@ class Play {
                 seedSentences = seedSentences,
                 sentenceScores = mutableMapOf())
         sampleSentencesTsv.delete()
-        (0..20).forEach {
+        (0..2000).forEach {
             if ((it) % 50 == 49) {
+
                 val incomplete =
                         player.incompleteLadderLevelKeys()
                 val report = incomplete
@@ -174,6 +221,10 @@ class Play {
                                     "with ${totalKeys - coveredKeys} of $totalKeys keys covered = $keys"
                         }
                 println(report)
+                println("Disambiguation stats; ${player.disambiguationStats}")
+                println("Postachievement stats; ${player.postAchievementStats}")
+                println("Ladder elements covered; ${player.ladderKeysCovered.size}")
+                println("Achievement elements covered; ${player.achievementsCovered.size}")
             }
             val sentence = player.addOneSentence()
             println(sentence.toDisplayString())
@@ -194,7 +245,7 @@ class Play {
     @Test
     fun allSentencesAreCoveredByEachLadderLevel() {
         val allSentenceCount = sentenceIndexRange().count()
-        for (ladderKind in LadderKind.values()) {
+        for (ladderKind in values()) {
             val sentences = intSetOf()
             for (level in 0 until ladderKind.levelProvider.size) {
                 sentences += ladderKind.levelProvider.getLevelSentences(level)
@@ -220,19 +271,19 @@ class Play {
         //val target = "ジム は 肩幅 が 広い 。"
         //val target = "君 は 外来 思想 に 偏見 を 抱い て いる よう だ 。"
         //val target = "頭 の 毛 は 灰色 だっ た 。"
-        val target = "ただいま！"
+        val target = "私に触らないで。"
         //val target = "私と一緒に外に来て。"
         //val target = "これ は 本 です 。"
         //val target = "お母さん は どこ 。"
         //val target = "ここ は 今 乾期 です 。"
         //val target = "バラ は 今 満開 です 。"
+        val tokenization = tokenizeJapaneseSentence(target)
+        println("tokens = \r\n${tokenization.tokens.joinToString("\r\n")}")
         val index = japaneseToSentenceIndex(target)
         val found = sentenceIndexToTranslatedSentence(index)
 
         println("$found")
-        val tokenization = tokenizeJapaneseSentence(target)
         println("sentence index = $index")
-        println("tokens = ${tokenization.tokens}")
         println("reading = ${tokenization.reading()}")
         println("skeleton = ${tokenization.particleSkeletonForm()}")
         val skeletonSentences = SentenceSkeletonFilter
@@ -256,13 +307,13 @@ class Play {
                 println("NOT FOUND in $ladderKind")
             }
         }
-        for (ladderKind in LadderKind.values()) {
+        for (ladderKind in values()) {
             locateInLevel(ladderKind)
         }
 
-        val coordinates = scoreCoordinatesFromSentence(index)
+        val coordinates = ladderCoordinateIndexesOfSentence(index)
         for (coordinateIndex in coordinates) {
-            val coordinate = scoreCoordinateFromCoordinateIndex(
+            val coordinate = ladderCoordinateOfLadderCoordinateIndex(
                     coordinateIndex)
             println("$coordinate")
         }
@@ -281,7 +332,7 @@ class Play {
         val index = japaneseToSentenceIndex(sentence)
         val back = sentenceIndexToTranslatedSentence(index)
         assertThat(back.japanese).isEqualTo(sentence)
-        val coordinatesOfSentence = scoreCoordinatesFromSentence(index)
+        val coordinatesOfSentence = ladderCoordinateIndexesOfSentence(index)
         assertThat(coordinatesOfSentence).hasSize(4)
         absoluteBurdenOfSentence(index)
     }

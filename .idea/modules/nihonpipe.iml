@@ -4,12 +4,7 @@
     <exclude-output />
     <content url="file://$MODULE_DIR$/../..">
       <excludeFolder url="file://$MODULE_DIR$/../../.gradle" />
-      <excludeFolder url="file://$MODULE_DIR$/../../bin" />
       <excludeFolder url="file://$MODULE_DIR$/../../build" />
-      <excludeFolder url="file://$MODULE_DIR$/../../external" />
-      <excludeFolder url="file://$MODULE_DIR$/../../grammars" />
-      <excludeFolder url="file://$MODULE_DIR$/../../out" />
-      <excludeFolder url="file://$MODULE_DIR$/../../processed" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

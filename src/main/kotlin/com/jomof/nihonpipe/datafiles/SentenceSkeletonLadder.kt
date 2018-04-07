@@ -2,8 +2,6 @@ package com.jomof.nihonpipe.datafiles
 
 import com.jomof.intset.IntSet
 import com.jomof.intset.intSetOf
-import com.jomof.nihonpipe.groveler.schema.KuromojiIpadicTokenization
-import com.jomof.nihonpipe.groveler.schema.particleSkeletonForm
 import com.jomof.nihonpipe.schema.KeySentences
 import com.jomof.nihonpipe.sentenceSkeletonLadderBin
 import org.h2.mvstore.MVMap
@@ -13,9 +11,6 @@ class SentenceSkeletonLadder : LevelProvider {
     override fun getKeySentences(level: Int) = instance.first[level]!!
     override fun getLevelSentences(level: Int) = instance.second[level]!!
     override val size: Int get() = instance.first.size
-    fun keysOf(tokenization: KuromojiIpadicTokenization) =
-            setOf(tokenization.particleSkeletonForm())
-
     override fun getLevelSizes(): List<Int> {
         return instance
                 .first
@@ -60,7 +55,7 @@ class SentenceSkeletonLadder : LevelProvider {
             var acceptableSize = 115.0
             val growthRate = 1.08
             for ((skeleton, sentences) in sorted) {
-                accumulatedLevels += sentences
+                accumulatedLevels.addAll(sentences)
                 keySentences.add(KeySentences(skeleton, sentences))
                 totalSize += sentences.size
                 if (totalSize > acceptableSize) {

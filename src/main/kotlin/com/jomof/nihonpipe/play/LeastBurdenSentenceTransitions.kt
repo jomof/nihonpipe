@@ -15,12 +15,12 @@ class LeastBurdenSentenceTransitions {
         }
         var leastBurdenSeen = Int.MAX_VALUE
         val nextSentence = mutableListOf<Int>()
-        val fromCoordinates = scoreCoordinatesFromSentence(sentence)
+        val fromCoordinates = ladderCoordinateIndexesOfSentence(sentence)
         for (ixTo in sentenceIndexRange()) {
             if (sentence == ixTo) {
                 continue
             }
-            val toCoordinates = scoreCoordinatesFromSentence(ixTo)
+            val toCoordinates = ladderCoordinateIndexesOfSentence(ixTo)
             var burden = 0
             toCoordinates.doWhile { coordinate ->
                 if (!fromCoordinates.contains(coordinate)) {

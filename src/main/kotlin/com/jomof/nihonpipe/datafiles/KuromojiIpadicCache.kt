@@ -14,6 +14,11 @@ private val db = MVStore.Builder()
 private val kuromojiCache = db.openMap<String, KuromojiIpadicTokenization>(
         "KuromojiIpadic")
 
+fun normalizationOfJapaneseSentence(japanese: String): String {
+    val tokens = tokenizeJapaneseSentence(japanese)
+    return tokens.normalized()
+}
+
 fun readingOfJapaneseSentence(japanese: String): String {
     val tokens = tokenizeJapaneseSentence(japanese)
     return tokens.reading()

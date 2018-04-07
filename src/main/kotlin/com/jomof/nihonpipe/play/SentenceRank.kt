@@ -23,13 +23,13 @@ data class SentenceRank(
 
         val sentence = sentenceIndexToTranslatedSentence(sentenceIndex)
         val coordinates = marginalScoreCoordinates.map { index ->
-            scoreCoordinateFromCoordinateIndex(index)
+            ladderCoordinateOfLadderCoordinateIndex(index)
         }
         val reading = readingOfJapaneseSentence(sentence.japanese)
         val pronunciation = pronunciationOfJapaneseSentence(sentence.japanese)
 
         val token = labelOf("vocab", coordinates
-                .filter { it.ladderKind == LadderKind.TOKEN_FREQUENCY_LADDER }
+                .filter { it.ladderKind == LadderKind.TOKEN_SURFACE_FREQUENCY_LADDER }
                 .map { it.key })
         val skeleton = labelOf("pattern", coordinates
                 .filter { it.ladderKind == LadderKind.SENTENCE_SKELETON_LADDER }

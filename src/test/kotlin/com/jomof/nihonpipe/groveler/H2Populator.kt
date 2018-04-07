@@ -53,12 +53,6 @@ class H2Populator {
     }
 
     @Test
-    fun vocabToSentenceFilter() {
-        val vocabToSentence = VocabToSentenceFilter()
-        vocabToSentence["友達"]
-    }
-
-    @Test
     fun sentenceSkeletonLevels() {
         val skeletonLevels = SentenceSkeletonLadder()
         skeletonLevels.getKeySentences(5)
@@ -69,12 +63,6 @@ class H2Populator {
         val tokenization = tokenizeJapaneseSentence(
                 "お兄さんの身長はいくつですか")
         assertThat(tokenization.tokens).hasSize(8)
-    }
-
-    @Test
-    fun repro() {
-        val filter = VocabToSentenceFilter()["一"]
-        assertThat(filter.contains(4635)).isFalse()
     }
 
     @Test
