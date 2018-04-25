@@ -1,5 +1,7 @@
 package com.jomof.nihonpipe.groveler.schema
 
+import com.jomof.nihonpipe.RomajiState
+import com.jomof.nihonpipe.katakanaToRomaji
 import com.jomof.nihonpipe.schema.Indexed
 import java.io.Serializable
 
@@ -26,6 +28,79 @@ data class KuromojiIpadicTokenization(
                     sb.append(token.surface)
                 else -> sb.append(token.pronunciation)
             }
+        }
+        return sb.toString()
+    }
+
+    fun romajiPronunciation(): String {
+        val sb = StringBuilder()
+        val state = RomajiState()
+        var lastToken: KuromojiIpadicToken? = null
+        for (token in tokens) {
+            if (!sb.isEmpty()) {
+                sb.append(" ")
+            }
+            when (token.pronunciation) {
+                "*" ->
+                    sb.append(katakanaToRomaji(token.surface, state))
+                "々" -> {
+                    val katakana = katakanaToRomaji(lastToken!!.pronunciation, state)
+                    sb.append("[$katakana]")
+                }
+                else -> sb.append(katakanaToRomaji(token.pronunciation, state))
+            }
+            lastToken = token
+        }
+        return sb.toString()
+    }
+
+    fun romajiReading(): String {
+        val sb = StringBuilder()
+        val state = RomajiState()
+        var lastToken: KuromojiIpadicToken? = null
+        for (token in tokens) {
+            if (!sb.isEmpty()) {
+                sb.append(" ")
+            }
+            when (token.reading) {
+                "*" ->
+                    sb.append(katakanaToRomaji(token.surface, state))
+                "々" -> {
+                    val katakana = katakanaToRomaji(lastToken!!.reading, state)
+                    sb.append("[$katakana]")
+                }
+                else -> sb.append(katakanaToRomaji(token.reading, state))
+            }
+            lastToken = token
+        }
+        return sb.toString()
+    }
+
+    fun romajiSurfaceFurigana(): String {
+        val sb = StringBuilder()
+        var state = RomajiState()
+        var lastToken: KuromojiIpadicToken? = null
+        for (token in tokens) {
+            if (!sb.isEmpty()) {
+                sb.append("  ")
+            }
+
+            sb.append(token.surface)
+            when (token.pronunciation) {
+                "*" -> {
+                    val romaji = katakanaToRomaji(token.surface, state)
+                    sb.append("[$romaji]")
+                }
+                "々" -> {
+                    val romaji = katakanaToRomaji(lastToken!!.pronunciation, state)
+                    sb.append("[$romaji]")
+                }
+                else -> {
+                    val romaji = katakanaToRomaji(token.pronunciation, state)
+                    sb.append("[$romaji]")
+                }
+            }
+            lastToken = token
         }
         return sb.toString()
     }

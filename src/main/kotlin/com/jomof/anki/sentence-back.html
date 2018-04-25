@@ -1,0 +1,58 @@
+<div id="back" class="vocab meaning">
+    <div id="main">
+        <div class="overlay"></div>
+        <p class="word">{{furigana:Reading}}</p>
+        <p class="translation">{{furigana:Romaji}}</p>
+    </div>
+    <div id="header">Sentence <b>Meaning</b></div>
+    <div id="answer-wrap">
+        <div>{{type:Kana Reading}}</div>
+    </div>
+
+    <div id="info-box">
+        <div class="section">
+            <h2>Definitions</h2>
+            {{Full Definition}}
+        </div>
+        <div class="section">
+            <h2>Notes</h2>
+            {{Notes}}
+        </div>
+        <div class="section">
+            <h2>Related Kanji</h2>
+            {{Kanji List}}
+        </div>
+        <div class="section context">
+            <h2>Context Sentences</h2>
+            <div class="context-sentence-group">
+                <p>{{furigana:Context Sentence 1}}</p>
+                <p>{{English Sentence 1}}</p>
+            </div>
+            <div class="context-sentence-group">
+                <p>{{furigana:Context Sentence 2}}</p>
+                <p>{{English Sentence 2}}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{Context Audio}}
+
+<!-- HIDDEN DATA STUFF -->
+
+<div id="correctAnswer" style="display:none">{{Romaji}}</div>
+<p id="altmean" style="display:none;">{{Alternative Meanings}}</p>
+
+<!-- SCRIPTS -->
+
+<script src="_jquery-3.1.1.min.js"></script>
+<script src="_wk_persist.js"></script>
+<script src="_wk_modify_input meaning.js"></script>
+<!--script src="_wk_multichoice.js"></script>
+<script src="_wk_countdown.js"></script-->
+<script>$(function(){
+mcel = $('#choices');
+bindMultichoice(mcel);
+});
+
+</script>

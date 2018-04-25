@@ -10,6 +10,7 @@ import com.jomof.nihonpipe.play.io.StudyActionType.NOTHING
 import com.jomof.nihonpipe.play.io.StudyActionType.SENTENCE_TEST
 import com.jomof.nihonpipe.sampleSentencesTsv
 import org.junit.Test
+import java.io.File
 import java.util.*
 import kotlin.math.min
 
@@ -187,6 +188,7 @@ class Play {
                                 "${answerResponse.pronunciation}," +
                                 "${answerResponse.reading}," +
                                 unlocks)
+                        generateAnkiInfo(requestResponse.english)
                         ++number
 
                     }
@@ -263,66 +265,18 @@ class Play {
         }
     }
 
+    // Support for https://community.wanikani.com/t/anki-deck-template-wk-anki-crihaks-flavor/17399
     @Test
-    fun analyzeSentence() {
-        //val target = "大人 ２ 枚 ください 。"
-        //val target = "彼 は 方向 音痴 だ 。"
-        //val target = "もう 一つ ケーキ を 食べ て も いい です か 。"
-        //val target = "ジム は 肩幅 が 広い 。"
-        //val target = "君 は 外来 思想 に 偏見 を 抱い て いる よう だ 。"
-        //val target = "頭 の 毛 は 灰色 だっ た 。"
-        val target = "私に触らないで。"
-        //val target = "私と一緒に外に来て。"
-        //val target = "これ は 本 です 。"
-        //val target = "お母さん は どこ 。"
-        //val target = "ここ は 今 乾期 です 。"
-        //val target = "バラ は 今 満開 です 。"
-        val tokenization = tokenizeJapaneseSentence(target)
-        println("tokens = \r\n${tokenization.tokens.joinToString("\r\n")}")
-        val index = japaneseToSentenceIndex(target)
-        val found = sentenceIndexToTranslatedSentence(index)
-
-        println("$found")
-        println("sentence index = $index")
-        println("reading = ${tokenization.reading()}")
-        println("skeleton = ${tokenization.particleSkeletonForm()}")
-        val skeletonSentences = SentenceSkeletonFilter
-                .filterOf
-                .skeletons[tokenization.particleSkeletonForm()]!!
-        println("There are ${skeletonSentences.size} sentences with this skeleton")
-        fun locateInLevel(ladderKind: LadderKind) {
-            val provider = ladderKind.levelProvider
-            var foundSentence = false
-            val size = provider.size
-            for (level in 0 until size) {
-                val keySentences = provider.getKeySentences(level)
-                for (keySentence in keySentences) {
-                    if (keySentence.sentences.contains(index)) {
-                        println("$ladderKind level=$level of ${provider.size} key=${keySentence.key}")
-                        foundSentence = true
-                    }
-                }
-            }
-            if (!foundSentence) {
-                println("NOT FOUND in $ladderKind")
-            }
-        }
-        for (ladderKind in values()) {
-            locateInLevel(ladderKind)
-        }
-
-        val coordinates = ladderCoordinateIndexesOfSentence(index)
-        for (coordinateIndex in coordinates) {
-            val coordinate = ladderCoordinateOfLadderCoordinateIndex(
-                    coordinateIndex)
-            println("$coordinate")
-        }
-
-        val (sentences, burden) = LeastBurdenSentenceTransitions().getNextSentences(index)
-        println("The most similar sentences have burden $burden -> ")
-        for ((count, ix) in sentences.withIndex()) {
-            println("  $ix : ${sentenceIndexToTranslatedSentence(ix)}")
-            if (count > 20) break
+    fun testIntoAnki() {
+        val file = File("C:\\Users\\jomof\\downloads\\anki-line.tsv")
+        file.delete()
+        val sentences = listOf("IT is a major industry in India.")
+        for (sentence in sentences) {
+            val info = generateAnkiInfo(sentence)
+            val definitions = info.htmlDefinitions()
+            val notes = info.htmlNotes()
+            val line = "\"$sentence\"\t${info.romaji}\t${info.meanings}\t\"$definitions\"\t$notes\tPlaceholder\r\n"
+            file.appendText(line)
         }
     }
 
@@ -350,4 +304,69 @@ class Play {
             break
         }
     }
+
 }
+
+@Test
+fun analyzeSentence() {
+    //val target = "大人 ２ 枚 ください 。"
+    //val target = "彼 は 方向 音痴 だ 。"
+    //val target = "もう 一つ ケーキ を 食べ て も いい です か 。"
+    //val target = "ジム は 肩幅 が 広い 。"
+    //val target = "君 は 外来 思想 に 偏見 を 抱い て いる よう だ 。"
+    //val target = "頭 の 毛 は 灰色 だっ た 。"
+    val target = "私に触らないで。"
+    //val target = "私と一緒に外に来て。"
+    //val target = "これ は 本 です 。"
+    //val target = "お母さん は どこ 。"
+    //val target = "ここ は 今 乾期 です 。"
+    //val target = "バラ は 今 満開 です 。"
+    val tokenization = tokenizeJapaneseSentence(target)
+    println("tokens = \r\n${tokenization.tokens.joinToString("\r\n")}")
+    val index = japaneseToSentenceIndex(target)
+    val found = sentenceIndexToTranslatedSentence(index)
+
+    println("$found")
+    println("sentence index = $index")
+    println("reading = ${tokenization.reading()}")
+    println("skeleton = ${tokenization.particleSkeletonForm()}")
+    val skeletonSentences = SentenceSkeletonFilter
+            .filterOf
+            .skeletons[tokenization.particleSkeletonForm()]!!
+    println("There are ${skeletonSentences.size} sentences with this skeleton")
+    fun locateInLevel(ladderKind: LadderKind) {
+        val provider = ladderKind.levelProvider
+        var foundSentence = false
+        val size = provider.size
+        for (level in 0 until size) {
+            val keySentences = provider.getKeySentences(level)
+            for (keySentence in keySentences) {
+                if (keySentence.sentences.contains(index)) {
+                    println("$ladderKind level=$level of ${provider.size} key=${keySentence.key}")
+                    foundSentence = true
+                }
+            }
+        }
+        if (!foundSentence) {
+            println("NOT FOUND in $ladderKind")
+        }
+    }
+    for (ladderKind in values()) {
+        locateInLevel(ladderKind)
+    }
+
+    val coordinates = ladderCoordinateIndexesOfSentence(index)
+    for (coordinateIndex in coordinates) {
+        val coordinate = ladderCoordinateOfLadderCoordinateIndex(
+                coordinateIndex)
+        println("$coordinate")
+    }
+
+    val (sentences, burden) = LeastBurdenSentenceTransitions().getNextSentences(index)
+    println("The most similar sentences have burden $burden -> ")
+    for ((count, ix) in sentences.withIndex()) {
+        println("  $ix : ${sentenceIndexToTranslatedSentence(ix)}")
+        if (count > 20) break
+    }
+}
+

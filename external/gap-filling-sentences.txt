@@ -79,3 +79,11 @@ A: コンビニはどこですか？	Where is a convenience store?
 A: 何時ですか？	What time is it?
 A: これは何ですか？	What is this?
 A: それはいくらですか？	How much does that cost?
+A: あなたは日本語が上手です。	You are good at Japanese.
+A: 日本語が上手です。	You are good at Japanese.
+A: あの男の人はすばらしいです。	That man is wonderful.
+A: 会議は楽しみじゃないです。	Meeting is not a pleasure.
+A: りんごは赤くありませんでした。	The apple was not red.
+A: りんごは赤くくなかったです。	The apple was not red.
+A: きのうの夜、パーティーに行きました。	Last night I went to a party.
+A: ひこうきは、北西にむかっています。	The airplane is heading northwest.

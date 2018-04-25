@@ -1,0 +1,35 @@
+<div id="front" class="vocab meaning" data-countdown-mobile="9">
+    <div id="main">
+        <div class="overlay"></div>
+        <p class="word">{{furigana:Reading}}</p>
+    </div>
+    <div id="header">Sentence <b>Meaning</b></div>
+    <div id="answer-wrap">
+        <div style>{{type:Kana Reading}}</div>
+    </div>
+</div>
+
+{{Audio}}
+
+<!-- HIDDEN DATA STUFF -->
+
+<ul id="correctAnswers" style="display:none">
+    <li>{{Romaji}}</li>
+    <li>{{Alternative Meanings}}</li>
+</ul>
+<div id="partOfSpeech" style="display:none">{{Part of Speech}}</div>
+
+<!-- SCRIPTS -->
+
+<script src="_jquery-3.1.1.min.js"></script>
+<script src="_wk_persist.js"></script>
+<!--script src="_wk_wordlist.js"></script>
+<script src="_wk_multichoice.js"></script>
+<script src="_wk_countdown.js"></script-->
+<script>
+$(function() {
+mcel = $('#choices');
+bindMultichoice(mcel);
+});
+
+</script>

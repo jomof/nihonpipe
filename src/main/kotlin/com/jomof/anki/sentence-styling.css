@@ -1,0 +1,202 @@
+@import url("_fonts.css");
+
+.card {
+  font-size: 24px;
+  text-align: center;
+  color: white;
+  background: #F3F3F3;
+  margin: 0px;
+}
+
+#main {
+  text-shadow: 3px 3px 2px rgba(0,0,0,0.5);
+position: relative;
+z-index: -2;
+}
+.overlay{
+background: #002;
+opacity: 0.3;
+position: absolute;
+width:100%;
+height: 0%;
+z-index: -1;
+}
+.word {
+font-weight: bold;
+margin: 0px;
+  font-size: 80px;
+  line-height: 80px;
+color: white;
+padding-top: 90px;
+padding-bottom: 65px;
+z-index: 1;
+}
+
+.translation {
+  position: absolute;
+  top: 160px;
+  text-align: center;
+  width: 100%;
+}
+
+#header {
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
+  background: -webkit-linear-gradient(#3c3c3c, #1a1a1a);
+  text-shadow: -1px -1px 0 #000;
+  font-size: 24px;
+  padding: 20px 0;
+}
+.meaning #header {
+  border-top: 1px solid #d5d5d5;
+  border-bottom: 1px solid #c8c8c8;
+  color: #555;
+  background: -webkit-linear-gradient(#eee, #e1e1e1);
+  text-shadow: -1px -1px 0 rgba(255,255,255,0.1);
+}
+
+#answer-wrap {
+  padding: 10px;
+}
+
+input#typeans {
+  font-family: myfont;
+  font-size: 30px;
+  text-align: center;
+  color: black;
+  border: 1px;
+  padding: 20px 0px 20px 0px;
+  outline: 0;
+  outline-style:none;
+  outline-width:0;
+  -webkit-box-shadow: 3px 3px 0 #e1e1e1;
+  -moz-box-shadow: 3px 3px 0 #e1e1e1;
+  box-shadow: 3px 3px 0 #e1e1e1;
+}
+
+.corrected {
+  font-family: myfont;
+  padding: 20px;
+  outline: 0;
+  outline-style:none;
+  outline-width:0;
+  margin: 10px;
+  -webkit-box-shadow: 3px 3px 0 #e1e1e1;
+  -moz-box-shadow: 3px 3px 0 #e1e1e1;
+  box-shadow: 3px 3px 0 #e1e1e1;
+}
+#incorrect {
+  background: #FF0033;
+}
+#correct {
+  background: #88CC00;
+}
+
+#choices {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  width:100%;
+  text-align:center;
+}
+#choices li {
+  cursor:pointer;
+  display:inline-block;
+  padding: 10px;
+  margin: 0 10px 20px;
+  display: inline-block;
+  font-size: 24px;
+  line-height: 30px;
+  line-height: 60px;
+  width: 250px;
+  height: 60px
+    -webkit-box-shadow: 3px 3px 0 #e1e1e1;
+    -moz-box-shadow: 3px 3px 0 #e1e1e1;
+    box-shadow: 3px 3px 0 #e1e1e1;
+}
+#choices li span {
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 30px;
+}
+#choices .selected {
+  background: #333!important;
+}
+/* Correct (unselected) answer */
+#back #choices .correct {
+  padding: 0;
+  border: 10px solid #88CC00;
+}
+/* Incorrect selected answer */
+#back #choices .selected {
+  background: #FF0033!important;
+}
+/* Correct (selected) answer */
+#back #choices .correct.selected {
+  background: #88CC00!important;
+}
+
+#info-box {
+  background: white;
+  color: #555;
+  font-size: 16px;
+  line-height: 24px;
+  margin: 10px;
+  text-align: left;
+  padding: 20px;
+  -webkit-box-shadow: 3px 3px 0 #e1e1e1;
+  -moz-box-shadow: 3px 3px 0 #e1e1e1;
+  box-shadow: 3px 3px 0 #e1e1e1;
+}
+
+#info-box .section {
+  margin-bottom: 40px;
+}
+
+#info-box h2 {
+    margin: 0 0 0.5em;
+    padding-bottom: 0.5em;
+    color: #888888;
+    font-size: 18px;
+    font-weight: normal;
+    letter-spacing: -1px;
+    line-height: 1em;
+    border-bottom: 1px solid #eee;
+    -webkit-box-shadow: 1px 10px 9px -6px rgba(0,0,0,0.025);
+    -moz-box-shadow: 1px 10px 9px -6px rgba(0,0,0,0.025);
+    box-shadow: 1px 10px 9px -6px rgba(0,0,0,0.025);
+}
+
+#info-box .context p {
+  margin: 0;
+  padding 0;
+}
+
+#info-box .context-sentence-group {
+  margin-bottom: 16px
+}
+
+
+
+/* Mobile */
+.mobile .word {
+  font-size: 50px;
+  line-height: 50px;
+}
+.mobile .translation {
+  top: 130px;
+}
+.mobile #choices li {
+  width: 39%;
+  font-size: 20px;
+}
+/* End Mobile */
+
+
+/* Vocab Specific */
+.vocab #main {
+  background: #a100f1;
+}
+.vocab #choices li {
+  background-color: #a100f1;
+}

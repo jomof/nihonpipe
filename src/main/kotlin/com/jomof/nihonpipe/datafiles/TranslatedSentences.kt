@@ -13,6 +13,7 @@ private val db = MVStore.Builder()
 
 private val indexToTranslated = db.openMap<Int, TranslatedSentence>("IndexToTranslated")!!
 private val japaneseToIndex = db.openMap<String, Int>("JapaneseToIndex")!!
+private val englishToIndexes = db.openMap<String, MutableSet<Int>>("EnglishToIndexes")!!
 private val nextIndex = db.openMap<String, Int>("NextIndex")!!
 private val seen = mutableSetOf<String>()
 
@@ -30,6 +31,9 @@ private fun addSentence(japanese: String, english: String) {
     seen += token
     val next = nextIndex.getsert("index") { 0 }
     japaneseToIndex[japanese] = next
+    englishToIndexes
+            .getsert(english, { mutableSetOf() })
+            .add(next)
     indexToTranslated[next] = TranslatedSentence(
             japanese = japanese,
             english = english)
@@ -123,4 +127,9 @@ fun sentenceIndexToTranslatedSentence(sentenceIndex: Int): TranslatedSentence {
 fun japaneseToSentenceIndex(japanese: String): Int {
     populate()
     return japaneseToIndex[japanese] ?: throw RuntimeException("'$japanese'")
+}
+
+fun englishToSentenceIndexes(english: String): Set<Int> {
+    populate()
+    return englishToIndexes[english] ?: throw RuntimeException("'$english'")
 }
