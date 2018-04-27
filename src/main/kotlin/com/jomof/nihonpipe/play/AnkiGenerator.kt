@@ -1,7 +1,6 @@
 package com.jomof.nihonpipe.play
 
 import com.jomof.algorithm.getsert
-import com.jomof.nihonpipe.RomajiState
 import com.jomof.nihonpipe.datafiles.englishToSentenceIndexes
 import com.jomof.nihonpipe.datafiles.sentenceIndexToTranslatedSentence
 import com.jomof.nihonpipe.datafiles.tokenizeJapaneseSentence
@@ -9,7 +8,6 @@ import com.jomof.nihonpipe.datafiles.vocabInfo
 import com.jomof.nihonpipe.groveler.schema.KuromojiIpadicToken
 import com.jomof.nihonpipe.groveler.schema.KuromojiIpadicTokenization
 import com.jomof.nihonpipe.groveler.schema.particleSkeletonForm
-import com.jomof.nihonpipe.katakanaToRomaji
 import com.jomof.nihonpipe.schema.Jlpt
 
 data class AnkiInfo(
@@ -197,7 +195,7 @@ fun AnkiInfo.htmlDefinitions(): String {
     for ((word, vocab) in this.vocab) {
         sb.append("<li>")
         sb.append("<b>$word</b>/")
-        sb.append("${katakanaToRomaji(vocab.pronunciation, RomajiState())} ")
+        sb.append("${vocab.pronunciation} ")
         if (vocab.partOfSpeech != null) {
             sb.append("<i>${vocab.partOfSpeech.toLowerCase()}</i> ")
         }

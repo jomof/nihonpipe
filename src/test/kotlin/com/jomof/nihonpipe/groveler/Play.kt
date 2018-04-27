@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.jomof.intset.intSetOf
 import com.jomof.nihonpipe.datafiles.*
 import com.jomof.nihonpipe.groveler.schema.particleSkeletonForm
+import com.jomof.nihonpipe.personalSentencesFile
 import com.jomof.nihonpipe.play.*
 import com.jomof.nihonpipe.play.LadderKind.*
 import com.jomof.nihonpipe.play.io.StudyActionType.NOTHING
@@ -105,9 +106,27 @@ class Play {
 
     @Test
     fun playTheGame() {
+        val seedSentences = mutableSetOf<String>()
+        personalSentencesFile
+                .forEachLine { line ->
+                    if (line.length > 3) {
+                        when (line[0]) {
+                            'A' -> {
+                                val leftStripped = line.substring(3)
+                                val split = leftStripped.split("\t")
+                                if (split.size != 2) {
+                                    throw RuntimeException(line)
+                                }
+                                seedSentences += split[1]
+                            }
+                        }
+                    }
+                }
         val player = Player(
-                seedSentences = seedSentences,
+                seedSentences = seedSentences.toList(),
                 sentenceScores = mutableMapOf())
+        val file = File("C:\\Users\\jomof\\downloads\\anki-game.tsv")
+        file.delete()
         var time = GregorianCalendar(2020, 1, 1)
         fun time(): String {
             val year = time.get(Calendar.YEAR)
@@ -121,7 +140,7 @@ class Play {
         var questionsAnswer = 0.0
         var daysElapsed = 0.0
         var rand = Random(0)
-        val chanceCorrect = .80
+        val chanceCorrect = .98
         var number = 1
         val set = mutableSetOf<String>()
         while (number < 5000) {
@@ -188,7 +207,11 @@ class Play {
                                 "${answerResponse.pronunciation}," +
                                 "${answerResponse.reading}," +
                                 unlocks)
-                        generateAnkiInfo(requestResponse.english)
+                        val info = generateAnkiInfo(requestResponse.english)
+                        val definitions = info.htmlDefinitions()
+                        val notes = info.htmlNotes()
+                        val line = "\"${requestResponse.english}\"\t${info.romaji}\t${info.meanings}\t\"$definitions\"\t$notes\tPlaceholder\r\n"
+                        file.appendText(line)
                         ++number
 
                     }
@@ -270,7 +293,7 @@ class Play {
     fun testIntoAnki() {
         val file = File("C:\\Users\\jomof\\downloads\\anki-line.tsv")
         file.delete()
-        val sentences = listOf("IT is a major industry in India.")
+        val sentences = listOf("It's pouring.")
         for (sentence in sentences) {
             val info = generateAnkiInfo(sentence)
             val definitions = info.htmlDefinitions()

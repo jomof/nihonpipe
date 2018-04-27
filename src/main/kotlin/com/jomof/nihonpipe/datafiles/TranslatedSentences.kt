@@ -45,19 +45,33 @@ private fun populate() {
         core10kSentences()
         translateTanakaCorpus()
         residueSentences()
-        gapFillingSentences()
+        otherSentences(gapFillingSentencesFile)
+        otherSentencesReversed(personalSentencesFile)
     }
     db.commit()
 }
 
-private fun gapFillingSentences() {
-    gapFillingSentencesFile
+private fun otherSentences(sentences: File) {
+    sentences
             .forEachLine { line ->
                 when (line[0]) {
                     'A' -> {
                         val leftStripped = line.substring(3)
                         val split = leftStripped.split("\t")
                         addSentence(split[0], split[1])
+                    }
+                }
+            }
+}
+
+private fun otherSentencesReversed(sentences: File) {
+    sentences
+            .forEachLine { line ->
+                if (line.length > 3) when (line[0]) {
+                    'A' -> {
+                        val leftStripped = line.substring(3)
+                        val split = leftStripped.split("\t")
+                        addSentence(split[1], split[0])
                     }
                 }
             }

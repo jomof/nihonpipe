@@ -1,0 +1,51 @@
+A: Japanese house is small.	日本のうちは小さいです。
+A: The car is not big.	車は大きくないです。
+A: The newspaper was expensive.	新聞は高かったです。
+A: The book was not cheap.	本は安くなかったです。
+A: Is the beer tasty?	ビールはおいしいですか。
+A: It is bad tasting.	まずいです。
+A: This pen is blue.	このペンは青いです。
+A: The business card was white.	名刺は白かったです。
+A: The apple was not red.	りんごは赤くありませんでした。
+A: My umbrella is yellow.	私のかさは黄色いです。
+A: The hair is not brown.	髪は茶色くありません。
+A: My telephone was black.	私の電話は黒かったです。
+A: The watch was not new.	時計は新しくありませんでした。
+A: Is this movie bad?	この映画は悪いですか。
+A: This chair is not old.	このいすは古くないです。
+A: The party was interesting.	パーティーは面白かったです。
+A: The test was not difficult.	テストは難しくなかったです。
+A: Police box is far.	交番は遠いです。
+A: I was not busy.	私は忙しくありませんでした。
+A: The meeting was boring.	会議はつまらなかったです。
+A: Japanese is not easy. 	日本語はやさしくないです。
+A: The school was not near.	学校は近くありませんでした。
+A: Station is not quiet.	駅は静かではありません。
+A: My mother was not famous.	母は有名じゃなかったです。
+A: The woman is kind.	女の人は親切です。
+A: I was free.	私は暇でした。
+A: My father is lively.	父はにぎやかです。
+A: Subway was convenient.	地下鉄は便利でした。
+A: The secretary is not healthy.	秘書は元気ではありません。
+A: Today is cold.	今日は寒いです。
+A: Yesterday was hot.	昨日は暑かったです。
+A: Next week will not to be warm.	来週は暖かくないです。
+A: The last month was not cool.	先月はすずしくなかったです。
+A: The movie was enjoyable.	映画は楽しかったです。
+A: The coffee is not cold.	コーヒーは冷たくありません。
+A: I was not sorry.	残念ではありませんでした。
+A: You are good at Japanese.	あなたは日本語が上手です。
+A: I was bad at golf.	私はゴルフが下手でした。
+A: I'm not good at tennis.	私はテニスが上手じゃないです。
+A: It was not late.	遅くなかったです。
+A: It is not early.	早くありません。
+A: My hand was painful.	手が痛かったです。
+A: Meeting is not a pleasure.	会議は楽しみじゃないです。
+A: That man is wonderful.	あの男の人はすばらしいです。
+A: I'm happy.	私はうれしいです。
+A: I was not sad.	私は悲しくなかったです。
+A: Test is not fun.	テストは楽しくないです。
+A: Leaves of tree are not brown.	木の葉は茶色くありません。
+A: Hairs are white.	髪は白いです。
+A: My mother was beautiful.	母は美しかったです。
+

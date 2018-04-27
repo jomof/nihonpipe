@@ -35,21 +35,14 @@ data class KuromojiIpadicTokenization(
     fun romajiPronunciation(): String {
         val sb = StringBuilder()
         val state = RomajiState()
-        var lastToken: KuromojiIpadicToken? = null
         for (token in tokens) {
             if (!sb.isEmpty()) {
                 sb.append(" ")
             }
             when (token.pronunciation) {
-                "*" ->
-                    sb.append(katakanaToRomaji(token.surface, state))
-                "々" -> {
-                    val katakana = katakanaToRomaji(lastToken!!.pronunciation, state)
-                    sb.append("[$katakana]")
-                }
+                "*" -> sb.append(katakanaToRomaji(token.surface, state))
                 else -> sb.append(katakanaToRomaji(token.pronunciation, state))
             }
-            lastToken = token
         }
         return sb.toString()
     }
@@ -57,50 +50,33 @@ data class KuromojiIpadicTokenization(
     fun romajiReading(): String {
         val sb = StringBuilder()
         val state = RomajiState()
-        var lastToken: KuromojiIpadicToken? = null
         for (token in tokens) {
             if (!sb.isEmpty()) {
                 sb.append(" ")
             }
             when (token.reading) {
-                "*" ->
-                    sb.append(katakanaToRomaji(token.surface, state))
-                "々" -> {
-                    val katakana = katakanaToRomaji(lastToken!!.reading, state)
-                    sb.append("[$katakana]")
-                }
+                "*" -> sb.append(katakanaToRomaji(token.surface, state))
                 else -> sb.append(katakanaToRomaji(token.reading, state))
             }
-            lastToken = token
         }
         return sb.toString()
     }
 
     fun romajiSurfaceFurigana(): String {
         val sb = StringBuilder()
-        var state = RomajiState()
-        var lastToken: KuromojiIpadicToken? = null
+        val state = RomajiState()
         for (token in tokens) {
             if (!sb.isEmpty()) {
                 sb.append("  ")
             }
 
             sb.append(token.surface)
+            sb.append("[")
             when (token.pronunciation) {
-                "*" -> {
-                    val romaji = katakanaToRomaji(token.surface, state)
-                    sb.append("[$romaji]")
-                }
-                "々" -> {
-                    val romaji = katakanaToRomaji(lastToken!!.pronunciation, state)
-                    sb.append("[$romaji]")
-                }
-                else -> {
-                    val romaji = katakanaToRomaji(token.pronunciation, state)
-                    sb.append("[$romaji]")
-                }
+                "*" -> sb.append(katakanaToRomaji(token.surface, state))
+                else -> sb.append(katakanaToRomaji(token.pronunciation, state))
             }
-            lastToken = token
+            sb.append("]")
         }
         return sb.toString()
     }
